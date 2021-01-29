@@ -16,7 +16,6 @@ force-app/main/default/applications/
 force-app/main/default/appMenus/
 force-app/main/default/certs/
 
-
 force-app/main/default/classes/ChangePasswordController.cls
 force-app/main/default/classes/ChangePasswordControllerTest.cls
 force-app/main/default/classes/CommunitiesLandingController.cls
@@ -42,7 +41,6 @@ force-app/main/default/cspTrustedSites/
 force-app/main/default/navigationMenus/
 force-app/main/default/networkBranding/
 force-app/main/default/networks/
-force-app/main/default/pages/
 
 force-app/main/default/pages/AnswersHome.page
 force-app/main/default/pages/BandwidthExceeded.page
@@ -67,8 +65,6 @@ force-app/main/default/pages/StdExceptionTemplate.page
 force-app/main/default/pages/Unauthorized.page
 force-app/main/default/pages/UnderConstruction.page
 
-force-app/main/default/permissionsets/
-force-app/main/default/profiles/
 force-app/main/default/staticresources/SiteSamples/
 force-app/main/default/staticresources/SiteSamples.resource-meta.xml
 force-app/main/default/siteDotComSites/

@@ -1,0 +1,24 @@
+<apex:page controller="UpdateProfileController" showHeader="false">
+  <apex:composition template="{!$Site.Template}">
+    <apex:define name="body">
+      <apex:form id="theForm">
+        <apex:outputPanel style="padding:50px 50px 50px 50px" id="userDetail">
+          <apex:pageBlock title="{!$Label.site.my_profile}" id="editUserDetail">
+            <apex:pageMessages />
+            <apex:pageBlockButtons id="editButtons" location="top">
+              <apex:commandButton id="save" value="{!$Label.site.save}" action="{!save}" rerender="userDetail" />
+              <apex:commandButton id="cancel" value="{!$Label.site.cancel}" action="{!cancel}" rerender="userDetail" immediate="true" />
+            </apex:pageBlockButtons>
+            <apex:pageBlockSection id="editAddressInformation" columns="1" title="{!$Label.site.address_information}">
+              <apex:inputField id="editstreet" value="{!user.street}" />
+              <apex:inputField id="editcity" value="{!user.city}" />
+              <apex:inputField id="editstate" value="{!user.state}" />
+              <apex:inputField id="editpostalcode" value="{!user.postalcode}" />
+              <apex:inputField id="editcountry" value="{!user.country}" />
+            </apex:pageBlockSection>
+          </apex:pageBlock>
+        </apex:outputPanel>
+      </apex:form>
+    </apex:define>
+  </apex:composition>
+</apex:page>

@@ -1,7 +1,7 @@
 global with sharing class RealmExtensionCallable implements Callable{
   global Object call(String action, Map<String, Object> args) {
+    User current_user = new Repository().findById((Id) args.get('user_id'));
     if (action == 'before:authorize:page') {
-      User current_user = new Repository().findById((Id) args.get('user_id'));
 
       if (
         String.isBlank(current_user.Street) ||
@@ -17,11 +17,18 @@ global with sharing class RealmExtensionCallable implements Callable{
 
         return response;
       }
+      return null;
+    }
+    if (action == 'get:challenge:page') {
+      if (String.isBlank(current_user.MobilePhone)) {
+        return new PageReference('/challenge');
+      }
+      return null;
     }
     return null;
   }
 
-  public class Repository {
+  public without sharing class Repository {
     public User findById(Id user_id) {
       return [SELECT
         Id, Name, FirstName, LastName, CommunityNickname, Username, SmallPhotoUrl,

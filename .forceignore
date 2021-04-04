@@ -24,13 +24,13 @@ force-app/main/default/classes/CommunitiesLoginController.cls
 force-app/main/default/classes/CommunitiesLoginControllerTest.cls
 force-app/main/default/classes/CommunitiesSelfRegConfirmController.cls
 force-app/main/default/classes/CommunitiesSelfRegConfirmControllerTest.cls
-force-app/main/default/classes/CommunitiesSelfRegController.cls
+# force-app/main/default/classes/CommunitiesSelfRegController.cls
 force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls
 force-app/main/default/classes/ForgotPasswordController.cls
 force-app/main/default/classes/ForgotPasswordControllerTest.cls
 force-app/main/default/classes/MyProfilePageController.cls
 force-app/main/default/classes/MyProfilePageControllerTest.cls
-force-app/main/default/classes/SiteLoginController.cls
+# force-app/main/default/classes/SiteLoginController.cls
 force-app/main/default/classes/SiteLoginControllerTest.cls
 force-app/main/default/classes/SiteRegisterController.cls
 force-app/main/default/classes/SiteRegisterControllerTest.cls
@@ -78,13 +78,13 @@ CommunitiesLoginController.cls
 CommunitiesLoginControllerTest.cls
 CommunitiesSelfRegConfirmController.cls
 CommunitiesSelfRegConfirmControllerTest.cls
-CommunitiesSelfRegController.cls
+# CommunitiesSelfRegController.cls
 CommunitiesSelfRegControllerTest.cls
 ForgotPasswordController.cls
 ForgotPasswordControllerTest.cls
 MyProfilePageController.cls
 MyProfilePageControllerTest.cls
-SiteLoginController.cls
+# SiteLoginController.cls
 SiteLoginControllerTest.cls
 SiteRegisterController.cls
 SiteRegisterControllerTest.cls

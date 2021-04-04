@@ -1,0 +1,117 @@
+<apex:page controller="ChallengeController" showHeader="false" cache="false" docType="html-5.0" action="{!process}" >
+  <style>
+    html,
+    body,
+    body>div {
+      height: 100%;
+      min-height: 100%;
+      background-color: {!backgroundColor};
+    }
+    #auraErrorMessage {
+      display: none;
+    }
+  </style>
+  <link rel="stylesheet" href="{!$Resource.IntlTelInput + '/css/intlTelInput.css'}" />
+  <script src="{!$Resource.IntlTelInput + '/js/intlTelInput.js'}"></script>
+  <script src="{!$Resource.IntlTelInput + '/js/utils.js'}"></script>
+  <apex:slds></apex:slds>
+
+  <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+    <div class="slds-col" id="challenge_form">
+      <article class="slds-card" style="max-width: 500px; display:none; padding: 48px 32px;" id="phoneContainer">
+        <div class="slds-card__body slds-card__body_inner">
+          <div class="slds-text-heading_large slds-text-align_center">{! $Label.twilio_verify_register_title }</div>
+          <div class="slds-text-body_regular" style="margin: 16px">{! $Label.twilio_verify_register_description }</div>
+
+          <div class="slds-p-around_medium">
+            <div class="slds-text-body_regular">
+              <div class="slds-form-element slds-text-align_center">
+                <label class="slds-form-element__label" for="phone"><abbr class="slds-required" title="required">* </abbr>{! $Label.twilio_verify_register_phone_label}</label>
+                <div class="slds-form-element__control">
+                  <input class="slds-input" type="tel" id="phone"/>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <footer class="slds-card__footer slds-text-align_center slds-button_stretch">
+          <button class="slds-button slds-button_brand slds-button_stretch" id="challenge">{! $Label.twilio_verify_register_button }</button>
+        </footer>
+      </article>
+
+      <article class="slds-card" style="max-width: 500px; display:none; padding: 48px 32px;" id="otpContainer">
+        <div class="slds-card__body slds-card__body_inner">
+          <div class="slds-text-heading_large slds-text-align_center">{! $Label.twilio_verify_otp_title }</div>
+          <div class="slds-text-body_regular" style="margin: 16px">{! $Label.twilio_verify_otp_description }</div>
+
+          <div class="slds-p-around_medium">
+            <div class="slds-text-body_regular">
+              <div class="slds-form-element slds-text-align_center">
+                <label class="slds-form-element__label" for="otp"><abbr class="slds-required" title="required">* </abbr>{! $Label.twilio_verify_otp_otp_label}</label>
+                <div class="slds-form-element__control">
+                  <div class="slds-text-body_regular">
+                    <input class="slds-input" type="number" required="true" id="otp" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <footer class="slds-card__footer slds-text-align_center slds-button_stretch">
+          <button class="slds-button slds-button_brand slds-button_stretch" id="verify">{! $Label.twilio_verify_otp_button }</button>
+        </footer>
+      </article>
+
+    </div>
+
+  </div>
+  <script type="text/javascript">
+    var state = JSON.parse("{! JSENCODE(log) }");
+    var phoneContainer = document.querySelector("#phoneContainer");
+    var otpContainer = document.querySelector("#otpContainer");
+    var iti = window.intlTelInput(document.querySelector("#phone"), {
+      preferredCountries: ['fr', 'us']
+    });
+    document.querySelector("#verify").addEventListener('click', function() {
+      Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.ChallengeController.verify}',
+        state.phoneNumber,
+        state.transactionId,
+        document.querySelector('#otp').value,
+        function(result, event){
+          Object.assign(state, result);
+        },
+        {escape: true}
+      );
+    });
+    document.querySelector("#challenge").addEventListener('click', function() {
+      if (!iti.getNumber()) {
+        console.log('must enter a phone number');
+        return;
+      }
+
+
+      Visualforce.remoting.Manager.invokeAction(
+        '{!$RemoteAction.ChallengeController.challenge}',
+        iti.getNumber(),
+        function(result, event){
+          Object.assign(state, result);
+          load();
+        },
+        {escape: true}
+      );
+    });
+    function load() {
+      if (state.transactionId) {
+        otpContainer.style.display = 'block';
+        phoneContainer.style.display = 'none';
+      } else {
+        otpContainer.style.display = 'none';
+        phoneContainer.style.display = 'block';
+      }
+    }
+    load();
+
+  </script>
+</apex:page>

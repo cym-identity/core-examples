@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>twilio_verify_register_title</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_register_title</shortDescription>
+        <value>Secure Your Account</value>
+    </labels>
+    <labels>
+        <fullName>twilio_verify_register_description</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_register_description</shortDescription>
+        <value>Enter your phone number below. An SMS will be sent to confirm it on the next screen</value>
+    </labels>
+    <labels>
+        <fullName>twilio_verify_register_phone_label</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_register_phone_label</shortDescription>
+        <value>Phone Number</value>
+    </labels>
+    <labels>
+        <fullName>twilio_verify_register_button</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_register_button</shortDescription>
+        <value>Continue</value>
+    </labels>
+
+    <labels>
+        <fullName>twilio_verify_otp_title</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_otp_title</shortDescription>
+        <value>Verify Your Identity</value>
+    </labels>
+    <labels>
+        <fullName>twilio_verify_otp_description</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_otp_description</shortDescription>
+        <value>Enter the code your received by text</value>
+    </labels>
+    <labels>
+        <fullName>twilio_verify_otp_otp_label</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_otp_otp_label</shortDescription>
+        <value>Code</value>
+    </labels>
+    <labels>
+        <fullName>twilio_verify_otp_button</fullName>
+        <categories>twilio_verify</categories>
+        <language>en_US</language>
+        <protected>true</protected>
+        <shortDescription>twilio_verify_otp_button</shortDescription>
+        <value>Continue</value>
+    </labels>
+</CustomLabels>

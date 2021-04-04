@@ -1,6 +1,7 @@
 {
   "orgName": "Demo company",
   "edition": "Developer",
+  "adminEmail": "scratch.org@cym-identity.com",
   "features": [
     "Communities",
     "Sites"

@@ -28,4 +28,8 @@ export default class TwilioVerifyConfiguration extends LightningElement {
   handleServiceSIDChange(e) {
     this.config = Object.assign({}, this.config, {service_sid: e.target.value});
   }
+
+  handleAppHashChange(e) {
+    this.config = Object.assign({}, this.config, {AppHash: e.target.value});
+  }
 }

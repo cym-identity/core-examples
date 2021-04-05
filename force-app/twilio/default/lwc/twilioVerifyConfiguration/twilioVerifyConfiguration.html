@@ -5,17 +5,28 @@
       <lightning-input type="text" name="AccountSid" id="AccountSid" label="Account SID" onchange={handleAccountSIDChange} value={config.account_sid} required></lightning-input>
       <lightning-input type="text" name="AuthToken" id="AuthToken" label="Auth Token" onchange={handleAuthTokenChange} value={config.auth_token} required></lightning-input>
       <lightning-input type="text" name="ServiceSid" id="ServiceSid" label="Service SID" onchange={handleServiceSIDChange} value={config.service_sid} required></lightning-input>
+      <lightning-input type="text" name="AppHash" id="AppHash" label="AppHash" onchange={handleAppHashChange} value={config.AppHash}></lightning-input>
     </p>
 
 
     <!-- RemoteSiteSetting -->
     <p class="slds-p-horizontal_medium" style="margin-top: 16px;">
-      <lightning-icon icon-name="utility:check" alternative-text="RemoteSiteSetting Ok" title="RemoteSiteSetting"
-        if:true={is_remote_site_setting_enabled} size="x-small" variant="success"></lightning-icon>
-      <lightning-icon icon-name="utility:close" alternative-text="RemoteSiteSetting not ok"
-        title="RemoteSiteSetting ok" if:false={is_remote_site_setting_enabled} size="x-small" variant="error">
-      </lightning-icon>
-      <span>Remote Site Setting</span><span if:false={is_remote_site_setting_enabled}> - Your Administrator must add/enable a remote site setting for Twilio Verify service https://verify.twilio.com</span>
+      <lightning-icon
+        icon-name="utility:check"
+        alternative-text="RemoteSiteSetting Ok"
+        title="RemoteSiteSetting"
+        if:true={is_remote_site_setting_enabled}
+        size="x-small"
+        variant="success"></lightning-icon>
+      <lightning-icon
+        icon-name="utility:close"
+        alternative-text="RemoteSiteSetting not ok"
+        title="RemoteSiteSetting ok"
+        if:false={is_remote_site_setting_enabled}
+        size="x-small"
+        variant="error"></lightning-icon>
+      <span>Remote Site Setting</span>
+      <span if:false={is_remote_site_setting_enabled}> - Your Administrator must add/enable a remote site setting for Twilio Verify service https://verify.twilio.com</span>
     </p>
   </lightning-card>
 </template>

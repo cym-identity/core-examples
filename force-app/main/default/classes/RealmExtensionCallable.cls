@@ -20,10 +20,7 @@ global with sharing class RealmExtensionCallable implements Callable{
       return null;
     }
     if (action == 'get:challenge:page') {
-      if (String.isBlank(current_user.MobilePhone)) {
-        return new PageReference('/challenge');
-      }
-      return null;
+      return new PageReference('/challenge');
     }
     return null;
   }

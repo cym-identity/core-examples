@@ -19,15 +19,11 @@ public inherited sharing class TwilioVerify {
   public class Sms {
     cym.AuthorizationContext.Authenticator authenticator;
     public Sms(cym.AuthorizationContext.Authenticator authenticator) {
-      // if (authenticator?.provider != 'cym_TwilioVerify_Sms') throw new InvalidArgumentException('invalid authenticator');
       this.authenticator = authenticator;
     }
 
-    // Dummy authenticator;
-    // public Sms(Dummy authenticator) {}
-
-    public String initChallenge(Map<String, Object> args) {
-      String phone_number = (String) args.get('phone_number');
+    public Map<String, Object> initChallenge(Map<String, Object> args) {
+      String phone_number = (String) args.get('phoneNumber');
 
       if (String.isBlank(phone_number)) throw new InvalidArgumentException('A Phone number must be provided');
 
@@ -41,10 +37,11 @@ public inherited sharing class TwilioVerify {
         'To' => phone_number,
         'Channel' => 'sms'
       };
-      if (this.authenticator.get('CustomFriendlyName') != null) payload.put('CustomFriendlyName', (String) this.authenticator.get('CustomFriendlyName'));
-      if (this.authenticator.get('Locale') != null) payload.put('Locale', (String) this.authenticator.get('Locale'));
-      if (this.authenticator.get('CustomCode') != null) payload.put('CustomCode', (String) this.authenticator.get('CustomCode'));
-      if (this.authenticator.get('AppHash') != null) payload.put('AppHash', (String) this.authenticator.get('AppHash'));
+      if (args.get('CustomFriendlyName') != null) payload.put('CustomFriendlyName', (String) args.get('CustomFriendlyName'));
+      if (args.get('Locale') != null) payload.put('Locale', (String) args.get('Locale'));
+      if (args.get('CustomCode') != null) payload.put('CustomCode', (String) args.get('CustomCode'));
+
+      if (String.isNotBlank((String) this.authenticator.get('AppHash'))) payload.put('AppHash', (String) this.authenticator.get('AppHash'));
 
       HttpRequest req = new HttpRequest();
       req.setEndpoint(TWILIO_URL + '/Services/' + service_id + '/Verifications');
@@ -54,11 +51,14 @@ public inherited sharing class TwilioVerify {
       HttpResponse resp = new Http().send(req);
 
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());
-      if (resp.getStatusCode() != 200) return null;
-      return (String) response.get('sid');
+      if (resp.getStatusCode() != 201) return new Map<String, Object> {
+        'error' => response,
+        'statusCode' => resp.getStatusCode()
+      };
+      return response;
     }
 
-    public String verifyChallenge(Map<String, Object> args) {
+    public Map<String, Object> verifyChallenge(Map<String, Object> args) {
 
       String account_sid = (String) this.authenticator.get('account_sid');
       String auth_token = (String) this.authenticator.get('auth_token');
@@ -77,18 +77,16 @@ public inherited sharing class TwilioVerify {
       req.setBody(TwilioVerify.fromMapToUrlString(payload));
       HttpResponse resp = new Http().send(req);
 
-      if (resp.getStatusCode() != 200) return null;
-
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());
-      return (String) response.get('status');
+      if (resp.getStatusCode() != 200) return new Map<String, Object> {
+        'error' => response,
+        'statusCode' => resp.getStatusCode()
+      };
+      return response;
     }
   }
 
   public class InvalidArgumentException extends Exception {}
-
-  public class Dummy {
-    public Object get(String name) { return null; }
-  }
 
   private static String fromMapToUrlString(Map<String, String> params) {
     String enc = 'UTF-8';

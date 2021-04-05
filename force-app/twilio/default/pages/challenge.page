@@ -63,11 +63,18 @@
         </footer>
       </article>
 
+      <div style="display:none;">
+        <apex:form>
+          <apex:commandButton action="{!done}" value="" id="done"></apex:commandButton>
+        </apex:form>
+      </div>
+
     </div>
 
   </div>
   <script type="text/javascript">
     var state = JSON.parse("{! JSENCODE(log) }");
+    console.log({state});
     var phoneContainer = document.querySelector("#phoneContainer");
     var otpContainer = document.querySelector("#otpContainer");
     var iti = window.intlTelInput(document.querySelector("#phone"), {
@@ -76,11 +83,12 @@
     document.querySelector("#verify").addEventListener('click', function() {
       Visualforce.remoting.Manager.invokeAction(
         '{!$RemoteAction.ChallengeController.verify}',
-        state.phoneNumber,
         state.transactionId,
         document.querySelector('#otp').value,
         function(result, event){
-          Object.assign(state, result);
+          if (result.status == 'approved') {
+            document.querySelector('form').querySelector("input[type='submit']").click();
+          }
         },
         {escape: true}
       );

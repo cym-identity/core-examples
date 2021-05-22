@@ -1,0 +1,12 @@
+<template>
+  <template if:true={clientSessions.length}>
+    <h1>The following applications have access to your data even when you are not using them.</h1> 
+    <lightning-accordion allow-multiple-sections-open>
+      <template for:each={clientSessions} for:item="session">
+        <lightning-accordion-section name={session.client_name} label={session.client_name} key={session.key}>
+          <lightning-button label="Revoke" title="Revoke" onclick={session.revoke}></lightning-button>
+        </lightning-accordion-section>
+      </template>
+    </lightning-accordion>
+  </template>
+</template>

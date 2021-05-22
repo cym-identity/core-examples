@@ -1,0 +1,9 @@
+<template>
+  <div class="slds-grid slds-grid_align-space">
+    <template for:each={callbacks} for:item="cb">
+      <div key={cb} class="slds-col">
+        <input type="number" class="slds-input otp-input" oninput={cb.oninput} onpaste={cb.onpaste} onfocus={cb.onfocus}/>
+      </div>
+    </template>
+  </div>
+</template>

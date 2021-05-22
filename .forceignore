@@ -65,6 +65,10 @@ force-app/main/default/pages/StdExceptionTemplate.page
 force-app/main/default/pages/Unauthorized.page
 force-app/main/default/pages/UnderConstruction.page
 
+force-app/main/default/profiles/accounts Profile.profile-meta.xml
+force-app/main/default/profiles/Admin.profile-meta.xml
+force-app\main\default\layouts\WebAuthnCredential__c-WebAuthnCredential Layout.layout-meta.xml
+
 force-app/main/default/staticresources/SiteSamples/
 force-app/main/default/staticresources/SiteSamples.resource-meta.xml
 force-app/main/default/siteDotComSites/

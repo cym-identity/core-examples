@@ -1,6 +1,10 @@
 {
   "packageDirectories": [
     {
+      "path": "ui",
+      "default": false
+    },
+    {
       "path": "force-app",
       "default": true
     }

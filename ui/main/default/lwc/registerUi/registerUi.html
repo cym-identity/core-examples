@@ -1,0 +1,37 @@
+<template>
+  <article class="slds-card" style="padding: 32px 16px; margin: 16px" >
+    <div class="slds-card__body slds-card__body_inner" if:false={enrollWebAuthnPlatform}>
+      <div class="slds-text-heading_large slds-text-align_center">Secure your account</div>
+      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail}></c-challenge-email>
+      <c-challenge-totp ondone={factorDone} if:true={showTotp}></c-challenge-totp>
+      <c-challenge-sms ondone={factorDone} if:true={showSms}></c-challenge-sms>
+      <c-register-webauthn ondone={factorDone} if:true={showWebAuthn} credentials={credentials} authenticator="accounts_webauthn_cross_platform" onerror={handleWebAuthnError} cta="Register your Security Key"></c-register-webauthn>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner" if:true={showFactors}>
+      <ul class="slds-has-block-links_space">
+        <li class="slds-item">
+          <h6 class="slds-text-heading_small" style="padding: 8px 0;">Register a verification method</h6>
+        </li>
+        <template for:each={factors} for:item="r">
+          <li class="slds-item" key={r} style={r.style}>
+            <a onclick={r.onclick}>{r.title}</a>
+          </li>
+        </template>
+      </ul>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner" if:true={enrollWebAuthnPlatform}>
+      <div class="slds-text-heading_large slds-text-align_center">Simplify your access</div>
+      <div class="slds-text-heading_medium slds-text-align_center">Use your builtin biometrics</div>
+      <c-register-webauthn ondone={enrollWebAuthnPlatformDone} credentials={credentials} authenticator="accounts_webauthn_platform" onerror={handleEnrollWebAuthnPlatformError} cta="Enroll your Biometrics"></c-register-webauthn>
+    </div>
+
+    <!-- <div style="overflow: auto;">
+      <pre style="word-wrap: break-word;white-space: break-spaces; background:lightgray">{log}</pre>
+    </div> -->
+
+
+  </article>
+
+</template>

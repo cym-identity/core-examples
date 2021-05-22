@@ -1,0 +1,45 @@
+<template>
+  <article class="slds-card" style="padding: 32px 16px; margin: 16px" >
+    <div class="slds-card__body slds-card__body_inner" if:false={showEnrollWebAuthnPlatform}>
+      <div class="slds-text-heading_large slds-text-align_center">Secure your account</div>
+      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail}></c-challenge-email>
+      <!-- <c-challenge-totp ondone={factorDone}></c-challenge-totp> -->
+      <c-challenge-totp ondone={factorDone} if:true={showTotp}></c-challenge-totp>
+      <c-challenge-sms ondone={factorDone} if:true={showSms}></c-challenge-sms>
+      <c-challenge-webauthn ondone={factorDone} if:true={showWebAuthn} credentials={credentials} authenticator="accounts_webauthn_cross_platform" cta="Use your security key"></c-challenge-webauthn>
+
+      <div class="slds-card__body slds-card__body_inner" if:true={showWebAuthnPlatform}>
+        <div class="slds-text-heading_medium slds-text-align_center">Use your builtin biometrics</div>
+        <c-challenge-webauthn ondone={handleWebAuthnPlatformDone} onerror={handleWebAuthnPlatformError} credentials={credentials} authenticator="accounts_webauthn_platform" mode="auto" cta="Verify with biometrics"></c-challenge-webauthn>
+      </div>
+
+      <footer class="slds-card__footer slds-text-align_left slds-button_stretch" if:true={showOtherAuthenticators}>
+        <ul class="slds-has-block-links_space">
+          <li class="slds-item">
+            <h6 class="slds-text-heading_small" style="padding: 8px 0;">Choose a different verification method</h6>
+          </li>
+          <template for:each={remainingFactors} for:item="r">
+            <li class="slds-item" key={r} style={r.style}>
+              <a onclick={r.onclick}>{r.title}</a>
+            </li>
+          </template>
+        </ul>
+      </footer>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner" if:true={showEnrollWebAuthnPlatform}>
+      <div class="slds-text-heading_large slds-text-align_center">Simplify your access</div>
+      <div class="slds-text-heading_medium slds-text-align_center">Use your builtin biometrics, from now on.</div>
+      <c-register-webauthn ondone={enrollWebAuthnPlatformDone} onerror={handleEnrollWebAuthnPlarformError} credentials={credentials} authenticator="accounts_webauthn_platform" cta="Enroll your biometrics"></c-register-webauthn>
+    </div>
+
+    <!-- <footer class="slds-card__footer slds-text-align_center slds-button_stretch">
+      <button class="slds-button slds-button_brand slds-button_stretch" onclick={finish}>Done</button>
+    </footer>
+
+    <div style="overflow: auto;">
+      <pre style="word-wrap: break-word;white-space: break-spaces; background:lightgray">{log}</pre>
+    </div> -->
+
+  </article>
+</template>

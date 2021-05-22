@@ -1,0 +1,18 @@
+<template>
+    <template if:true={consents.length}>
+      <lightning-accordion allow-multiple-sections-open>
+        <template for:each={consents} for:item="consent">
+          <lightning-accordion-section name={consent.client.client_name} label={consent.client.client_name} key={consent.key}>
+            <ul>
+              <template for:each={consent.scopes} for:item="scope">
+                <li key={scope}>
+                  <span>{scope}</span>
+                </li>
+              </template>
+            </ul>
+            <lightning-button label="Revoke" title="Revoke" onclick={consent.revoke}></lightning-button>
+          </lightning-accordion-section>
+        </template>
+      </lightning-accordion>
+    </template>
+</template>

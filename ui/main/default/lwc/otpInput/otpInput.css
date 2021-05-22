@@ -1,0 +1,11 @@
+.slds-input.otp-input {
+  width: 30px;
+  padding: 0 10px;
+  /* margin: 0 8px; */
+  -moz-appearance: textfield;
+}
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

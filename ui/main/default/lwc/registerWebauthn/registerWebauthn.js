@@ -3,17 +3,23 @@ import base64url from "./base64url";
 import initRegisterWebAuthn from "@salesforce/apex/ChallengeController.initRegisterWebAuthn";
 import verifyRegisterWebAuthn from "@salesforce/apex/ChallengeController.verifyRegisterWebAuthn";
 
+import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
+
 export default class RegisterWebauthn extends LightningElement {
   @api credentials;
   @api authenticator;
   @api cta;
 
+  loading = false;
+
+  registerAnimationUrl = MFA_STATIC_RESOURCE_URL + '/img/windows_register_animation.gif';
+
   handleRegisterWebAuthn() {
+    this.loading = true;
     return initRegisterWebAuthn({
       authenticator: this.authenticator,
     })
       .then(({ transactionId, publicKey: result }) => {
-        this.loading = true;
         var publicKey = this.preformatMakeCredReq(result);
         return this.credentials
           .create({ publicKey })

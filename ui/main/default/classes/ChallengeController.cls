@@ -29,6 +29,12 @@ public with sharing class ChallengeController {
     String[] user_factors = store.getUserFactors(UserInfo.getUserId());
     if (webauthn_platform != null && context.session.verifications.get(webauthn_platform) != null) user_factors.add('webauthn.platform');
 
+    if (context.authenticators.get('accounts_twilio_push') != null) {
+      TwilioVerify.Push service = new TwilioVerify.Push(context.authenticators.get('accounts_twilio_push'));
+      if (service.getFactors().size() > 0) user_factors.add('twilio_push');
+    }
+
+
     RESPONSE.put('factors', user_factors);
 
     RESPONSE.put('startURL', ApexPages.currentPage().getParameters().get('startURL'));
@@ -177,6 +183,10 @@ public with sharing class ChallengeController {
           Type = 'TOTP',
           UserId = UserInfo.getUserId()
         );
+        // cym.CommunityContext context = cym.CommunityContext.getContext();
+        // cym.CommunityContext.Authenticator auth = context.authenticators.get('accounts_totp');
+        // context.session.verifications.add(auth, null, null);
+        // context.save();
       }
 
       return new Map<String, Object> {
@@ -196,6 +206,12 @@ public with sharing class ChallengeController {
 
     Boolean result = info.HasTotp ? System.UserManagement.verifyVerificationMethod(null, otp, method).success : false;
 
+    if (result) {
+      cym.CommunityContext context = cym.CommunityContext.getContext();
+      cym.CommunityContext.Authenticator auth = context.authenticators.get('accounts_totp');
+      context.session.verifications.add(auth, null, null);
+      context.save();
+    }
     return new Map<String, Object> {
       'result' => result
     };
@@ -250,6 +266,50 @@ public with sharing class ChallengeController {
     return is_valid;
   }
 
+  @AuraEnabled
+  public static Object[] listAllTwilioPush(){
+    try {
+      cym.CommunityContext context = cym.CommunityContext.getContext();
+      cym.CommunityContext.Authenticator auth = context.authenticators.get('accounts_twilio_push');
+      TwilioVerify.Push service = new TwilioVerify.Push(auth);
+      return service.getFactors();
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+
+  @AuraEnabled
+  public static Object initTwilioPush(String sid) {
+    try {
+      cym.CommunityContext context = cym.CommunityContext.getContext();
+      cym.CommunityContext.Authenticator auth = context.authenticators.get('accounts_twilio_push');
+      TwilioVerify.Push service = new TwilioVerify.Push(auth);
+      return service.challenge(sid);
+      // Object[] factors = service.getFactors();
+      // if (factors.size() > 0) {
+      // }
+      // return null;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
+  @AuraEnabled
+  public static String verifyTwilioPush(String challenge){
+    try {
+      cym.CommunityContext context = cym.CommunityContext.getContext();
+      cym.CommunityContext.Authenticator auth = context.authenticators.get('accounts_twilio_push');
+      TwilioVerify.Push service = new TwilioVerify.Push(auth);
+      String verification = service.verify(challenge);
+      if (verification != 'approved') return verification;
+      context.session.verifications.add(auth, null, null);
+      context.save();
+      return verification;
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
 
   public PageReference done() {
     cym.CommunityContext context = cym.CommunityContext.getContext();
@@ -307,7 +367,6 @@ public with sharing class ChallengeController {
       }
       return false;
     }
-
   }
 
 }

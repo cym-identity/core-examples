@@ -1,0 +1,151 @@
+<template>
+  <article class="slds-card login-card">
+    <div if:true={loading}>
+      <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+    </div>
+
+    <!-- <header class="slds-media slds-media_center slds-has-flexi-truncate slds-grid_vertical"> -->
+    <div class="slds-p-around_medium slds-text-align_center">
+      <div if:true={app.logo_uri}>
+        <img src={app.logo_uri} style="height:96px;" alt={app.client_name}/>
+      </div>
+      <div if:true={app.client_uri}>
+        <a href={app.client_ur} class="slds-card__header-link slds-truncate" title={app.client_name} target="_blank" rel="noreferrer">
+          <span class="slds-text-heading_large">{app.client_name}</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner" if:true={showAccountChooser}>
+      <ul class="slds-has-dividers_around-space">
+        <template for:each={_users} for:item="user">
+          <li key={user.Id} class="slds-item selectable" onclick={user.handleClick}>
+            <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+              <div class="slds-col">
+                <!-- <span class="slds-avatar slds-avatar_circle slds-avatar_medium">
+                  <img alt={user.Name} src={user.SmallPhotoUrl} title={user.Name} />
+                </span> -->
+                <span class="slds-avatar-group slds-avatar-group_large">
+                  <span class="slds-avatar slds-avatar-grouped slds-avatar-grouped__primary">
+                    <img alt={user.Name} src={user.SmallPhotoUrl} title={user.Name} />
+                  </span>
+                  <span if:true={user.IsActive} class="slds-avatar slds-avatar-grouped slds-avatar-grouped__secondary" style="background-color:green; bottom: -4px; right: 4px; top: auto; z-index: 10; width:1rem; height:1rem;"></span>
+                </span>
+              </div>
+              <div class="slds-col">
+                <p class="slds-text-heading_small">{user.FirstName} {user.LastName}</p>
+                <p class="slds-text-heading_x-small">{user.Email}</p>
+              </div>
+              <div class="slds-col slds-col_bump-left">
+                <lightning-icon size="x-small" icon-name="utility:chevronright"></lightning-icon>
+              </div>
+            </div>
+          </li>
+        </template>
+        <li class="slds-item slds-text-align_center" style="border: 0;">
+          <a onclick={chooseAnotherUser}><span>Login as another user</span></a>
+        </li>
+      </ul>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner" if:true={showEmail}>
+      <form onsubmit={handleDiscover}>
+
+        <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error" role="status" if:true={error}>
+          <div class="slds-media__body">
+            <p>{error}</p>
+          </div>
+        </div>
+
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="text-input-email">Email<abbr class="slds-required" title="required">* </abbr></label>
+          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+            <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:email"></lightning-icon>
+            <input type="email" id="text-input-email" placeholder="Enter email" class="slds-input" required oninput={handleEmailChange} inputmode="email" style="line-height: 42px;" value={email} />
+          </div>
+        </div>
+        <div if:true={users.length} class="slds-p-around_x-small slds-text-align_center">
+          <a onclick={backToChooser}><span>Choose a different user ({users.length} connected)</span></a>
+        </div>
+        <div class="slds-p-top_medium slds-p-left_large slds-p-right_large slds-text-align_center">
+          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Next</button></p>
+        </div>
+      </form>
+    </div>
+
+    <div class="slds-card__body slds-card__body_inner" if:true={showLogin}>
+      <p class="slds-p-around_small slds-text-align_center">
+        Welcome <a>{email}</a><span>&nbsp;</span><button class="slds-button" onclick={resetEmail}><span>(change)</span></button>
+      </p>
+
+      <form onsubmit={handleLogin}>
+
+        <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error" role="status" if:true={error}>
+          <div class="slds-media__body">
+            <p>{error}</p>
+          </div>
+        </div>
+
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="text-input-password">Password<abbr class="slds-required" title="required">* </abbr></label>
+          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+            <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:password"></lightning-icon>
+            <input type="password" id="text-input-password" placeholder="Enter your password" class="slds-input" required oninput={handlePasswordChange} style="line-height: 42px;" />
+          </div>
+        </div>
+        <div class="slds-text-align_right slds-p-around_x-small" if:true={forgotPasswordUrl} >
+          <a href={forgotPasswordUrl} rel="noreferrer">
+            <span class="slds-text-body_small">Forgot Password?</span>
+          </a>
+        </div>
+        <div class="slds-p-top_large slds-p-left_large slds-p-right_large slds-text-align_center">
+          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Login</button></p>
+        </div>
+      </form>
+
+      <div class="slds-text-align_center" if:true={registrationUrl}>
+        <form action={registrationUrl} method="POST">
+          <input type="hidden" value={email} name="login_hint"/>
+          <span>Don't have an account?</span>
+          <a class="slds-button slds-m_x-small">
+            <button class="slds-button" type="submit">Register now!</button>
+          </a>
+        </form>
+      </div>
+      <footer class="slds-card__footer slds-text-align_center" if:true={socialProviders.length}>
+        <div class="slds-grid slds-grid_vertical">
+          <p class="divider">
+            <span>OR</span>
+          </p>
+          <template for:each={socialProviders} for:item="socialProvider">
+            <p key={socialProvider.Id} style="margin: 4px 0;">
+              <a class="social-button" href={socialProvider.url} data-social-provider={socialProvider.friendlyName}>
+                <span>Connect with {socialProvider.friendlyName}</span>
+              </a>
+            </p>
+          </template>
+        </div>
+      </footer>
+    </div>
+
+    <footer class="slds-card__footer slds-border_top slds-text-align_center">
+      <div class="slds-grid slds-gutters">
+        <div class="slds-col slds-size_1-of-2">
+          <div if:true={app.tos_uri}>
+            <a href={app.tos_uri} class="slds-card__header-link slds-truncate" title={app.tos_uri} target="_blank" rel="noreferrer">
+              <span class="slds-text-body_small">{Labels.consent_terms_of_service}</span>
+            </a>
+          </div>
+        </div>
+        <div class="slds-col slds-size_1-of-2">
+          <div if:true={app.policy_uri}>
+            <a href={app.policy_uri} class="slds-card__header-link slds-truncate" title={app.policy_uri} target="_blank" rel="noreferrer">
+              <span class="slds-text-body_small">{Labels.consent_privacy_policy}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </article>
+</template>

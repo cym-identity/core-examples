@@ -3,12 +3,17 @@ import base64url from "./base64url";
 import initVerifyWebAuthn from "@salesforce/apex/ChallengeController.initVerifyWebAuthn";
 import verifyVerifyWebAuthn from "@salesforce/apex/ChallengeController.verifyVerifyWebAuthn";
 
+import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
+
 export default class ChallengeWebauthn extends LightningElement {
   @api credentials;
   @api authenticator;
   @api cta;
   @api mode;
   loading = false;
+
+  fingerprintUrl = MFA_STATIC_RESOURCE_URL + '/img/fingerprint_generic_white.svg';
+  fidoCertifiedUrl = MFA_STATIC_RESOURCE_URL + '/img/FIDO_Certified_logo_yellow.png';
 
   connectedCallback() {
     if (this.mode === 'auto') this.handleVerifyWebAuthn();

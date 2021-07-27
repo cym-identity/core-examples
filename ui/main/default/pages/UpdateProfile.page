@@ -1,24 +1,84 @@
 <apex:page controller="UpdateProfileController" showHeader="false">
-  <apex:composition template="{!$Site.Template}">
-    <apex:define name="body">
+
+  <style>
+    html,
+    body,
+    body>div {
+      height: 100%;
+      min-height: 100%;
+    }
+    #auraErrorMessage {
+      display: none;
+    }
+  </style>
+
+  <apex:slds></apex:slds>
+
+
+  <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+    <div class="slds-card">
+      <div class="slds-card__header slds-grid">
+        <h4>{!$Label.site.my_profile}</h4>
+      </div>
       <apex:form id="theForm">
-        <apex:outputPanel style="padding:50px 50px 50px 50px" id="userDetail">
-          <apex:pageBlock title="{!$Label.site.my_profile}" id="editUserDetail">
+        <div class="slds-card__body slds-card__body_inner" style="width: 500px;">
+          <apex:outputPanel style="padding:50px 50px 50px 50px" id="userDetail">
             <apex:pageMessages />
-            <apex:pageBlockButtons id="editButtons" location="top">
-              <apex:commandButton id="save" value="{!$Label.site.save}" action="{!save}" rerender="userDetail" />
-              <apex:commandButton id="cancel" value="{!$Label.site.cancel}" action="{!cancel}" rerender="userDetail" immediate="true" />
-            </apex:pageBlockButtons>
-            <apex:pageBlockSection id="editAddressInformation" columns="1" title="{!$Label.site.address_information}">
-              <apex:inputField id="editstreet" value="{!user.street}" />
-              <apex:inputField id="editcity" value="{!user.city}" />
-              <apex:inputField id="editstate" value="{!user.state}" />
-              <apex:inputField id="editpostalcode" value="{!user.postalcode}" />
-              <apex:inputField id="editcountry" value="{!user.country}" />
-            </apex:pageBlockSection>
-          </apex:pageBlock>
-        </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-form-element" rendered="{! askForCompanyName }" layout="block">
+              <label class="slds-form-element__label" for="editCompanyName">Company Name</label>
+              <div class="slds-form-element__control">
+                <apex:inputField id="editCompanyName" value="{!user.companyname}" styleClass="slds-input"/>
+              </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-form-element" rendered="{! askForAddress }" layout="block">
+              <label class="slds-form-element__label" for="editstreet">Street</label>
+              <div class="slds-form-element__control">
+                <apex:inputField id="editstreet" value="{!user.street}" styleClass="slds-input"/>
+              </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-form-element" rendered="{! askForAddress }" layout="block">
+              <label class="slds-form-element__label" for="editcity">City</label>
+              <div class="slds-form-element__control">
+                <apex:inputField id="editcity" value="{!user.city}" styleClass="slds-input"/>
+              </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-form-element" rendered="{! askForAddress }" layout="block">
+              <label class="slds-form-element__label" for="editstate">State</label>
+              <div class="slds-form-element__control">
+                <apex:inputField id="editstate" value="{!user.state}" styleClass="slds-input"/>
+              </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-form-element" rendered="{! askForAddress }" layout="block">
+              <label class="slds-form-element__label" for="editpostalcode">Zip Code</label>
+              <div class="slds-form-element__control">
+                <apex:inputField id="editpostalcode" value="{!user.postalcode}" styleClass="slds-input"/>
+              </div>
+            </apex:outputPanel>
+
+            <apex:outputPanel styleClass="slds-form-element" rendered="{! askForAddress }" layout="block">
+              <label class="slds-form-element__label" for="editcountry">Country</label>
+              <div class="slds-form-element__control">
+                <apex:inputField id="editcountry" value="{!user.country}" styleClass="slds-input"/>
+              </div>
+            </apex:outputPanel>
+
+          </apex:outputPanel>
+        </div>
+        <footer class="slds-card__footer">
+          <apex:commandButton id="save" value="{!$Label.site.save}" action="{!save}" rerender="userDetail" styleClass="slds-button slds-button_brand" />
+          <apex:commandButton id="cancel" value="{!$Label.site.cancel}" action="{!cancel}" rerender="userDetail" immediate="true" styleClass="slds-button slds-button_text-destructive" />
+        </footer>
       </apex:form>
-    </apex:define>
-  </apex:composition>
+    </div>
+
+  </div>
+
+
+
+
 </apex:page>

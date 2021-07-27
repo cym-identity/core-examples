@@ -1,7 +1,7 @@
 import { LightningElement, api, wire } from 'lwc';
 import remoteSiteSettingEnabled from '@salesforce/apex/TwilioVerify.is_twilio_reachable';
 
-export default class TwilioVerifyConfiguration extends LightningElement {
+export default class TwilioVerifyPushConfiguration extends LightningElement {
   @api save;
   @api config;
 
@@ -29,7 +29,19 @@ export default class TwilioVerifyConfiguration extends LightningElement {
     this.config = Object.assign({}, this.config, {service_sid: e.target.value});
   }
 
-  handleAppHashChange(e) {
-    this.config = Object.assign({}, this.config, {AppHash: e.target.value});
+  handleClientChange(e) {
+    this.config = Object.assign({}, this.config, {client_id: e.target.value});
+  }
+
+  handleIntrospectionClientIdChange(e) {
+    this.config = Object.assign({}, this.config, {introspection_client_id: e.target.value});
+  }
+
+  handleIntrospectionClientSecretChange(e) {
+    this.config = Object.assign({}, this.config, {introspection_client_secret: e.target.value});
+  }
+
+  handleIntrospectionEndpointChange(e) {
+    this.config = Object.assign({}, this.config, {introspection_endpoint: e.target.value});
   }
 }

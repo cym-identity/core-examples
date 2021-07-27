@@ -1,0 +1,22 @@
+<template>
+  <div class="slds-text-heading_small slds-text-align_center">
+    <p>
+      A request has been sent to your device
+    </p>
+    <img src={pendingRequestImgUrl} width="320px">
+  </div>
+  <div class="slds-text-heading_large slds-text-align_center" style="position:relative; height:40px">
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </div>
+  <template for:each={factors} for:item="factor" if:true={factors.length}>
+    <div key={factor.sid}>
+      {factor.friendly_name} {factor.sid} <button class="slds-button slds-button_brand" style="display: inline-block;" onclick={factor.init}>Init</button>
+    </div>
+  </template>
+
+  <template if:true={sid}>
+    <div>Currently verifying : {sid}</div>
+    <button class="slds-button slds-button_brand slds-button_stretch" onclick={handleVerify}>Verify</button>
+  </template>
+
+</template>

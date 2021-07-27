@@ -1,11 +1,16 @@
 import { LightningElement, api, track } from "lwc";
 
+import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
+
 export default class RegisterUi extends LightningElement {
   @api credentials;
   @api startURL;
   @api isUserVerifyingPlatformAuthenticatorAvailable;
   @track emailVerifyDone = false;
   @track _errorLog = {};
+
+  registerAnimationUrl = MFA_STATIC_RESOURCE_URL + '/img/windows_register_animation.gif';
+  fidoCertifiedUrl = MFA_STATIC_RESOURCE_URL + '/img/FIDO_Certified_logo_yellow.png';
 
   get log() {
     return JSON.stringify(this._errorLog, null, 2);
@@ -92,5 +97,14 @@ export default class RegisterUi extends LightningElement {
   }
   handleWebAuthnError(err) {
     this._errorLog['handleWebAuthnError'] = err;
+  }
+
+  skipEnrollWebAuthnPlatform() {
+    this.done();
+  }
+
+  showLearnMore = false;
+  toggleLearnMore() {
+    this.showLearnMore = !this.showLearnMore
   }
 }

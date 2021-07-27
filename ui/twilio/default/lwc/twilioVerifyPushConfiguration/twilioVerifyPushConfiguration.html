@@ -1,0 +1,47 @@
+<template>
+  <lightning-card title="Twilio Verify Push Configuration">
+    <lightning-button onclick={handleClick} title="Save" label="Save" slot="actions" variant="brand"></lightning-button>
+    <div class="slds-p-horizontal_medium" style="margin-bottom: 12px;">
+      <p class="slds-text-heading_medium">
+        Twilio Account Information
+      </p>
+      <lightning-input type="password" name="AccountSid" id="AccountSid" label="Account SID" onchange={handleAccountSIDChange} value={config.account_sid} required></lightning-input>
+      <lightning-input type="password" name="AuthToken" id="AuthToken" label="Auth Token" onchange={handleAuthTokenChange} value={config.auth_token} required></lightning-input>
+      <lightning-input type="password" name="ServiceSid" id="ServiceSid" label="Service SID" onchange={handleServiceSIDChange} value={config.service_sid} required></lightning-input>
+    </div>
+    <div class="slds-p-horizontal_medium" style="margin-bottom: 12px;">
+      <p class="slds-text-heading_medium">
+        Mobile App Client Information
+      </p>
+      <lightning-input type="text" name="Client" id="Client" label="Client" onchange={handleClientChange} value={config.client_id}></lightning-input>
+    </div>
+    <div class="slds-p-horizontal_medium" style="margin-bottom: 12px;">
+      <p class="slds-text-heading_medium">
+        Introspection Information
+      </p>
+      <lightning-input type="url" name="Client" id="IntrospectionEndpoint" label="endpoint" onchange={handleIntrospectionEndpointChange} value={config.introspection_endpoint}></lightning-input>
+      <lightning-input type="text" name="Client" id="IntrospectionClientId" label="client_id" onchange={handleIntrospectionClientIdChange} value={config.introspection_client_id}></lightning-input>
+      <lightning-input type="password" name="Client" id="IntrospectionClientSecret" label="client_secret" onchange={handleIntrospectionClientSecretChange} value={config.introspection_client_secret}></lightning-input>
+    </div>
+
+    <!-- RemoteSiteSetting -->
+    <p class="slds-p-horizontal_medium" style="margin-top: 16px;">
+      <lightning-icon
+        icon-name="utility:check"
+        alternative-text="RemoteSiteSetting Ok"
+        title="RemoteSiteSetting"
+        if:true={is_remote_site_setting_enabled}
+        size="x-small"
+        variant="success"></lightning-icon>
+      <lightning-icon
+        icon-name="utility:close"
+        alternative-text="RemoteSiteSetting not ok"
+        title="RemoteSiteSetting ok"
+        if:false={is_remote_site_setting_enabled}
+        size="x-small"
+        variant="error"></lightning-icon>
+      <span>Remote Site Setting</span>
+      <span if:false={is_remote_site_setting_enabled}> - Your Administrator must add/enable a remote site setting for Twilio Verify service https://verify.twilio.com</span>
+    </p>
+  </lightning-card>
+</template>

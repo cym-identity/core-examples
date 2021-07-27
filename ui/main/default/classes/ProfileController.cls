@@ -76,7 +76,7 @@ public with sharing class ProfileController {
     try {
       context.sessions.revoke();
       // Add login to revoke all Salesforce Sessions as well
-      delete (AuthSession[]) [SELECT Id FROM AuthSession WHERE UsersId = :UserInfo.getUserId()];
+      // delete (AuthSession[]) [SELECT Id FROM AuthSession WHERE UsersId = :UserInfo.getUserId()];
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

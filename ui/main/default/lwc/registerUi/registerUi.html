@@ -22,9 +22,32 @@
     </div>
 
     <div class="slds-card__body slds-card__body_inner" if:true={enrollWebAuthnPlatform}>
-      <div class="slds-text-heading_large slds-text-align_center">Simplify your access</div>
-      <div class="slds-text-heading_medium slds-text-align_center">Use your builtin biometrics</div>
-      <c-register-webauthn ondone={enrollWebAuthnPlatformDone} credentials={credentials} authenticator="accounts_webauthn_platform" onerror={handleEnrollWebAuthnPlatformError} cta="Enroll your Biometrics"></c-register-webauthn>
+      <div class="slds-text-heading_medium slds-text-align_center">You’re eligible for a simpler sign-in!</div>
+      <div style="margin: 16px;">
+        <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
+      </div>
+      <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
+      <c-register-webauthn ondone={enrollWebAuthnPlatformDone} onerror={handleEnrollWebAuthnPlatformError} credentials={credentials} authenticator="accounts_webauthn_platform" cta="Register Now!"></c-register-webauthn>
+      <p class="slds-text-align_center">
+        <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
+      </p>
+      <p class="slds-text-heading_small_xx slds-text-align_center" style="margin: 16px;">
+        <a onclick={toggleLearnMore}>
+          <span if:false={showLearnMore}>Learn More</span>
+          <span if:true={showLearnMore}>Hide</span>
+        </a> | <a onclick={skipEnrollWebAuthnPlatform}>skip</a>
+      </p>
+      <ul class="slds-list_dotted" if:true={showLearnMore}>
+        <li>FIDO is a technology built into all leading desktop devices (PC and Mac) and browsers, that allows users to sign in securely without a password.</li>
+        <li>In the same way your phone uses a biometric, FIDO now enables biometric sign-in on websites viewed on your desktop too.</li>
+        <li>FIDO makes sign-in easy, safe, and private!</li>
+        <li>FIDO technology uses your computer's built-in authentication method (i.e., Windows Hello or Apple Touch ID) to ensure your sign-in information stays safe from hackers because it never leaves your computer.</li>
+        <li>Once you’ve registered your computer’s PIN, facial recognition, fingerprint, or security key, FIDO verifies it’s really you and doesn’t transmit any of your sign-in information over the internet.</li>
+        <li>Registering with FIDO provides you with an additional sign-in option for this device — your password remains valid.</li>
+        <li>Leading companies worldwide in retail, telecommunications, finance, and technology are already using FIDO.</li>
+      </ul>
+
+
     </div>
 
     <!-- <div style="overflow: auto;">

@@ -1,7 +1,8 @@
 <template>
   <lightning-card title="Twilio Verify Push Configuration">
     <lightning-button onclick={handleClick} title="Save" label="Save" slot="actions" variant="brand"></lightning-button>
-    <div class="slds-p-horizontal_medium" style="margin-bottom: 12px;">
+    <lightning-spinner alternative-text="Loading" size="small" if:true={loading}></lightning-spinner>
+    <div class="slds-p-horizontal_medium" style="margin-bottom: 12px;" if:true={config}>
       <p class="slds-text-heading_medium">
         Twilio Account Information
       </p>

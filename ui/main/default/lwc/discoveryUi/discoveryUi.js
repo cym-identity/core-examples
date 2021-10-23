@@ -9,8 +9,10 @@ export default class DiscoveryUi extends LightningElement {
   @api app;
   @api registrationUrl;
   @api forgotPasswordUrl;
+  @api socialProviders = [];
   @api startURL;
-  @api users;
+  @api users = [];
+  @api handle;
 
   connectedCallback() {
     this.step = this.users && this.users.length ? 'account_chooser' : 'discovery';
@@ -66,11 +68,12 @@ export default class DiscoveryUi extends LightningElement {
   handleDiscover(e) {
     e.preventDefault();
     this.loading = true;
-    discover({email : this.email, startURL : this.startURL})
-      .then(({action, socialProviders}) => {
+    discover({email : this.email, startURL : this.startURL, handle : this.handle.value})
+      .then(({action, socialProviders, verifications}) => {
+        console.log({action, socialProviders, verifications})
         // if (redirect) window.location.replace(redirect);
         this.step = action;
-        this.socialProviders = socialProviders;
+        // this.socialProviders = socialProviders;
         this.loading = false;
       })
       .catch(({body}) => {
@@ -85,7 +88,7 @@ export default class DiscoveryUi extends LightningElement {
   handleLogin(e) {
     e.preventDefault();
     this.loading = true;
-    authenticate({email : this.email, password: this.password, startURL : this.startURL})
+    authenticate({email : this.email, password: this.password, startURL : this.startURL, handle: this.handle.value})
       .then(redirect => {
         if (redirect) window.location.replace(redirect);
         // this.loading = false;

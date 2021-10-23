@@ -2,10 +2,17 @@
   <article class="slds-card" style="padding: 32px 16px; margin: 16px" >
     <div class="slds-card__body slds-card__body_inner" if:false={enrollWebAuthnPlatform}>
       <div class="slds-text-heading_large slds-text-align_center">Secure your account</div>
-      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail}></c-challenge-email>
-      <c-challenge-totp ondone={factorDone} if:true={showTotp}></c-challenge-totp>
+      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail} handle={handle} start-url={startUrl}></c-challenge-email>
+      <c-challenge-totp ondone={factorDone} if:true={showTotp} handle={handle} start-url={startUrl} base-path={basePath}></c-challenge-totp>
       <c-challenge-sms ondone={factorDone} if:true={showSms}></c-challenge-sms>
-      <c-register-webauthn ondone={factorDone} if:true={showWebAuthn} credentials={credentials} authenticator="accounts_webauthn_cross_platform" onerror={handleWebAuthnError} cta="Register your Security Key"></c-register-webauthn>
+      <c-register-webauthn
+        ondone={factorDone}
+        if:true={showWebAuthn}
+        credentials={credentials}
+        base-path={basePath}
+        authenticator="accounts_webauthn_cross_platform"
+        onerror={handleWebAuthnError}
+        cta="Register your Security Key"></c-register-webauthn>
     </div>
 
     <div class="slds-card__body slds-card__body_inner" if:true={showFactors}>
@@ -27,7 +34,13 @@
         <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
       </div>
       <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
-      <c-register-webauthn ondone={enrollWebAuthnPlatformDone} onerror={handleEnrollWebAuthnPlatformError} credentials={credentials} authenticator="accounts_webauthn_platform" cta="Register Now!"></c-register-webauthn>
+      <c-register-webauthn
+        ondone={enrollWebAuthnPlatformDone}
+        onerror={handleEnrollWebAuthnPlatformError}
+        credentials={credentials}
+        authenticator="accounts_webauthn_platform"
+        cta="Register Now!"
+        base-path={basePath}></c-register-webauthn>
       <p class="slds-text-align_center">
         <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
       </p>

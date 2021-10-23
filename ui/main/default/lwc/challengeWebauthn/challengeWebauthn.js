@@ -10,6 +10,8 @@ export default class ChallengeWebauthn extends LightningElement {
   @api authenticator;
   @api cta;
   @api mode;
+  @api basePath;
+  @api startUrl;
   loading = false;
 
   fingerprintUrl = MFA_STATIC_RESOURCE_URL + '/img/fingerprint_generic_white.svg';
@@ -29,21 +31,28 @@ export default class ChallengeWebauthn extends LightningElement {
         return this.credentials
           .get({ publicKey })
           .then((response) => {
-            return verifyVerifyWebAuthn({
-              authenticator: this.authenticator,
-              param: {
-                transactionId,
-                id: response.id,
-                rawId: base64url.encode(response.rawId),
-                authenticatorData: base64url.encode(
-                  response.response.authenticatorData
-                ),
-                clientDataJSON: base64url.encode(
-                  response.response.clientDataJSON
-                ),
-                signature: base64url.encode(response.response.signature),
-              },
-            })
+            return fetch(this.basePath + '/browser_handle')
+              .then(resp => resp.json())
+              .then(resp => resp.handle)
+              .then(handle => {
+                return verifyVerifyWebAuthn({
+                  authenticator: this.authenticator,
+                  startURL: this.startUrl,
+                  handle,
+                  param: {
+                    transactionId,
+                    id: response.id,
+                    rawId: base64url.encode(response.rawId),
+                    authenticatorData: base64url.encode(
+                      response.response.authenticatorData
+                    ),
+                    clientDataJSON: base64url.encode(
+                      response.response.clientDataJSON
+                    ),
+                    signature: base64url.encode(response.response.signature),
+                  },
+                })
+              })
               .then((isValid) => {
                 if (isValid) {
                   this.dispatchEvent(

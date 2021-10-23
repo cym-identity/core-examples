@@ -17,8 +17,8 @@ public inherited sharing class TwilioVerify {
   }
 
   public class Sms {
-    cym.CommunityContext.Authenticator authenticator;
-    public Sms(cym.CommunityContext.Authenticator authenticator) {
+    cym.Community.Authenticator authenticator;
+    public Sms(cym.Community.Authenticator authenticator) {
       this.authenticator = authenticator;
     }
 
@@ -86,9 +86,13 @@ public inherited sharing class TwilioVerify {
     }
   }
 
+  public class Factor {
+
+  }
+
   public class Push {
-    cym.CommunityContext.Authenticator authenticator;
-    public Push(cym.CommunityContext.Authenticator authenticator) {
+    cym.Community.Authenticator authenticator;
+    public Push(cym.Community.Authenticator authenticator) {
       this.authenticator = authenticator;
     }
 
@@ -165,7 +169,7 @@ public inherited sharing class TwilioVerify {
       req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(account_sid + ':' + auth_token))); // NOPMD.ApexSuggestUsingNamedCred
       req.setMethod('POST');
       req.setBody(
-        TwilioVerify.fromMapToUrlString(
+        TwilioVerifyUtils.fromMapToUrlString(
           new Map<String, String> {
             'Details.Message' => 'You have a login request pending',
             'Details.Fields' => JSON.serialize(new Map<String, Object> {

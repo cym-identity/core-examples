@@ -32,16 +32,19 @@
       </div>
       <script type="text/javascript">
         try {
+          var input = {
+            app: JSON.parse("{! JSENCODE(app_string) }"),
+            registrationUrl: "{! JSENCODE(registrationUrl) }",
+            forgotPasswordUrl: "{! JSENCODE(forgotPasswordUrl) }",
+            socialProviders : JSON.parse("{! JSENCODE(socialLogins) }"),
+            startURL : "{! JSENCODE(startURL) }",
+            users : JSON.parse("{! JSENCODE(browserUsers) }"),
+            handle : JSON.parse("{! JSENCODE(handle) }")
+          };
+          console.log(input);
           $Lightning.use("c:loginApp", function () {
-            $Lightning.createComponent("c:loginUi",
-              {
-                app: JSON.parse("{! JSENCODE(app_string) }"),
-                registrationUrl: "{! JSENCODE(registrationUrl) }",
-                forgotPasswordUrl: "{! JSENCODE(forgotPasswordUrl) }",
-                socialProviders : JSON.parse("{! JSENCODE(socialLogins) }"),
-                startURL : "{! JSENCODE(startURL) }",
-                users : JSON.parse("{! JSENCODE(browserUsers) }"),
-              },
+            $Lightning.createComponent("c:discoveryUi",
+              input,
               "container",
               function (cmp, status) {
                 document.getElementById('loading').style.display = 'none';

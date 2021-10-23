@@ -11,8 +11,8 @@ export default class ConsentUi extends LightningElement {
 
   connectedCallback() {
     init({startURL: this.startURL}).then(resp => {
-      this.requested = resp.scopes.requested.filter(scope => resp.scopes.existing.indexOf(scope) === -1);
-      this.existing = resp.scopes.existing;
+      this.existing = resp.scopes.existing || [];
+      this.requested = resp.scopes.requested.filter(scope => this.existing.indexOf(scope) === -1);
       this.client = resp.client;
       this.loading = false;
     });

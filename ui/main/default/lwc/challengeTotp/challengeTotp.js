@@ -9,7 +9,8 @@ export default class ChallengeTotp extends LightningElement {
   nextDisabled = true;
   loading = true;
 
-  @api done;
+  @api startUrl;
+  @api basePath;
 
   showRegistration = false;
   showQRCode = false;
@@ -17,6 +18,7 @@ export default class ChallengeTotp extends LightningElement {
   secret;
 
   connectedCallback() {
+    console.log(this.basePath);
     initRegisterTotp().then(resp => {
       if (resp.registered) return;
       this.showRegistration = true;
@@ -38,7 +40,17 @@ export default class ChallengeTotp extends LightningElement {
   }
 
   handleRegisterNext() {
-    verifyRegisterTotp({secret : this.secret, otp: this.otp})
+    fetch(this.basePath + '/browser_handle')
+      .then(response => response.json())
+      .then(resp => resp.handle)
+      .then(handle => {
+        return verifyRegisterTotp({
+          secret : this.secret,
+          otp: this.otp,
+          handle: handle,
+          startURL : this.startUrl
+        });
+      })
       .then(({isValid}) => {
         if (isValid) {
           this.dispatchEvent(new CustomEvent('done', {detail : isValid}))
@@ -49,16 +61,24 @@ export default class ChallengeTotp extends LightningElement {
 
   handleNext() {
     this.loading = true;
-    verifyVerification({
-      otp: this.otp,
-    }).then((resp) => {
-      this.loading = false;
-      this.dispatchEvent(new CustomEvent('done', {detail : resp}))
-    })
-    .catch(err => {
-      this.loading = false;
-      console.error(err);
-      this.dispatchEvent(new CustomEvent('done', {detail : err}))
-    });
+    fetch(this.basePath + '/browser_handle')
+      .then(response => response.json())
+      .then(resp => resp.handle)
+      .then(handle => {
+        return verifyVerification({
+          otp: this.otp,
+          handle: handle,
+          startURL : this.startUrl
+        })
+      }).then((resp) => {
+        console.log(JSON.stringify(resp));
+        const { result } = resp;
+        if (result) this.dispatchEvent(new CustomEvent('done', {detail : resp}));
+      })
+      .catch(err => {
+        this.loading = false;
+        console.error(err);
+        // this.dispatchEvent(new CustomEvent('done', {detail : err}))
+      });
   }
 }

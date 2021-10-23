@@ -3,13 +3,29 @@
     <div class="slds-card__body slds-card__body_inner" if:false={showEnrollWebAuthnPlatform}>
 
       <div class="slds-text-heading_medium slds-text-align_center">Secure your account</div>
-      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail}></c-challenge-email>
-      <c-challenge-totp ondone={factorDone} if:true={showTotp}></c-challenge-totp>
-      <c-challenge-sms ondone={factorDone} if:true={showSms}></c-challenge-sms>
-      <c-challenge-twilio-push ondone={factorDone} if:true={showTwilioPush}></c-challenge-twilio-push>
-      <c-challenge-webauthn ondone={factorDone} if:true={showWebAuthn} credentials={credentials} authenticator="accounts_webauthn_cross_platform" cta="Use your security key"></c-challenge-webauthn>
+      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail} start-url={startUrl} base-path={basePath}></c-challenge-email>
+      <c-challenge-totp ondone={factorDone} if:true={showTotp} start-url={startUrl} base-path={basePath}></c-challenge-totp>
+      <c-challenge-sms ondone={factorDone} if:true={showSms} start-url={startUrl} base-path={basePath}></c-challenge-sms>
+      <c-challenge-twilio-push ondone={factorDone} if:true={showTwilioPush} start-url={startUrl} base-path={basePath}></c-challenge-twilio-push>
+      <c-challenge-webauthn
+        ondone={factorDone}
+        if:true={showWebAuthn}
+        credentials={credentials}
+        authenticator="accounts_webauthn_cross_platform"
+        cta="Use your security key"
+        start-url={startUrl}
+        base-path={basePath}></c-challenge-webauthn>
 
-      <c-challenge-webauthn ondone={handleWebAuthnPlatformDone} if:true={showWebAuthnPlatform} onerror={handleWebAuthnPlatformError} credentials={credentials} authenticator="accounts_webauthn_platform" mode="auto" cta="Verify with biometrics"></c-challenge-webauthn>
+      <c-challenge-webauthn
+        ondone={handleWebAuthnPlatformDone}
+        if:true={showWebAuthnPlatform}
+        onerror={handleWebAuthnPlatformError}
+        credentials={credentials}
+        authenticator="accounts_webauthn_platform"
+        mode="request"
+        cta="Verify with biometrics"
+        start-url={startUrl}
+        base-path={basePath}></c-challenge-webauthn>
 
       <ul class="slds-has-block-links_space" if:true={showList}>
         <template for:each={remainingFactors} for:item="r">
@@ -32,7 +48,14 @@
         <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
       </div>
       <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
-      <c-register-webauthn ondone={enrollWebAuthnPlatformDone} onerror={handleEnrollWebAuthnPlatformError} credentials={credentials} authenticator="accounts_webauthn_platform" cta="Register Now!"></c-register-webauthn>
+      <c-register-webauthn
+        ondone={enrollWebAuthnPlatformDone}
+        onerror={handleEnrollWebAuthnPlatformError}
+        credentials={credentials}
+        authenticator="accounts_webauthn_platform"
+        cta="Register Now!"
+        start-url={startUrl}
+        base-path={basePath}></c-register-webauthn>
       <p class="slds-text-align_center">
         <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
       </p>

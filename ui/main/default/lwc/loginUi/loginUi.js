@@ -8,13 +8,13 @@ export default class LoginUi extends LightningElement {
   @api app;
   @api registrationUrl;
   @api forgotPasswordUrl;
-  @api socialProviders;
+  @api socialProviders = [];
   @api startURL;
-  @api users;
+  @api users = [];
+  @api handle;
 
   connectedCallback() {
     const activeSession = this.users && this.users.length && this.users.filter(u => u.IsActive);
-    console.log(activeSession);
     if (activeSession && activeSession.length == 1) {
       this.step = 'login';
       this.email = activeSession[0].Email;
@@ -70,7 +70,8 @@ export default class LoginUi extends LightningElement {
     authenticate({email : this.email, password: this.password, startURL : this.startURL})
       .then(redirect => {
         if (redirect) window.location.replace(redirect);
-        // this.loading = false;
+        // console.log(redirect);
+        this.loading = false;
       })
       .catch(({body}) => {
         this.loading = false;

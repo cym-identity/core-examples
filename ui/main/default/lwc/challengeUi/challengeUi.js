@@ -5,8 +5,11 @@ import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
 export default class ChallengeUi extends LightningElement {
   @api factors;
   @api credentials;
-  @api startURL;
+  @api startUrl;
   @api isUserVerifyingPlatformAuthenticatorAvailable;
+  @api handle;
+  @api basePath;
+
   @track factor;
   @track _errorLog = [];
 
@@ -134,7 +137,7 @@ export default class ChallengeUi extends LightningElement {
   }
 
   finish() {
-    window.location.href = this.startURL;
+    window.location.href = this.startUrl;
   }
 
   handleEnrollWebAuthnPlatformError({detail}) {

@@ -3,7 +3,7 @@
     <label>cym.TwilioVerify.Push</label>
     <protected>true</protected>
     <values>
-        <field>cym__config_ui__c</field>
+        <field>cym__ConfigUi__c</field>
         <value xsi:type="xsd:string">c:twilioVerifyPushConfiguration</value>
     </values>
 </CustomMetadata>

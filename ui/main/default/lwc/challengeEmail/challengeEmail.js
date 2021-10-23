@@ -4,14 +4,17 @@ import verifyVerification from "@salesforce/apex/ChallengeController.verifyVerif
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
 export default class ChallengeEmail extends LightningElement {
-  length = 5;
+  length = 6;
   otp;
   transactionId;
 
   @api done;
+  @api startUrl;
+  @api handle;
+
   error;
   nextDisabled = true;
-  loading = false;
+  loading = true;
 
   connectedCallback() {
     if (this.loading) this.handleResend();
@@ -29,6 +32,8 @@ export default class ChallengeEmail extends LightningElement {
     verifyVerification({
       transactionId: this.transactionId,
       otp: this.otp,
+      handle: this.handle,
+      startUrl : this.startUrl
     })
       .then((resp) => {
         this.loading = false;

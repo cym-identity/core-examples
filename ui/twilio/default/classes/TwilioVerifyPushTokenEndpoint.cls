@@ -10,7 +10,7 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
 
     try {
       // The community is linked to CYM Identity
-      cym.CommunityContext context = cym.CommunityContext.getContext();
+      cym.Community context = cym.Community.getCurrent();
       if( context == null ) {
         response.statusCode = 400;
         response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object> {
@@ -23,7 +23,7 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
       String authenticatorName = getAuthenticatorNameFromUri(request.requestUri);
 
       // Check if there's an authenticator with the correct name
-      cym.CommunityContext.Authenticator authenticator = context.authenticators.get(authenticatorName);
+      cym.Community.Authenticator authenticator = context.authenticators.find('name', authenticatorName);
       if( authenticator == null ) {
         response.statusCode = 400;
         response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object> {

@@ -1,0 +1,6 @@
+<apex:page controller="BrowserHandleController"
+  showHeader="false"
+  cache="false"
+  contentType="application/json"
+  docType=""
+  >{!log}</apex:page>

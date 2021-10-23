@@ -9,6 +9,8 @@ export default class RegisterWebauthn extends LightningElement {
   @api credentials;
   @api authenticator;
   @api cta;
+  @api basePath;
+  @api startUrl;
 
   loading = false;
 
@@ -38,10 +40,16 @@ export default class RegisterWebauthn extends LightningElement {
                 ? JSON.stringify(response.response.getTransports())
                 : "[]",
             };
-            return verifyRegisterWebAuthn({
-              authenticator: this.authenticator,
-              param: cred,
-            })
+            return fetch(this.basePath + '/browser_handle')
+              .then(resp => resp.json())
+              .then(resp => resp.handle)
+              .then(handle => {
+                return verifyRegisterWebAuthn({
+                  authenticator: this.authenticator,
+                  param: cred,
+                  handle,
+                })
+              })
               .then(({id}) => {
                 this.loading = false;
                 if (id) {

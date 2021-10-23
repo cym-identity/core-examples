@@ -4,8 +4,10 @@ import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
 
 export default class RegisterUi extends LightningElement {
   @api credentials;
-  @api startURL;
+  @api startUrl;
   @api isUserVerifyingPlatformAuthenticatorAvailable;
+  @api handle;
+  @api basePath;
   @track emailVerifyDone = false;
   @track _errorLog = {};
 
@@ -18,12 +20,18 @@ export default class RegisterUi extends LightningElement {
 
   enrollWebAuthnPlatform = false;
   get factors() {
-    return this.emailVerifyDone && ["totp", "sms", "webauthn"].map((factor) => {
+    return this.emailVerifyDone && ["totp", "sms", "email", "webauthn"].map((factor) => {
       switch (factor) {
         case "sms":
           return {
             title: "Register a phone number",
             onclick: this.switchTo.bind(this, "sms"),
+            style: factor != this.factor ? "display: block;" : "display: none;",
+          };
+        case "email":
+          return {
+            title: "Use your email",
+            onclick: this.switchTo.bind(this, "email"),
             style: factor != this.factor ? "display: block;" : "display: none;",
           };
         case "totp":
@@ -49,7 +57,7 @@ export default class RegisterUi extends LightningElement {
 
   // Email verification will be done when no other factor has been completed
   get showEmail() {
-    return !this.enrollWebAuthnPlatform && !this.factors;
+    return !this.enrollWebAuthnPlatform && this.factors && "email" === this.factor;
   }
   get showTotp() {
     return (
@@ -76,20 +84,20 @@ export default class RegisterUi extends LightningElement {
   }
 
   factorDone(resp) {
-    console.log(resp.detail);
+    const { redirect } = resp.detail;
 
     this.isUserVerifyingPlatformAuthenticatorAvailable.then((canEnroll) => {
       if (canEnroll) {
         this.enrollWebAuthnPlatform = true;
       } else {
-        window.location.href = this.startURL;
+        window.location.href = redirect || this.startUrl;
       }
     });
   }
 
 
   enrollWebAuthnPlatformDone() {
-    window.location.href = this.startURL;
+    window.location.href = this.startUrl;
   }
 
   handleEnrollWebAuthnPlatformError(err) {

@@ -1,11 +1,9 @@
 <template>
   <article class="slds-card login-card">
-    <div if:true={loading}>
+    <p if:true={loading}>
       <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
-    </div>
-
-    <!-- <header class="slds-media slds-media_center slds-has-flexi-truncate slds-grid_vertical"> -->
-    <div class="slds-p-around_medium slds-text-align_center">
+    </p>
+    <div class="slds-p-top_medium slds-text-align_center" if:true={app}>
       <div if:true={app.logo_uri}>
         <img src={app.logo_uri} style="height:96px;" alt={app.client_name}/>
       </div>
@@ -15,6 +13,7 @@
         </a>
       </div>
     </div>
+
 
     <div class="slds-card__body slds-card__body_inner" if:true={showAccountChooser}>
       <ul class="slds-has-dividers_around-space">

@@ -1,7 +1,8 @@
 <template>
   <lightning-card title="Twilio SMS Configuration">
     <lightning-button onclick={handleClick} title="Save" label="Save" slot="actions" variant="brand"></lightning-button>
-    <p class="slds-p-horizontal_medium">
+    <lightning-spinner alternative-text="Loading" size="small" if:true={loading}></lightning-spinner>
+    <p class="slds-p-horizontal_medium" if:true={config}>
       <lightning-input type="password" name="AccountSid" id="AccountSid" label="Account SID" onchange={handleAccountSIDChange} value={config.account_sid} required></lightning-input>
       <lightning-input type="password" name="AuthToken" id="AuthToken" label="Auth Token" onchange={handleAuthTokenChange} value={config.auth_token} required></lightning-input>
       <lightning-input type="password" name="ServiceSid" id="ServiceSid" label="Service SID" onchange={handleServiceSIDChange} value={config.service_sid} required></lightning-input>

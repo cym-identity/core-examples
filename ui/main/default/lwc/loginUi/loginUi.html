@@ -3,7 +3,7 @@
     <p if:true={loading}>
       <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
     </p>
-    <div class="slds-p-top_medium slds-text-align_center">
+    <div class="slds-p-top_medium slds-text-align_center" if:true={app}>
       <div if:true={app.logo_uri}>
         <img src={app.logo_uri} style="height:96px;" alt={app.client_name}/>
       </div>
@@ -54,14 +54,6 @@
       <form onsubmit={handleSubmit}>
 
         <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error" role="status" if:true={error}>
-          <!-- <div class="slds-media__figure">
-            <span class="slds-icon_container slds-icon-utility-error" title="error">
-              <svg class="slds-icon slds-icon_small" aria-hidden="true">
-                <use xlink:href="/assets/icons/utility-sprite/svg/symbols.svg#error"></use>
-              </svg>
-              <span class="slds-assistive-text">error</span>
-            </span>
-          </div> -->
           <div class="slds-media__body">
             <p>{error}</p>
           </div>
@@ -90,9 +82,9 @@
         </div>
         <div class="slds-p-top_large slds-p-left_large slds-p-right_large slds-text-align_center">
           <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Login</button></p>
-          <p>
+          <p if:true={registrationUrl}>
             <span>Don't have an account?</span>
-            <a class="slds-button slds-m_x-small" href={registrationUrl} if:true={registrationUrl}>
+            <a class="slds-button slds-m_x-small" href={registrationUrl}>
               Register now!
             </a>
           </p>
@@ -114,7 +106,7 @@
       </footer>
     </div>
 
-    <footer class="slds-card__footer slds-border_top slds-text-align_center">
+    <footer class="slds-card__footer slds-border_top slds-text-align_center" if:true={app}>
       <div class="slds-grid slds-gutters">
         <div class="slds-col slds-size_1-of-2">
           <div if:true={app.tos_uri}>

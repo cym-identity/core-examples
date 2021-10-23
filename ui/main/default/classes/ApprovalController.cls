@@ -20,7 +20,7 @@ public with sharing class ApprovalController {
   public static void save(String startURL){
     try {
       cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
-      context.consent.add(context.request.scope);
+      context.consent.replace(context.request.scope);
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

@@ -27,11 +27,13 @@ public with sharing class ProfileController {
     cym.UserContext context = cym.UserContext.getContext();
     Map<String, Object> response = new Map<String, Object>();
     try {
-      Map<Id, Object> clients = new ClientRepository().find(context.consents.keySet());
-      for (Id i : clients.keySet()) {
-        response.put(i, new Map<String, Object>{
-          'client' => clients.get(i),
-          'scopes' => context.consents.get(i).scopes
+      Set<Id> clientIds = new Set<Id>();
+      for (cym.UserContext.Consent consent : context.consents.asList()) clientIds.add(consent.client);
+      Map<Id, Object> clients = new ClientRepository().find(clientIds);
+      for (cym.UserContext.Consent consent : context.consents.asList()) {
+        response.put(consent.client, new Map<String, Object>{
+          'client' => clients.get(consent.client),
+          'scopes' => consent.scopes
         });
       }
       return response;
@@ -44,7 +46,14 @@ public with sharing class ProfileController {
   public static void revokeConsent(Id client_id){
     cym.UserContext context = cym.UserContext.getContext();
     try {
-      context.consents.get(client_id)?.revoke();
+      cym.UserContext.Consent clientConsent = null;
+      for (cym.UserContext.Consent consent : context.consents.asList()) {
+        if (consent.client == client_id) {
+          clientConsent = consent;
+          break;
+        }
+      }
+      clientConsent?.revoke();
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -54,7 +63,8 @@ public with sharing class ProfileController {
   public static Map<Id, Object> getAllClientSession(){
     cym.UserContext context = cym.UserContext.getContext();
     try {
-      return new ClientRepository().find(context.refreshtokens.keySet());
+      // return new ClientRepository().find(context.refreshtokens.keySet());
+      return null;
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -64,7 +74,7 @@ public with sharing class ProfileController {
   public static void revokeClientSession(Id client_id){
     cym.UserContext context = cym.UserContext.getContext();
     try {
-      context.refreshtokens.get(client_id)?.revoke();
+      context.refreshtokens.revoke();
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
@@ -84,12 +94,12 @@ public with sharing class ProfileController {
 
   public without sharing class ClientRepository {
     public Map<Id, Object> find(Set<Id> ids) {
-      cym__Client__c[] clients = [SELECT Id, Name, cym__client_uri__c, cym__realm__c FROM cym__Client__c WHERE Id IN :ids];
+      cym__Client__c[] clients = [SELECT Id, Name, cym__ClientUri__c, cym__Realm__c FROM cym__Client__c WHERE Id IN :ids];
       Map<Id, Object> results = new Map<Id, Object>();
       for(cym__Client__c client: clients) {
         results.put(client.Id, new Map<String, Object> {
           'client_name' => client.Name,
-          'client_uri' => client.cym__client_uri__c
+          'client_uri' => client.cym__ClientUri__c
         });
       }
       return results;

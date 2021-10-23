@@ -47,14 +47,15 @@
   </div>
   <script type="text/javascript">
     var state = JSON.parse("{! JSENCODE(log) }");
-    // console.log({state});
     console.log({
-          factors: state.factors,
-          credentials : navigator.credentials,
-          startURL : state.startURL,
-          isUserVerifyingPlatformAuthenticatorAvailable: window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-            PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
-        })
+      factors: state.factors,
+      credentials : navigator.credentials,
+      startUrl : state.startURL,
+      isUserVerifyingPlatformAuthenticatorAvailable: window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
+        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+      handle : state.handle,
+      basePath: state.basePath
+    });
     window.addEventListener('load', function() {
       $Lightning.use("c:challengeApp", function () {
         if (!state.factors || state.factors.length === 0) {
@@ -62,9 +63,11 @@
             "c:registerUi",
             {
               credentials : navigator.credentials,
-              startURL : state.startURL,
+              startUrl : state.startURL,
               isUserVerifyingPlatformAuthenticatorAvailable: window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+              handle : state.handle,
+              basePath: state.basePath,
             },
             "appContainer",
             function (cmp, status) {
@@ -77,9 +80,11 @@
             {
               factors: state.factors,
               credentials : navigator.credentials,
-              startURL : state.startURL,
+              startUrl : state.startURL,
               isUserVerifyingPlatformAuthenticatorAvailable: window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
+              handle : state.handle,
+              basePath: state.basePath,
             },
             "appContainer",
             function (cmp, status) {

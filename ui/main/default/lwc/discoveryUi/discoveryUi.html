@@ -1,5 +1,6 @@
 <template>
-  <article class="slds-card login-card">
+
+  <article class="slds-card slds-grid_align-center">
     <p if:true={loading}>
       <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
     </p>
@@ -8,140 +9,268 @@
         <img src={app.logo_uri} style="height:96px;" alt={app.client_name}/>
       </div>
       <div if:true={app.client_uri}>
-        <a href={app.client_ur} class="slds-card__header-link slds-truncate" title={app.client_name} target="_blank" rel="noreferrer">
+        <a href={app.client_uri} class="slds-card__header-link slds-truncate" title={app.client_name} target="_blank" rel="noreferrer">
           <span class="slds-text-heading_large">{app.client_name}</span>
         </a>
       </div>
     </div>
 
+    <div class="slds-col slds-medium-size_1-of-1 slds-size_1-of-1 slds-scoped-notification slds-media slds-media_center slds-theme_error slds-text-align_center" role="status" if:true={error}>
+      <div class="slds-media__body">
+        <p>{error}</p>
+      </div>
+    </div>
 
-    <div class="slds-card__body slds-card__body_inner" if:true={showAccountChooser}>
-      <ul class="slds-has-dividers_around-space">
-        <template for:each={_users} for:item="user">
-          <li key={user.Id} class="slds-item selectable" onclick={user.handleClick}>
-            <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
-              <div class="slds-col">
-                <!-- <span class="slds-avatar slds-avatar_circle slds-avatar_medium">
-                  <img alt={user.Name} src={user.SmallPhotoUrl} title={user.Name} />
-                </span> -->
-                <span class="slds-avatar-group slds-avatar-group_large">
-                  <span class="slds-avatar slds-avatar-grouped slds-avatar-grouped__primary">
-                    <img alt={user.Name} src={user.SmallPhotoUrl} title={user.Name} />
-                  </span>
-                  <span if:true={user.IsActive} class="slds-avatar slds-avatar-grouped slds-avatar-grouped__secondary" style="background-color:green; bottom: -4px; right: 4px; top: auto; z-index: 10; width:1rem; height:1rem;"></span>
-                </span>
-              </div>
-              <div class="slds-col">
-                <p class="slds-text-heading_small">{user.FirstName} {user.LastName}</p>
-                <p class="slds-text-heading_x-small">{user.Email}</p>
-              </div>
-              <div class="slds-col slds-col_bump-left">
-                <lightning-icon size="x-small" icon-name="utility:chevronright"></lightning-icon>
+    <div class="slds-card__body slds-card__body_inner slds-grid slds-grid_vertical-align-center" style="min-height: 300px;">
+      <div class="slds-col slds-size_1-of-1">
+        <template if:true={canShowDiscoverySection}>
+          <ul class="slds-has-dividers_around-space" if:true={canShowAccountChooser}>
+            <template for:each={_users} for:item="user">
+              <li key={user.Id} class="slds-item selectable" onclick={user.handleClick}>
+                <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                  <div class="slds-col">
+                    <span class="slds-avatar slds-avatar_large">
+                      <img alt={user.Name} src={user.SmallPhotoUrl} title={user.Name} style="border-radius: 50%;"/>
+                    </span>
+                  </div>
+                  <div class="slds-col">
+                    <p class="slds-text-heading_small">{user.FirstName} {user.LastName}</p>
+                    <p class="slds-text-heading_x-small">{user.Email}</p>
+                  </div>
+                  <div class="slds-col slds-col_bump-left">
+                    <lightning-icon size="x-small" icon-name="utility:chevronright"></lightning-icon>
+                  </div>
+                </div>
+              </li>
+            </template>
+            <li class="slds-item slds-text-align_center" style="border: 0;">
+              <a onclick={chooseAnotherUser}><span>Login as another user</span></a>
+            </li>
+          </ul>
+          <form onsubmit={handleDiscover} if:true={canShowEmail}>
+            <div class="slds-form-element">
+              <label class="slds-form-element__label" for="text-input-email">Email<abbr class="slds-required" title="required">* </abbr></label>
+              <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+                <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:email"></lightning-icon>
+                <input type="email" id="text-input-email" placeholder="Enter email" class="slds-input" required oninput={handleEmailChange} inputmode="email" style="line-height: 42px;" value={email} autofocus />
               </div>
             </div>
-          </li>
+            <div if:true={users.length} class="slds-p-around_x-small slds-text-align_center">
+              <a onclick={backToChooser}><span>Choose a different user ({users.length} connected)</span></a>
+            </div>
+            <div class="slds-p-top_medium slds-p-left_large slds-p-right_large slds-text-align_center">
+              <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Next</button></p>
+            </div>
+          </form>
         </template>
-        <li class="slds-item slds-text-align_center" style="border: 0;">
-          <a onclick={chooseAnotherUser}><span>Login as another user</span></a>
-        </li>
-      </ul>
-    </div>
 
-    <div class="slds-card__body slds-card__body_inner" if:true={showEmail}>
-      <form onsubmit={handleDiscover}>
-
-        <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error" role="status" if:true={error}>
-          <div class="slds-media__body">
-            <p>{error}</p>
+        <template if:true={canShowAuthenticatorSection}>
+          <div class="slds-p-around_small slds-text-align_center">
+            <div class="avatar">
+              <img src={avatar}/>
+            </div>
           </div>
-        </div>
-
-        <div class="slds-form-element">
-          <label class="slds-form-element__label" for="text-input-email">Email<abbr class="slds-required" title="required">* </abbr></label>
-          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
-            <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:email"></lightning-icon>
-            <input type="email" id="text-input-email" placeholder="Enter email" class="slds-input" required oninput={handleEmailChange} inputmode="email" style="line-height: 42px;" value={email} />
-          </div>
-        </div>
-        <div if:true={users.length} class="slds-p-around_x-small slds-text-align_center">
-          <a onclick={backToChooser}><span>Choose a different user ({users.length} connected)</span></a>
-        </div>
-        <div class="slds-p-top_medium slds-p-left_large slds-p-right_large slds-text-align_center">
-          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Next</button></p>
-        </div>
-      </form>
-    </div>
-
-    <div class="slds-card__body slds-card__body_inner" if:true={showLogin}>
-      <p class="slds-p-around_small slds-text-align_center">
-        Welcome <a>{email}</a><span>&nbsp;</span><button class="slds-button" onclick={resetEmail}><span>(change)</span></button>
-      </p>
-
-      <form onsubmit={handleLogin}>
-
-        <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error" role="status" if:true={error}>
-          <div class="slds-media__body">
-            <p>{error}</p>
-          </div>
-        </div>
-
-        <div class="slds-form-element">
-          <label class="slds-form-element__label" for="text-input-password">Password<abbr class="slds-required" title="required">* </abbr></label>
-          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
-            <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:password"></lightning-icon>
-            <input type="password" id="text-input-password" placeholder="Enter your password" class="slds-input" required oninput={handlePasswordChange} style="line-height: 42px;" />
-          </div>
-        </div>
-        <div class="slds-text-align_right slds-p-around_x-small" if:true={forgotPasswordUrl} >
-          <a href={forgotPasswordUrl} rel="noreferrer">
-            <span class="slds-text-body_small">Forgot Password?</span>
-          </a>
-        </div>
-        <div class="slds-p-top_large slds-p-left_large slds-p-right_large slds-text-align_center">
-          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Login</button></p>
-        </div>
-      </form>
-
-      <div class="slds-text-align_center" if:true={registrationUrl}>
-        <form action={registrationUrl} method="POST">
-          <input type="hidden" value={email} name="login_hint"/>
-          <span>Don't have an account?</span>
-          <a class="slds-button slds-m_x-small">
-            <button class="slds-button" type="submit">Register now!</button>
-          </a>
-        </form>
-      </div>
-      <footer class="slds-card__footer slds-text-align_center" if:true={socialProviders.length}>
-        <div class="slds-grid slds-grid_vertical">
-          <p class="divider">
-            <span>OR</span>
+          <p class="slds-text-align_center">
+            Welcome&nbsp;<a>{email}</a>
           </p>
-          <template for:each={socialProviders} for:item="socialProvider">
-            <p key={socialProvider.Id} style="margin: 4px 0;">
-              <a class="social-button" href={socialProvider.url} data-social-provider={socialProvider.friendlyName}>
-                <span>Connect with {socialProvider.friendlyName}</span>
+          <p class="slds-text-align_center">
+            <button class="slds-button" onclick={resetEmail}><span>change</span></button>
+          </p>
+
+          <div class="slds-grid slds-gutters slds-wrap slds-grid_align-center slds-grid_vertical-stretch authenticators-grid">
+            <div class="slds-col slds-size_1-of-3" if:true={canShowAuthenticatorChooserWebAuthnPlatform}>
+              <!-- Displayed when the user has an internal credential on any device -->
+              <c-webauthn-challenge
+                onready={handleWebAuthnPlatformReady}
+                ondone={handleWebAuthnPlatformDone}
+                onerror={handleWebAuthnPlatformError}
+                authenticator="webauthn_platform"
+                start-url={startUrl}
+                user-id={userId}
+                style="display: block; height: 100%;">
+
+                <lightning-spinner alternative-text="Loading" size="small" slot="spinner" style="height: 100%;"></lightning-spinner>
+
+                <article class="slds-card slds-card_boundary selectable" style="height: 100%;" slot="button">
+                  <div class="slds-card__body slds-text-align_center slds-icon-text-default" style="padding: 40px 0;">
+                    <svg width="48px" height="48px" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M23.8636 34.8278C23.7602 34.8278 23.6913 34.8278 23.5879 34.7929C20.1759 33.8852 17.3842 32.1048 15.5231 29.696C13.8344 27.5316 12.9728 24.9832 13.1106 22.5046C13.2485 19.7118 15.5921 17.5823 18.4871 17.5823C21.3822 17.5823 23.7602 19.6419 23.8636 22.2951C23.8636 22.33 23.8636 22.3649 23.8636 22.3998C23.8636 24.285 25.449 25.821 27.448 25.821C29.4125 25.821 30.9979 24.285 30.9979 22.3998C30.9979 16.0113 25.3801 10.8097 18.4871 10.8097C14.6271 10.8097 10.9738 12.4854 8.69914 15.2782C5.97641 18.6645 5.45943 23.2028 7.21714 28.5091C7.28607 28.7185 7.21714 28.928 7.18267 29.0328C7.07928 29.2422 6.87249 29.3819 6.63124 29.4517C6.52784 29.4866 6.45891 29.4866 6.35551 29.4866C5.94194 29.4866 5.59729 29.2422 5.45943 28.928C3.56387 23.2028 4.14977 18.1757 7.18267 14.4404C9.80199 11.2286 14.0067 9.30856 18.4871 9.30856C22.4161 9.30856 26.0694 10.705 28.7576 13.2883C31.3425 15.732 32.8245 19.0834 32.8245 22.4348C32.8245 25.1578 30.4119 27.392 27.4135 27.392C24.5185 27.392 22.1404 25.3323 22.0025 22.6791C22.0025 22.6442 22.0025 22.6093 22.0025 22.5744C22.0025 20.6893 20.4172 19.1532 18.4527 19.1532C16.5226 19.1532 15.0062 20.6194 14.9028 22.6093C14.7994 24.8087 15.5576 27.0428 17.0396 28.928C18.6939 31.0226 21.1409 32.5587 24.1049 33.3616C24.3462 33.4314 24.5529 33.5711 24.6563 33.7805C24.7252 33.8852 24.7597 34.0947 24.6908 34.3042C24.6563 34.6183 24.2772 34.8278 23.8636 34.8278ZM14.7305 34.8278C14.5237 34.8278 14.2824 34.758 14.1445 34.6533C11.5252 32.7332 9.38844 28.8931 8.80252 25.0879C8.11322 20.4449 9.76753 16.7444 13.4208 14.7196C15.0407 13.812 16.7984 13.3581 18.5561 13.3581C21.1065 13.3581 23.519 14.3007 25.3456 15.9764C27.2067 17.7219 28.2407 20.0609 28.2407 22.6093C28.2407 23.0282 27.8271 23.3773 27.3101 23.3773C26.7932 23.3773 26.3795 23.0282 26.3795 22.6093C26.3795 20.4798 25.5524 18.5248 24.0015 17.0586C22.5195 15.6622 20.5895 14.8942 18.5216 14.8942C17.0741 14.8942 15.6955 15.2782 14.3858 15.9764C11.3529 17.6521 9.9743 20.7591 10.5602 24.7388C11.0428 28.0203 12.8349 31.5113 14.9717 33.222C15.0062 33.2569 15.0062 33.2569 15.0407 33.2917C15.1096 33.3267 15.1441 33.3616 15.213 33.3965C15.3853 33.5361 15.5231 33.7107 15.5231 33.9201C15.5576 34.1296 15.4887 34.3042 15.3164 34.4438C15.2819 34.6881 15.0062 34.8278 14.7305 34.8278ZM27.3101 31.2321C24.6563 31.2321 22.5195 30.6037 20.9341 29.3469C18.9007 27.7411 17.5221 24.8785 17.6255 22.3649C17.6255 21.946 18.0391 21.6318 18.5561 21.6318H18.5905C18.8662 21.6318 19.1075 21.7366 19.2798 21.946C19.3832 22.0507 19.4866 22.2253 19.4866 22.4348C19.4177 24.4944 20.555 26.9381 22.2093 28.2647C23.4501 29.2422 25.1733 29.731 27.3101 29.731C27.896 29.731 28.4819 29.696 29.1368 29.6262C29.1712 29.6262 29.2057 29.6262 29.2746 29.6262C29.7226 29.6262 30.1362 29.9055 30.1707 30.2895C30.2052 30.499 30.1018 30.6735 30.0329 30.7783C29.895 30.9877 29.6537 31.0924 29.378 31.1274C28.6542 31.1972 27.9649 31.2321 27.3101 31.2321ZM3.90852 13.8818C3.73619 13.8818 3.5294 13.8469 3.39154 13.7422C3.18476 13.6374 3.0469 13.4279 3.01243 13.2185C2.97797 13.044 3.01243 12.8345 3.15029 12.6949C6.73463 7.91216 12.3868 5.15429 18.6595 5.15429C24.4151 5.15429 29.6882 7.49327 33.1347 11.5428C33.2725 11.6824 33.3415 11.8919 33.307 12.0665C33.2725 12.2759 33.1692 12.4505 32.9623 12.5902C32.79 12.6949 32.6177 12.7647 32.4109 12.7647C32.1007 12.7647 31.825 12.6599 31.6527 12.4505C28.5509 8.81986 23.8292 6.72521 18.6939 6.72521C13.0761 6.72521 7.97536 9.20383 4.73567 13.5327C4.49442 13.7422 4.2187 13.8818 3.90852 13.8818ZM28.6542 5.1892C28.4475 5.1892 28.2752 5.1543 28.1028 5.04956C25.4835 3.4437 22.1059 2.53604 18.625 2.53604C15.1441 2.53604 11.732 3.40879 9.04376 5.04956C8.87145 5.1543 8.69914 5.1892 8.52682 5.1892C8.21662 5.1892 7.9409 5.04956 7.76858 4.8401C7.63071 4.66555 7.59625 4.491 7.63071 4.31645C7.66518 4.10699 7.80304 3.89753 8.00983 3.7928C11.0083 2.01239 14.7649 1 18.625 1C22.4851 1 26.2417 1.97748 29.2057 3.7928C29.4125 3.93244 29.5503 4.10699 29.5848 4.31645C29.6192 4.491 29.5848 4.70046 29.4469 4.8401C29.2402 5.04956 28.9644 5.1892 28.6542 5.1892Z"></path>
+                    </svg>
+                  </div>
+                  <footer class="slds-card__footer">
+                    <button class="slds-button slds-button_basic slds-button_stretch">
+                      Login with biometrics
+                    </button>
+                  </footer>
+                </article>
+              </c-webauthn-challenge>
+            </div>
+            <div class="slds-col slds-size_1-of-3" if:true={canShowAuthenticatorChooserTotp}>
+              <article class="slds-card slds-card_boundary selectable" style="height: 100%;" onclick={showAuthenticatorTotp}>
+                <div class="slds-card__body slds-text-align_center">
+                  <lightning-icon
+                    size="large"
+                    icon-name="utility:phone_portrait"
+                    style="padding: 40px 0;"></lightning-icon>
+                </div>
+                <footer class="slds-card__footer">
+                  <button class="slds-button slds-button_basic slds-button_stretch">
+                    Login with your Authenticator App
+                  </button>
+                </footer>
+              </article>
+            </div>
+            <div class="slds-col slds-size_1-of-3" if:true={canShowAuthenticatorChooserPassword}>
+              <article class="slds-card slds-card_boundary selectable" style="height: 100%;" onclick={showAuthenticatorPassword}>
+                <div class="slds-card__body slds-text-align_center">
+                  <lightning-icon
+                    size="large"
+                    icon-name="utility:password"
+                    style="padding: 40px 0;"></lightning-icon>
+                </div>
+                <footer class="slds-card__footer">
+                  <button class="slds-button slds-button_basic slds-button_stretch">
+                    Login with your password
+                  </button>
+                </footer>
+              </article>
+            </div>
+          </div>
+
+          <form onsubmit={handleLogin} if:true={canShowPassword} class="slds-p-left_large slds-p-right_large">
+
+            <div class="slds-form-element">
+              <label class="slds-form-element__label" for="text-input-password">Password<abbr class="slds-required" title="required">* </abbr></label>
+              <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+                <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:password"></lightning-icon>
+                <input type="password" id="text-input-password" placeholder="Enter your password" class="slds-input" required oninput={handlePasswordChange} style="line-height: 42px;" autofocus/>
+              </div>
+            </div>
+            <div class="slds-text-align_right slds-p-around_x-small" if:true={forgotPasswordUrl} >
+              <a href={forgotPasswordUrl} rel="noreferrer">
+                <span class="slds-text-body_small">Forgot Password?</span>
               </a>
-            </p>
+            </div>
+            <div class="slds-p-top_large slds-text-align_center">
+              <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Login</button></p>
+            </div>
+            <div class="slds-text-align_center" if:true={registrationUrl}>
+              <form action={registrationUrl} method="POST">
+                <input type="hidden" value={email} name="login_hint"/>
+                <span>Don't have an account?</span>
+                <a class="slds-button slds-m_x-small">
+                  <button class="slds-button" type="submit">Register now!</button>
+                </a>
+              </form>
+            </div>
+          </form>
+
+          <template if:true={canShowTotp}>
+            <div class="slds-p-left_large slds-p-right_large">
+              <c-challenge-totp ondone={handleTotpDone} start-url={startUrl} base-path={basePath} user-id={userId}></c-challenge-totp>
+            </div>
           </template>
-        </div>
-      </footer>
+
+          <template if:true={canShowWebAuthnPlatform}>
+            <!-- Displayed when the user has an internal credential on the current device and the back end chooses a shortcut to use the authenticator -->
+            <c-webauthn-challenge
+              onready={handleWebAuthnPlatformReady}
+              ondone={handleWebAuthnPlatformDone}
+              onerror={handleWebAuthnPlatformError}
+              authenticator="webauthn_platform"
+              start-url={startUrl}
+              user-id={userId}
+              style="display: block;">
+
+              <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
+              <div slot="button" style="margin: 20px;">
+                <button class="slds-button slds-button_brand slds-button_stretch">
+                  <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+                  Login with biometrics
+                </button>
+              </div>
+            </c-webauthn-challenge>
+            <div class="slds-text-heading_medium slds-text-align_center">
+              <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
+            </div>
+          </template>
+
+          <div if:true={canShowAuthenticatorOptions} class="slds-p-around_x-small slds-text-align_center">
+            <a onclick={backToAuthenticatorChooser}><span>Choose a different authentication method</span></a>
+          </div>
+
+          <template if:true={canRegisterWebAuthnPlatform}>
+            <div class="slds-text-heading_medium slds-text-align_center">You’re eligible for a simpler sign-in!</div>
+            <div style="margin: 16px;">
+              <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
+            </div>
+            <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
+            <c-webauthn-register
+              onready={handleRegisterWebAuthnPlatformReady}
+              ondone={handleWebAuthnPlatformDone}
+              onerror={handleWebAuthnPlatformError}
+              authenticator="webauthn_platform"
+              start-url={startUrl}
+              user-id={userId}
+              style="display: block;">
+
+              <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
+              <button class="slds-button slds-button_brand slds-button_stretch" slot="button">
+                <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+                Register your biometrics
+              </button>
+
+            </c-webauthn-register>
+            <div class="slds-text-heading_medium slds-text-align_center">
+              <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
+            </div>
+            <p class="slds-text-heading_small_xx slds-text-align_center" style="margin: 16px;">
+              <a onclick={toggleLearnMore}>
+                <span if:false={showLearnMore}>Learn More</span>
+                <span if:true={showLearnMore}>Hide</span>
+              </a> | <a onclick={skipEnrollWebAuthnPlatform}>skip</a>
+            </p>
+            <ul class="slds-list_dotted" if:true={showLearnMore}>
+              <li>FIDO is a technology built into all leading desktop devices (PC and Mac) and browsers, that allows users to sign in securely without a password.</li>
+              <li>In the same way your phone uses a biometric, FIDO now enables biometric sign-in on websites viewed on your desktop too.</li>
+              <li>FIDO makes sign-in easy, safe, and private!</li>
+              <li>FIDO technology uses your computer's built-in authentication method (i.e., Windows Hello or Apple Touch ID) to ensure your sign-in information stays safe from hackers because it never leaves your computer.</li>
+              <li>Once you’ve registered your computer’s PIN, facial recognition, fingerprint, or security key, FIDO verifies it’s really you and doesn’t transmit any of your sign-in information over the internet.</li>
+              <li>Registering with FIDO provides you with an additional sign-in option for this device — your password remains valid.</li>
+              <li>Leading companies worldwide in retail, telecommunications, finance, and technology are already using FIDO.</li>
+            </ul>
+          </template>
+
+          <footer class="slds-text-align_center" if:true={socialProviders.length}>
+            <div class="slds-grid slds-grid_vertical">
+              <p class="divider">
+                <span>OR</span>
+              </p>
+              <p class="slds-text-heading_medium">Use your social media account</p>
+              <p>
+                <template for:each={socialProviders} for:item="socialProvider">
+                  <a key={socialProvider.Id}  class="social-button rounded" href={socialProvider.url} data-social-provider={socialProvider.friendlyName} style={socialProvider.style}></a>
+                </template>
+              </p>
+            </div>
+          </footer>
+        </template>
+
+      </div>
+
     </div>
 
-    <footer class="slds-card__footer slds-border_top slds-text-align_center">
-      <div class="slds-grid slds-gutters">
-        <div class="slds-col slds-size_1-of-2">
-          <div if:true={app.tos_uri}>
-            <a href={app.tos_uri} class="slds-card__header-link slds-truncate" title={app.tos_uri} target="_blank" rel="noreferrer">
-              <span class="slds-text-body_small">{Labels.consent_terms_of_service}</span>
-            </a>
-          </div>
+    <footer class="slds-card__footer slds-text-align_center" if:true={canShowFooterSection}>
+      <div class="slds-grid">
+        <div class="slds-col slds-size_1-of-2" if:true={app.tos_uri}>
+          <a href={app.tos_uri} class="slds-card__header-link slds-truncate" title={app.tos_uri} target="_blank" rel="noreferrer">
+            <span class="slds-text-body_small">{Labels.consent_terms_of_service}</span>
+          </a>
         </div>
-        <div class="slds-col slds-size_1-of-2">
-          <div if:true={app.policy_uri}>
-            <a href={app.policy_uri} class="slds-card__header-link slds-truncate" title={app.policy_uri} target="_blank" rel="noreferrer">
-              <span class="slds-text-body_small">{Labels.consent_privacy_policy}</span>
-            </a>
-          </div>
+        <div class="slds-col slds-size_1-of-2" if:true={app.policy_uri}>
+          <a href={app.policy_uri} class="slds-card__header-link slds-truncate" title={app.policy_uri} target="_blank" rel="noreferrer">
+            <span class="slds-text-body_small">{Labels.consent_privacy_policy}</span>
+          </a>
         </div>
       </div>
     </footer>

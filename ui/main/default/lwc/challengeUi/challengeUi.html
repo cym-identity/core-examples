@@ -7,25 +7,34 @@
       <c-challenge-totp ondone={factorDone} if:true={showTotp} start-url={startUrl} base-path={basePath}></c-challenge-totp>
       <c-challenge-sms ondone={factorDone} if:true={showSms} start-url={startUrl} base-path={basePath}></c-challenge-sms>
       <c-challenge-twilio-push ondone={factorDone} if:true={showTwilioPush} start-url={startUrl} base-path={basePath}></c-challenge-twilio-push>
-      <c-challenge-webauthn
+      <c-webauthn-challenge
         ondone={factorDone}
         if:true={showWebAuthn}
         credentials={credentials}
-        authenticator="accounts_webauthn_cross_platform"
-        cta="Use your security key"
+        authenticator="webauthn_cross_platform"
         start-url={startUrl}
-        base-path={basePath}></c-challenge-webauthn>
+        base-path={basePath}>
 
-      <c-challenge-webauthn
+        <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
+        <button class="slds-button slds-button_brand" slot="button">
+          <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+          Use your security key
+        </button>
+      </c-webauthn-challenge>
+
+      <c-webauthn-challenge
         ondone={handleWebAuthnPlatformDone}
         if:true={showWebAuthnPlatform}
         onerror={handleWebAuthnPlatformError}
-        credentials={credentials}
-        authenticator="accounts_webauthn_platform"
-        mode="request"
-        cta="Verify with biometrics"
-        start-url={startUrl}
-        base-path={basePath}></c-challenge-webauthn>
+        authenticator="webauthn_platform"
+        start-url={startUrl}>
+
+          <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
+          <button class="slds-button slds-button_brand" slot="button">
+            <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+            Verify with biometrics
+          </button>
+      </c-webauthn-challenge>
 
       <ul class="slds-has-block-links_space" if:true={showList}>
         <template for:each={remainingFactors} for:item="r">
@@ -48,14 +57,20 @@
         <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
       </div>
       <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
-      <c-register-webauthn
+      <c-webauthn-register
         ondone={enrollWebAuthnPlatformDone}
         onerror={handleEnrollWebAuthnPlatformError}
-        credentials={credentials}
-        authenticator="accounts_webauthn_platform"
-        cta="Register Now!"
+        authenticator="webauthn_platform"
         start-url={startUrl}
-        base-path={basePath}></c-register-webauthn>
+        base-path={basePath}>
+
+        <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
+        <button class="slds-button slds-button_brand" slot="button">
+          <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+          Register Now!
+        </button>
+      </c-webauthn-register>
+
       <p class="slds-text-align_center">
         <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
       </p>

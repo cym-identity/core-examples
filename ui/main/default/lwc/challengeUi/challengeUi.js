@@ -4,7 +4,6 @@ import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
 
 export default class ChallengeUi extends LightningElement {
   @api factors;
-  @api credentials;
   @api startUrl;
   @api isUserVerifyingPlatformAuthenticatorAvailable;
   @api handle;
@@ -13,6 +12,7 @@ export default class ChallengeUi extends LightningElement {
   @track factor;
   @track _errorLog = [];
 
+  fingerprintUrl = MFA_STATIC_RESOURCE_URL + "/img/fingerprint_generic_white.svg";
   registerAnimationUrl = MFA_STATIC_RESOURCE_URL + '/img/windows_register_animation.gif';
   fidoCertifiedUrl = MFA_STATIC_RESOURCE_URL + '/img/FIDO_Certified_logo_yellow.png';
 
@@ -124,7 +124,8 @@ export default class ChallengeUi extends LightningElement {
     this.hasWebAuthnPlatform = false;
   }
 
-  enrollWebAuthnPlatformDone() {
+  enrollWebAuthnPlatformDone({detail}) {
+    console.log(JSON.stringify(detail));
     this.done();
   }
 
@@ -142,8 +143,8 @@ export default class ChallengeUi extends LightningElement {
 
   handleEnrollWebAuthnPlatformError({detail}) {
     if (detail) {
-      const {name, message} = detail;
-      if (name === 'InvalidStateError') {
+      const {error, error_description} = detail;
+      if (error === 'InvalidStateError') {
         this.factor = 'webauthn.platform.verify';
       }
     }

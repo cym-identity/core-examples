@@ -19,13 +19,13 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
 
   public ChallengeController() {
     Auth.AuthConfiguration authConfig = new Auth.AuthConfiguration(Site.getBaseRequestUrl(), ApexPages.currentPage().getParameters().get('startURL'));
-    this.backgroundColor = authConfig.getBackgroundColor();
+    this.backgroundColor = [SELECT AssetCategory, TextAsset FROM CustomBrandAsset WHERE AssetCategory = 'LoginQuaternaryColor' AND CustomBrandId IN (SELECT Id FROM CustomBrand WHERE ParentId =: Network.getNetworkId())].TextAsset; 
   }
 
   public PageReference process() {
     cym.Community context = cym.Community.getCurrent();
     Repository store = new Repository();
-    cym.Community.Authenticator webauthn_platform = context.authenticators.find('name', 'accounts_webauthn_platform');
+    cym.Community.Authenticator webauthn_platform = context.authenticators.find('name', 'webauthn_platform');
 
     if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage(ApexPages.currentPage().getParameters().get('startURL'));
 
@@ -44,8 +44,8 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
       }
     }
 
-    if (context.authenticators.find('name', 'accounts_twilio_push') != null) {
-      TwilioVerify.Push service = new TwilioVerify.Push(context.authenticators.find('name', 'accounts_twilio_push'));
+    if (context.authenticators.find('name', 'twilio_push') != null) {
+      TwilioVerify.Push service = new TwilioVerify.Push(context.authenticators.find('name', 'twilio_push'));
       if (service.getFactors().size() > 0) user_factors.add('twilio_push');
     }
 
@@ -66,8 +66,8 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   }
 
   private static Map<String, Object> sendTwilioSms(User current_user, cym.Community context) {
-    // Assuming a Twilio SMS authenticator with name `accounts_twilio_verify` exists on the community
-    // TwilioVerify.Sms authenticator = new TwilioVerify.Sms(context.authenticators.find('name', 'accounts_twilio_verify'));
+    // Assuming a Twilio SMS authenticator with name `twilio_verify` exists on the community
+    // TwilioVerify.Sms authenticator = new TwilioVerify.Sms(context.authenticators.find('name', 'twilio_verify'));
     // Trigger an SMS directly
     // Map<String, Object> verification = authenticator.initChallenge(
     //   new Map<String, Object> {
@@ -89,8 +89,8 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   }
 
   private static Map<String, Object> sendSalesforceSms(User current_user, cym.Community context) {
-    // Assuming a Twilio SMS authenticator with name `accounts_twilio_verify` exists on the community
-    TwilioVerify.Sms authenticator = new TwilioVerify.Sms(context.authenticators.find('name', 'accounts_twilio_verify'));
+    // Assuming a Twilio SMS authenticator with name `twilio_verify` exists on the community
+    TwilioVerify.Sms authenticator = new TwilioVerify.Sms(context.authenticators.find('name', 'twilio_verify'));
     // Trigger an SMS directly
     Map<String, Object> verification = authenticator.initChallenge(
       new Map<String, Object> {
@@ -117,7 +117,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static Map<String, Object> verifyVerificationSms(String transactionId, String otp) {
     if (true) return new Map<String, Object> { 'result' => true };
     cym.Community context = cym.Community.getCurrent();
-    cym.Community.Authenticator authenticator = context.authenticators.find('name', 'accounts_twilio_verify');
+    cym.Community.Authenticator authenticator = context.authenticators.find('name', 'twilio_verify');
     TwilioVerify.Sms sms = new TwilioVerify.Sms(authenticator);
     // Trigger an SMS directly
     Map<String, Object> verification = sms.verifyChallenge(
@@ -164,7 +164,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
 
     cym.Browser browser = cym.Browser.fromHandle(handle);
     cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).activate();
-    cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'accounts_totp');
+    cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'totp');
     session.apply(auth, null, null);
 
     return new Map<String, Object> {
@@ -172,9 +172,11 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
     };
   }
 
+  
   @AuraEnabled
-  public static Map<String, Object> initRegisterTotp() {
-    TwoFactorMethodsInfo info = new Repository().getTwoFactorInfo(UserInfo.getUserId());
+  public static Map<String, Object> initRegisterTotp(Id userId) {
+    userId = String.isNotBlank(userId) ? userId : UserInfo.getUserId();
+    TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(userId);
     Map<String, Object> response = new Map<String, Object> {
       'registered' => false
     };
@@ -194,18 +196,18 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   @AuraEnabled
   public static Map<String, Object> verifyRegisterTotp(String secret, String otp, String handle, String startURL){
     try {
-      TwoFactorMethodsInfo info = new Repository().getTwoFactorInfo(UserInfo.getUserId());
+      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(UserInfo.getUserId());
       if (info.HasTotp) throw new AuraHandledException('invalid_registration');
 
       cym.Browser browser = cym.Browser.fromHandle(handle);
-      cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, UserInfo.getUserId()).activate();
 
       // Registering a TOTP makes a DML on a Setup object, it must be run in a different transaction
       String response = session.getRemoteApex(ChallengeController.RegisterTotp.class).invoke(JSON.serialize(new Map<String, Object> {'secret' => secret, 'otp' => otp}));
       Boolean isValid = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
 
       if (isValid) {
-        cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'accounts_totp');
+        cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'totp');
         session.apply(auth, null, null);
 
         PageReference resume = session.resume(startURL);
@@ -241,20 +243,20 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   }
 
   @AuraEnabled
-  public static Map<String, Object> verifyVerificationTotp(String otp, String handle, String startURL) {
-    TwoFactorMethodsInfo info = new Repository().getTwoFactorInfo(UserInfo.getUserId());
-    Auth.VerificationMethod method = Auth.VerificationMethod.TOTP;
+  public static Map<String, Object> verifyVerificationTotp(String otp, String handle, String startURL, Id userId) {
+    userId = String.isNotBlank(userId) ? userId : UserInfo.getUserId();
 
     cym.Browser browser = cym.Browser.fromHandle(handle);
-    cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).activate();
+    cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, userId).activate();
 
-    // This call makes a DML. It must be done after the activate call
-    Boolean result = info.HasTotp ? System.UserManagement.verifyVerificationMethod(null, otp, method).success : false;
+
+    // Verifying a TOTP requires the connected user
+    String response = session.getRemoteApex(ChallengeController.VerifyTotp.class).invoke(JSON.serialize(new Map<String, Object> {'otp' => otp}));
+    Boolean result = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
 
     if (result) {
-      cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'accounts_totp');
-      session.apply(auth, null, null);
-      PageReference resume = session.resume(startURL);
+      cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'totp');
+      PageReference resume = session.apply(auth, null, null).resume(startURL);
       return new Map<String, Object> {
         'result' => true,
         'redirect' => resume.getUrl()
@@ -266,62 +268,28 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
     }
   }
 
-  @AuraEnabled
-  public static Map<String, Object> initRegisterWebAuthn(String authenticator) {
-    cym.Community context = cym.Community.getCurrent();
-    return cym.WebAuthn.initRegisterWebAuthn(context.authenticators.find('name', authenticator));
-  }
+  global with sharing class VerifyTotp extends cym.Remote.Function {
+    global override String execute(String param) {
+      Map<String, Object> args = (Map<String, Object>) JSON.deserializeUntyped(param);
+      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(UserInfo.getUserId());
 
-  @AuraEnabled
-  public static Object verifyRegisterWebAuthn(Map<String, String> param, String authenticator, String handle, String startURL) {
-    cym.Community context = cym.Community.getCurrent();
-    cym.Community.Authenticator auth = context.authenticators.find('name', authenticator);
-    // Polyfill the transports based on the authenticator type. It allows to remember if the credential is platform specific or not
-    if (param.get('transports') == '[]') param.put('transports', (String) auth.get('type') == 'platform' ? '["internal"]' : '["usb", "nfc", "ble"]');
-    cym.WebAuthn.Credential credential = cym.WebAuthn.verifyRegisterWebAuthn(param, auth);
-    cym.Browser browser = cym.Browser.fromHandle(handle);
-    cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).activate();
-    session.apply(auth, null, null);
-    return new Map<String, Object> {
-      'id' => EncodingUtil.base64Encode(credential.credentialId),
-      'aaguid' => EncodingUtil.base64Encode(credential.aaguid),
-      'counter' => credential.counter,
-      'transports' => credential.transports
-    };
-  }
+      String otp = (String) args.get('otp');
 
-  @AuraEnabled
-  public static Map<String, Object> initVerifyWebAuthn(String authenticator) {
-    cym.Community context = cym.Community.getCurrent();
-    return cym.WebAuthn.initVerificationWebAuthn(context.authenticators.find('name', authenticator));
-  }
+      // This call makes a DML. It must be done after the activate call
+      Boolean isValid = info.HasTotp ? System.UserManagement.verifyVerificationMethod(null, otp, Auth.VerificationMethod.TOTP).success : false;
 
-  @AuraEnabled
-  public static Object verifyVerifyWebAuthn(Map<String, String> param, String authenticator, String handle, String startURL) {
-    cym.Community context = cym.Community.getCurrent();
-    cym.Community.Authenticator auth = context.authenticators.find('name', authenticator);
-    Boolean is_valid = cym.WebAuthn.verifyVerificationWebAuthn(param, auth);
-    if (is_valid) {
-      try {
-        cym.Browser browser = cym.Browser.fromHandle(handle);
-        cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).activate();
-        session.apply(auth, null, null);
-      } catch (Exception ex) {
-        return (new Map<String, Object> {
-          'error' => ex.getMessage(),
-          'error_description' => 'verifyVerifyWebAuthn',
-          'error_stack_trace' => ex.getStackTraceString().split('\n')
-        });
-      }
+      return JSON.serialize(new Map<String, Object> {'isValid' => isValid});
     }
-    return is_valid;
   }
+
+
+
 
   @AuraEnabled
   public static Object[] listAllTwilioPush(){
     try {
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', 'accounts_twilio_push');
+      cym.Community.Authenticator auth = context.authenticators.find('name', 'twilio_push');
       TwilioVerify.Push service = new TwilioVerify.Push(auth);
       return service.getFactors();
     } catch (Exception e) {
@@ -334,7 +302,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static Object initTwilioPush(String sid) {
     try {
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', 'accounts_twilio_push');
+      cym.Community.Authenticator auth = context.authenticators.find('name', 'twilio_push');
       TwilioVerify.Push service = new TwilioVerify.Push(auth);
       return service.challenge(sid);
       // Object[] factors = service.getFactors();
@@ -350,7 +318,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static String verifyTwilioPush(String challenge){
     try {
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', 'accounts_twilio_push');
+      cym.Community.Authenticator auth = context.authenticators.find('name', 'twilio_push');
       TwilioVerify.Push service = new TwilioVerify.Push(auth);
       String verification = service.verify(challenge);
       if (verification != 'approved') return verification;

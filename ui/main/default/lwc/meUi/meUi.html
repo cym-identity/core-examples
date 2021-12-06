@@ -1,6 +1,16 @@
 <template>
   <lightning-card>
     <lightning-tabset>
+      <lightning-tab label="Profile">
+        <lightning-file-upload
+          label="Attach Picture"
+          name="fileUploader"
+          accept={acceptedFormats}
+          record-id={recordId}
+          onuploadfinished={handleUploadFinished}
+        >
+    </lightning-file-upload>
+      </lightning-tab>
       <lightning-tab label="Third Party apps">
         <c-me-consent></c-me-consent>
       </lightning-tab>

@@ -15,6 +15,7 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
     if (expId != null) {
         Site.setExperienceId(expId); 
     }
+    this.email = ApexPages.currentPage().getParameters().get('login_hint');
   }
 
   private boolean isValidPassword() {
@@ -53,7 +54,7 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
         .sessions
         .add(userId)
         .activate()
-        .apply(cym.Community.getCurrent().authenticators.find('name', 'accounts_password'), null, null)
+        .apply(cym.Community.getCurrent().authenticators.find('name', 'password'), null, null)
         .resume(ApexPages.currentPage().getParameters().get('startURL'));
 
     } catch(Exception ex) {

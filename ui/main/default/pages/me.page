@@ -48,7 +48,7 @@
       $Lightning.use("c:challengeApp", function () {
         $Lightning.createComponent(
           "c:meUi",
-          undefined,
+          {recordId : "{!$User.Id}"},
           "appContainer",
           function (cmp, status) {
             document.querySelector('#spinner').style.display = 'none';

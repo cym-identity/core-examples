@@ -3,6 +3,8 @@ import initRegisterTotp from "@salesforce/apex/ChallengeController.initRegisterT
 import verifyRegisterTotp from "@salesforce/apex/ChallengeController.verifyRegisterTotp";
 import verifyVerification from "@salesforce/apex/ChallengeController.verifyVerificationTotp";
 
+import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
+
 export default class ChallengeTotp extends LightningElement {
   otp;
   length = 6;
@@ -10,8 +12,9 @@ export default class ChallengeTotp extends LightningElement {
   loading = true;
 
   @api startUrl;
-  @api basePath;
+  @api userId;
 
+  basePath = STATIC_RESOURCE_URL.split("/resource/")[0];
   showRegistration = false;
   showQRCode = false;
   qrCodeUrl;
@@ -19,7 +22,9 @@ export default class ChallengeTotp extends LightningElement {
 
   connectedCallback() {
     console.log(this.basePath);
-    initRegisterTotp().then(resp => {
+    initRegisterTotp({
+      userId: this.userId
+    }).then(resp => {
       if (resp.registered) return;
       this.showRegistration = true;
       this.showQRCode = true;
@@ -48,7 +53,8 @@ export default class ChallengeTotp extends LightningElement {
           secret : this.secret,
           otp: this.otp,
           handle: handle,
-          startURL : this.startUrl
+          startURL : this.startUrl,
+          userId : this.userId
         });
       })
       .then(({isValid}) => {
@@ -68,7 +74,8 @@ export default class ChallengeTotp extends LightningElement {
         return verifyVerification({
           otp: this.otp,
           handle: handle,
-          startURL : this.startUrl
+          startURL : this.startUrl,
+          userId : this.userId
         })
       }).then((resp) => {
         console.log(JSON.stringify(resp));

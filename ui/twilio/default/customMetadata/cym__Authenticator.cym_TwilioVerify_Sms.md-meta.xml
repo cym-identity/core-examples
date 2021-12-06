@@ -4,6 +4,6 @@
     <protected>true</protected>
     <values>
         <field>cym__ConfigUi__c</field>
-        <value xsi:type="xsd:string">c:twilioVerifySmsConfiguration</value>
+        <value xsi:type="xsd:string">twilioVerifySmsConfiguration</value>
     </values>
 </CustomMetadata>

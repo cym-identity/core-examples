@@ -45,9 +45,9 @@ public inherited sharing class TwilioVerify {
 
       HttpRequest req = new HttpRequest();
       req.setEndpoint(TWILIO_URL + '/Services/' + service_id + '/Verifications');
-      req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(account_sid + ':' + auth_token)));
+      req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(account_sid + ':' + auth_token))); // NOPMD.ApexSuggestUsingNamedCred
       req.setMethod('POST');
-      req.setBody(TwilioVerify.fromMapToUrlString(payload));
+      req.setBody(ConverterUtils.fromMapToUrlString(payload));
       HttpResponse resp = new Http().send(req);
 
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());
@@ -72,9 +72,9 @@ public inherited sharing class TwilioVerify {
 
       HttpRequest req = new HttpRequest();
       req.setEndpoint(TWILIO_URL + '/Services/' + service_id + '/VerificationCheck');
-      req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(account_sid + ':' + auth_token)));
+      req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(account_sid + ':' + auth_token))); // NOPMD.ApexSuggestUsingNamedCred
       req.setMethod('POST');
-      req.setBody(TwilioVerify.fromMapToUrlString(payload));
+      req.setBody(ConverterUtils.fromMapToUrlString(payload));
       HttpResponse resp = new Http().send(req);
 
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());
@@ -146,7 +146,7 @@ public inherited sharing class TwilioVerify {
       req.setEndpoint(TWILIO_URL + '/Services/' + service_id + '/AccessTokens');
       req.setHeader('Authorization', 'Basic ' + EncodingUtil.base64Encode(Blob.valueOf(account_sid + ':' + auth_token))); // NOPMD.ApexSuggestUsingNamedCred
       req.setMethod('POST');
-      req.setBody(TwilioVerify.fromMapToUrlString(payload));
+      req.setBody(ConverterUtils.fromMapToUrlString(payload));
       HttpResponse resp = new Http().send(req);
 
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());

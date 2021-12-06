@@ -1,0 +1,8 @@
+<template>
+  <template if:true={loading}><slot name="spinner"></slot></template>
+  <template if:true={canShowButton}>
+    <slot name="button" onclick={handleInitVerifyWebAuthn}></slot>
+  </template>
+
+  <iframe src={webAuthnPath} width="1px" height="1px" style="display: none;"></iframe>
+</template>

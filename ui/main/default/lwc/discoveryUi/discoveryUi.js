@@ -1,47 +1,114 @@
-import { LightningElement, api } from 'lwc';
-import consent_terms_of_service from '@salesforce/label/cym.consent_terms_of_service';
-import consent_privacy_policy from '@salesforce/label/cym.consent_privacy_policy';
+import { LightningElement } from "lwc";
+import consent_terms_of_service from "@salesforce/label/cym.consent_terms_of_service";
+import consent_privacy_policy from "@salesforce/label/cym.consent_privacy_policy";
 
-import discover from '@salesforce/apex/SiteLoginController.discover';
-import authenticate from '@salesforce/apex/SiteLoginController.authenticate';
+import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
+
+import discover from "@salesforce/apex/DiscoveryController.discover";
+import authenticate from "@salesforce/apex/DiscoveryController.authenticate";
 
 export default class DiscoveryUi extends LightningElement {
-  @api app;
-  @api registrationUrl;
-  @api forgotPasswordUrl;
-  @api socialProviders = [];
-  @api startURL;
-  @api users = [];
-  @api handle;
+  app;
+  registrationUrl;
+  forgotPasswordUrl;
+  socialProviders = [];
+  users = [];
 
-  connectedCallback() {
-    this.step = this.users && this.users.length ? 'account_chooser' : 'discovery';
-  }
-
-  get _users() {
-    return this.users.map(u => {
-      return Object.assign({}, u, {handleClick: (e) => {
-        this.email = u.Email;
-        this.handleDiscover(e);
-      }})
-    })
-  };
+  startUrl = new URLSearchParams(document.location.search).get('startURL');
+  basePath = STATIC_RESOURCE_URL.split("/resource/")[0];
+  authenticators = [];
   socialProviders;
   Labels = {
     consent_terms_of_service,
-    consent_privacy_policy
+    consent_privacy_policy,
   };
-  loading = false;
-  email = '';
+  loading = true;
+  email = "";
+  userId;
   password;
   error;
+  step = "loading";
 
-  step = 'discovery';
 
-  get showAccountChooser() { return this.step === 'account_chooser'; }
-  get showEmail() { return this.step === 'discovery'; }
-  get showLogin() { return this.step === 'login'; }
-  get showRegister() { return this.step === 'register'; }
+  styles = {
+    Google : `background-image:url(${STATIC_RESOURCE_URL}/img/google-plus.png)`,
+    Facebook : `background-image:url(${STATIC_RESOURCE_URL}/img/facebook.svg)`,
+    Twitter : `background-image:url(${STATIC_RESOURCE_URL}/img/twitter.png)`,
+    LinkedIn :`background-image:url(${STATIC_RESOURCE_URL}/img/linkedin.svg)`,
+  }
+
+  connectedCallback() {
+    fetch(
+      this.basePath + '/discover',
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'application/json'
+        },
+        body: new URLSearchParams({
+          action: 'loadContext',
+          startURL: this.startUrl
+        })
+      }
+    )
+    .then(resp => resp.json())
+    .then(({forgotPasswordUrl, registrationUrl, socialProviders, users, app}) => {
+      this.forgotPasswordUrl = forgotPasswordUrl;
+      this.registrationUrl = registrationUrl;
+      this.socialProviders = (socialProviders || []).map(provider => {
+        provider.style = this.styles[provider.friendlyName];
+        return provider;
+      });
+      this.users = users;
+      this.app = app;
+      this.loading = false;
+      this.step = this.users && this.users.length ? "account_chooser" : "discovery";
+    })
+    .catch(console.error);
+  }
+
+  fingerprintUrl = STATIC_RESOURCE_URL + "/img/fingerprint_generic_white.svg";
+  fidoCertifiedUrl = STATIC_RESOURCE_URL + "/img/FIDO_Certified_logo_yellow.png";
+  registerAnimationUrl = STATIC_RESOURCE_URL + '/img/windows_register_animation.gif';
+
+  get _users() {
+    return this.users.map((u) => {
+      return Object.assign({}, u, {
+        handleClick: (e) => {
+          this.email = u.Email;
+          this.handleDiscover(e);
+        },
+      });
+    });
+  }
+  get avatar() {
+    if (this.email) {
+      const currentUser = this.users.find(u => u.Email === this.email);
+      if (currentUser) return currentUser.SmallPhotoUrl;
+    }
+    return 'https://www.lightningdesignsystem.com/assets/images/avatar2.jpg';
+  }
+
+  get canShowFooterSection() { return this.app && (this.app.tos_uri || this.app.policy_uri); }
+
+  get canShowDiscoverySection() {return ["account_chooser", "discovery"].indexOf(this.step) > -1;}
+  get canShowAuthenticatorSection() {return (["authenticator_chooser", "password", "webauthn", "webauthn.platform", "totp", "webauthn.platform.register",].indexOf(this.step) > -1);}
+  get canShowRegistrationSection() {return ["register"].indexOf(this.step) > -1;}
+
+  get canShowAccountChooser() { return this.step === "account_chooser";}
+  get canShowEmail() {return this.step === "discovery";}
+  get canShowPassword() {return this.step === "password";}
+  get canShowWebAuthnPlatform() {return this.step === "webauthn.platform";}
+
+  get canShowRegister() {return this.step === "register";}
+  get canRegisterWebAuthnPlatform() {return this.step === "webauthn.platform.register";}
+  get canShowTotp() {return this.step === "totp";}
+
+  get canShowAuthenticatorOptions() {return (this.canShowAuthenticatorSection && !this.canShowAuthenticatorChooser && this.authenticators.length > 1);}
+  get canShowAuthenticatorChooser() {return this.step === "authenticator_chooser";}
+  get canShowAuthenticatorChooserTotp() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("totp") > -1);}
+  get canShowAuthenticatorChooserWebAuthnPlatform() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("webauthn.platform") > -1);}
+  get canShowAuthenticatorChooserPassword() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("password") > -1);}
 
   handleEmailChange(e) {
     this.email = e.target.value;
@@ -52,53 +119,145 @@ export default class DiscoveryUi extends LightningElement {
   }
 
   resetEmail() {
-    this.step = this.users && this.users.length && this.users.filter(u => u.Email === this.email).length ? 'account_chooser' : 'discovery';
-    this.password = '';
+    this.step =
+      this.users &&
+      this.users.length &&
+      this.users.filter((u) => u.Email === this.email).length
+        ? "account_chooser"
+        : "discovery";
+    this.password = "";
   }
 
-  backToChooser() {
-    this.step = 'account_chooser';
-  }
+  backToChooser() { this.step = "account_chooser"; }
+  backToAuthenticatorChooser() { this.step = "authenticator_chooser"; }
 
   chooseAnotherUser() {
-    this.step = 'discovery';
-    this.email = '';
+    this.step = "discovery";
+    this.email = "";
+    this.userId = "";
+    this.error = "";
   }
 
-  handleDiscover(e) {
+  showAuthenticatorTotp() { this.step = "totp"; }
+
+  showAuthenticatorPassword() { this.step = "password"; }
+
+  handleTotpDone(e) {
+    const redirect = e.detail.redirect;
+    if (redirect) return this.loginComplete(redirect);
+    this.loading = false;
+    this.error = "An error occured during your authentication";
+  }
+
+  redirect;
+  async loginComplete(redirect) {
+    console.log({redirect});
+    if (
+      this.authenticators.indexOf("webauthn.platform") == -1 &&
+      this.step !== "webauthn.platform.register"
+    ) {
+      this.redirect = redirect;
+      this.loading = false;
+      this.authenticators = [];
+      this.step = "webauthn.platform.register";
+      return;
+    }
+    return window.location.replace(redirect);
+  }
+
+  handleRegisterWebAuthnPlatformReady({
+    detail: {
+      error,
+      error_description,
+    },
+  }) {
+    console.log({error, error_description})
+    // The browser does not support WebAuthn or does not have UserVerification
+    if (error)
+      return window.location.replace(this.redirect);
+  }
+
+  async handleDiscover(e) {
     e.preventDefault();
     this.loading = true;
-    discover({email : this.email, startURL : this.startURL, handle : this.handle.value})
-      .then(({action, socialProviders, verifications}) => {
-        console.log({action, socialProviders, verifications})
-        // if (redirect) window.location.replace(redirect);
-        this.step = action;
-        // this.socialProviders = socialProviders;
+    const { handle } = (
+      await (await fetch(this.basePath + "/browser_handle")).json()
+    );
+    discover({ email: this.email, startURL: this.startUrl, handle })
+      .then((resp) => {
+        this.step = resp.action;
+        this.userId = resp.userId;
+        this.authenticators = resp.authenticators || [];
         this.loading = false;
       })
-      .catch(({body}) => {
+      .catch(({ body }) => {
         this.loading = false;
         this.error = body.message;
         setTimeout(() => {
-          this.error = undefined
+          this.error = undefined;
         }, 3000);
       });
   }
 
-  handleLogin(e) {
+  async handleLogin(e) {
     e.preventDefault();
     this.loading = true;
-    authenticate({email : this.email, password: this.password, startURL : this.startURL, handle: this.handle.value})
-      .then(redirect => {
-        if (redirect) window.location.replace(redirect);
-        // this.loading = false;
+    const handle = (
+      await (await fetch(this.basePath + "/browser_handle")).json()
+    ).handle;
+    authenticate({
+      email: this.email,
+      password: this.password,
+      startURL: this.startUrl,
+      handle,
+    })
+      .then((redirect) => {
+        if (redirect) this.loginComplete(redirect);
+        this.loading = false;
       })
-      .catch(({body}) => {
+      .catch(({ body }) => {
         this.loading = false;
         this.error = body.message;
         setTimeout(() => {
-          this.error = undefined
+          this.error = undefined;
         }, 3000);
       });
+  }
+
+  handleWebAuthnPlatformReady({ detail: { error } }) {
+    if (error) {
+      // The browser does not support WebAuthn or does not have UserVerification
+      // Must remove the webauthn.platform from the list of authenticators and allow the user to choose another method
+      this.removeAuthenticator('webauthn.platform');
+      this.backToAuthenticatorChooser();
+    }
+  }
+
+  removeAuthenticator(name) {
+    this.authenticators = this.authenticators.filter(authenticator => authenticator != name);
+  }
+
+  handleWebAuthnPlatformDone({ detail: { redirect } }) {
+    if (redirect) return window.location.replace(redirect);
+    this.loading = false;
+  }
+
+  handleWebAuthnPlatformError({ detail: { error, error_description } }) {
+    // The user cancelled or none of the credentials registered by the current user are part of the current device
+    this.removeAuthenticator('webauthn.platform');
+    this.backToAuthenticatorChooser();
+    this.error = error_description;
+    setTimeout(() => {
+      this.error = null;
+    }, 3000);
+  }
+
+  showLearnMore = false;
+  toggleLearnMore() {
+    this.showLearnMore = !this.showLearnMore;
+  }
+
+  skipEnrollWebAuthnPlatform() {
+    return window.location.replace(this.redirect);
   }
 }

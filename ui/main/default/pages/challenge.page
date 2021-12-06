@@ -49,10 +49,7 @@
     var state = JSON.parse("{! JSENCODE(log) }");
     console.log({
       factors: state.factors,
-      credentials : navigator.credentials,
       startUrl : state.startURL,
-      isUserVerifyingPlatformAuthenticatorAvailable: window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-        PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
       handle : state.handle,
       basePath: state.basePath
     });
@@ -62,10 +59,7 @@
           $Lightning.createComponent(
             "c:registerUi",
             {
-              credentials : navigator.credentials,
               startUrl : state.startURL,
-              isUserVerifyingPlatformAuthenticatorAvailable: window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable &&
-                PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable(),
               handle : state.handle,
               basePath: state.basePath,
             },

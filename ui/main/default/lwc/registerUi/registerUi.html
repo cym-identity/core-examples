@@ -5,14 +5,14 @@
       <c-challenge-email ondone={emailVerifyDone} if:true={showEmail} handle={handle} start-url={startUrl}></c-challenge-email>
       <c-challenge-totp ondone={factorDone} if:true={showTotp} handle={handle} start-url={startUrl} base-path={basePath}></c-challenge-totp>
       <c-challenge-sms ondone={factorDone} if:true={showSms}></c-challenge-sms>
-      <c-register-webauthn
+      <!-- <c-webauthn-register
         ondone={factorDone}
         if:true={showWebAuthn}
         credentials={credentials}
         base-path={basePath}
-        authenticator="accounts_webauthn_cross_platform"
+        authenticator="webauthn_cross_platform"
         onerror={handleWebAuthnError}
-        cta="Register your Security Key"></c-register-webauthn>
+        cta="Register your Security Key"></c-webauthn-register> -->
     </div>
 
     <div class="slds-card__body slds-card__body_inner" if:true={showFactors}>
@@ -34,13 +34,13 @@
         <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
       </div>
       <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
-      <c-register-webauthn
+      <!-- <c-webauthn-register
         ondone={enrollWebAuthnPlatformDone}
         onerror={handleEnrollWebAuthnPlatformError}
         credentials={credentials}
-        authenticator="accounts_webauthn_platform"
+        authenticator="webauthn_platform"
         cta="Register Now!"
-        base-path={basePath}></c-register-webauthn>
+        base-path={basePath}></c-webauthn-register> -->
       <p class="slds-text-align_center">
         <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
       </p>

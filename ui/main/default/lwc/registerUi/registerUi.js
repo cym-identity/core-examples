@@ -3,7 +3,6 @@ import { LightningElement, api, track } from "lwc";
 import MFA_STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
 
 export default class RegisterUi extends LightningElement {
-  @api credentials;
   @api startUrl;
   @api isUserVerifyingPlatformAuthenticatorAvailable;
   @api handle;

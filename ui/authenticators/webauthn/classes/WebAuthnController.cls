@@ -1,4 +1,4 @@
-global with sharing class WebAuthnController {
+global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
 
   public static final Map<String, Object> RESPONSE = new Map<String,Object>();
   public String log {
@@ -67,8 +67,10 @@ global with sharing class WebAuthnController {
       String name = ApexPages.currentPage().getParameters().get('authenticator');
       if (String.isBlank(name)) return null;
 
+      RESPONSE.put('requestor', ApexPages.currentPage().getParameters().get('requestor')); // NOPMD.ApexXSSFromUrlParam
+
       cym.Community.Authenticator authenticator = cym.Community.getCurrent().authenticators.find('name', name); // NOPMD.ApexXSSFromUrlParam
-      if (name == null) return null;
+      if (authenticator == null) return null;
 
       String type = (String) authenticator.get('type');
       String userVerification = (String) authenticator.get('user_verification');
@@ -99,7 +101,7 @@ global with sharing class WebAuthnController {
     return (Map<String, Object>) JSON.deserializeUntyped(response);
   }
 
-  public static Map<String, Object> verifyRegisterWebAuthn(Map<String, String> param, String authenticator, String startURL, Id userId) {
+  public static Map<String, Object> verifyRegisterWebAuthn(Map<String, String> publicKeyCredential, String authenticator, String startURL, Id userId) {
     if (userId == null) {
       if (Auth.CommunitiesUtil.isGuestUser()) return null;
       userId = UserInfo.getUserId();
@@ -111,7 +113,7 @@ global with sharing class WebAuthnController {
     ).invoke(
       JSON.serialize(
         new Map<String, Object> {
-          'param' => param,
+          'publicKeyCredential' => publicKeyCredential,
           'authenticator' => authenticator,
           'handle' => cym.Browser.getCurrent().handle.value
         }
@@ -155,13 +157,13 @@ global with sharing class WebAuthnController {
     return (Map<String, Object>) JSON.deserializeUntyped(response);
   }
 
-  public static Map<String, Object> verifyVerifyWebAuthn(Map<String, String> param, String authenticator, String startURL, Id userId) {
+  public static Map<String, Object> verifyVerifyWebAuthn(Map<String, String> publicKeyCredential, String authenticator, String startURL, Id userId) {
     if (userId == null) {
       if (Auth.CommunitiesUtil.isGuestUser()) return null;
       userId = UserInfo.getUserId();
     }
     cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
-    String response = session.getRemoteApex(WebAuthnController.VerifyVerifyWebAuthn.class).invoke(JSON.serialize(new Map<String, Object> {'param' => param, 'authenticator' => authenticator, 'handle' => cym.Browser.getCurrent().handle.value}));
+    String response = session.getRemoteApex(WebAuthnController.VerifyVerifyWebAuthn.class).invoke(JSON.serialize(new Map<String, Object> {'publicKeyCredential' => publicKeyCredential, 'authenticator' => authenticator, 'handle' => cym.Browser.getCurrent().handle.value}));
 
     Boolean is_valid = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
 
@@ -191,10 +193,10 @@ global with sharing class WebAuthnController {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', (String) o.get('authenticator'));
+      cym.WebAuthn auth = (cym.WebAuthn) context.authenticators.find('name', (String) o.get('authenticator'));
       String handle = (String) o.get('handle');
 
-      return JSON.serialize(cym.WebAuthn.initRegisterWebAuthn(cym.Browser.fromHandle(handle), auth));
+      return JSON.serialize(auth.initRegistration(new Map<String, Object> { 'handle' => handle }));
     }
   }
 
@@ -203,14 +205,19 @@ global with sharing class WebAuthnController {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', (String) o.get('authenticator'));
+      cym.WebAuthn auth = (cym.WebAuthn) context.authenticators.find('name', (String) o.get('authenticator'));
 
-      Map<String, String> param = ConverterUtils.fromMapObjectToMapString((Map<String, Object>) o.get('param'));
+      Map<String, Object> publicKeyCredential = (Map<String, Object>) o.get('publicKeyCredential');
       String handle = (String) o.get('handle');
       // Polyfill the transports based on the authenticator type. It allows to remember if the credential is platform specific or not
-      if (param.get('transports') == '[]') param.put('transports', (String) auth.get('type') == 'platform' ? '["internal"]' : '["usb", "nfc", "ble"]');
+      if (publicKeyCredential.get('transports') == '[]') publicKeyCredential.put('transports', (String) auth.get('type') == 'platform' ? '["internal"]' : '["usb", "nfc", "ble"]');
 
-      cym.WebAuthn.Credential credential = cym.WebAuthn.verifyRegisterWebAuthn(cym.Browser.fromHandle(handle), auth, param);
+      cym.WebAuthn.Credential credential = (cym.WebAuthn.Credential) auth.verifyRegistration(
+        new Map<String, Object> {
+          'handle' => handle,
+          'publicKeyCredential' => publicKeyCredential
+        }
+      );
 
       return JSON.serialize(
         new Map<String, Object> {
@@ -230,10 +237,10 @@ global with sharing class WebAuthnController {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', (String) o.get('authenticator'));
+      cym.WebAuthn auth = (cym.WebAuthn) context.authenticators.find('name', (String) o.get('authenticator'));
       String handle = (String) o.get('handle');
 
-      return JSON.serialize(cym.WebAuthn.initVerificationWebAuthn(cym.Browser.fromHandle(handle), auth));
+      return JSON.serialize(auth.initVerification(new Map<String, Object> {'handle' => handle}));
     }
   }
 
@@ -242,9 +249,15 @@ global with sharing class WebAuthnController {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', (String) o.get('authenticator'));
+      cym.WebAuthn auth = (cym.WebAuthn) context.authenticators.find('name', (String) o.get('authenticator'));
       String handle = (String) o.get('handle');
-      Boolean is_valid = cym.WebAuthn.verifyVerificationWebAuthn(cym.Browser.fromHandle(handle), auth, ConverterUtils.fromMapObjectToMapString((Map<String, Object>) o.get('param')));
+      Boolean is_valid = (Boolean) auth.verifyVerification(
+        new Map<String, Object> {
+          'handle' => handle,
+          'publicKeyCredential' => (Map<String, Object>) o.get('publicKeyCredential')
+        }
+      );
+      //  cym.WebAuthn.verifyVerificationWebAuthn(cym.Browser.fromHandle(handle), auth, );
 
       return JSON.serialize(new Map<String, Object> {'isValid' => is_valid});
     }

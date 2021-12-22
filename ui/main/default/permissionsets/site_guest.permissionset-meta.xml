@@ -8,6 +8,18 @@
         <apexClass>DiscoveryController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>PushChallengeController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>EmailChallengeController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>TotpChallengeController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <description>Site PermSet to be used on the guest profile</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>site guest</label>

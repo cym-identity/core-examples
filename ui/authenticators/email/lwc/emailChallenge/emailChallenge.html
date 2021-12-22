@@ -1,7 +1,7 @@
 <template>
   <lightning-spinner alternative-text="Loading" size="small" if:true={loading}></lightning-spinner>
 
-  <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Enter the 5 digit code your received by email</div>
+  <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Enter the 6 digit code your received by email</div>
   <div id="email_verify" class="slds-text-align_center slds-p-around_medium">
     <c-otp-input length={length} onotpchange={handleOtpChange} ></c-otp-input>
   </div>
@@ -9,9 +9,8 @@
     Didn't receive the code? <a class="slds-button" onclick={handleResend}>Resend code</a>
   </footer>
   <footer class="slds-card__footer slds-text-align_center slds-button_stretch">
-    <button class="slds-button slds-button_brand slds-button_stretch" onclick={handleNext} disabled={nextDisabled}>Next</button>
+    <button class="slds-button slds-button_brand slds-button_stretch" onclick={handleNext} type="submit" disabled={nextDisabled}>Next</button>
   </footer>
-
 
   <div class="slds-scoped-notification slds-media slds-media_center slds-theme_error" role="status" if:true={error}>
     <div class="slds-media__body">

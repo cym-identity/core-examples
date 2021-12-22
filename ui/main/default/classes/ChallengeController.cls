@@ -1,8 +1,5 @@
 global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static final transient Map<String, Object> RESPONSE = new Map<String, Object>();
-
-  public String backgroundColor {get; private set;}
-
   public String log {
     get {
       try {
@@ -17,45 +14,83 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
     }
   }
 
-  public ChallengeController() {
-    Auth.AuthConfiguration authConfig = new Auth.AuthConfiguration(Site.getBaseRequestUrl(), ApexPages.currentPage().getParameters().get('startURL'));
-    this.backgroundColor = [SELECT AssetCategory, TextAsset FROM CustomBrandAsset WHERE AssetCategory = 'LoginQuaternaryColor' AND CustomBrandId IN (SELECT Id FROM CustomBrand WHERE ParentId =: Network.getNetworkId())].TextAsset; 
+  public String contentType {get; private set;}
+
+  public String backgroundColor {get; private set;}
+
+
+  public ChallengeController() {}
+
+  public PageReference init() {
+    Map<String, String> headers = ApexPages.currentPage().getHeaders();
+
+    this.contentType = headers.get('Accept') == 'application/json' ? 'application/json;charset=UTF-8' : 'text/html;charset=UTF-8';
+
+    // This is a POST request from Javascript
+    if (headers.get('Accept') == 'application/json' && headers.containsKey('Content-Length') && Integer.valueOf(headers.get('Content-Length')) > 0) {
+      String origin = headers.get('Origin');
+      String allowedOrigin = 'https://' + new URL(Site.getBaseRequestUrl()).getHost();
+      // Do not support CORS
+      ApexPages.currentPage().getHeaders().put('Access-Control-Allow-Origin', new URL(Site.getBaseRequestUrl()).getHost());
+
+      // Only requests from the same domain are processed
+      if (origin != allowedOrigin) return null;
+
+      // This an XHR request made from the page itself, process it
+      try {
+        Map<String, String> body = ApexPages.currentPage().getParameters();
+
+        switch on body.remove('action') {
+          when 'loadContext' {
+            if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage(body.get('startURL'));
+            RESPONSE.putAll(loadContext(body.get('startURL')));
+            return null;
+          }
+
+          when else {
+            return null;
+          }
+        }
+      } catch (Exception ex) {
+        RESPONSE.putAll(ConverterUtils.toMap(ex));
+      }
+    } else {
+      this.backgroundColor = [SELECT AssetCategory, TextAsset FROM CustomBrandAsset WHERE AssetCategory = 'LoginQuaternaryColor' AND CustomBrandId IN (SELECT Id FROM CustomBrand WHERE ParentId =: Network.getNetworkId())].TextAsset; 
+      RESPONSE.putAll(Auth.SessionManagement.getCurrentSession());
+    }
+
+    return null;
   }
 
-  public PageReference process() {
+  public Map<String, Object> loadContext(String startURL) {
+    Map<String, Object> response = new Map<String, Object> ();
     cym.Community context = cym.Community.getCurrent();
-    Repository store = new Repository();
     cym.Community.Authenticator webauthn_platform = context.authenticators.find('name', 'webauthn_platform');
 
-    if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage(ApexPages.currentPage().getParameters().get('startURL'));
-
     cym.Browser browser = cym.Browser.getCurrent();
-    cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).sync();
+    cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, UserInfo.getUserId()).sync();
 
-    System.debug(session);
-    for (cym.Browser.SessionVerification v : session.verifications.asList()) System.debug(v);
+    String[] user_factors = new UserUtils.Repository().getUserFactors(UserInfo.getUserId());
+    if (user_factors.indexOf('password') > -1) user_factors.remove(user_factors.indexOf('password'));
+    RESPONSE.put('factors', user_factors);
 
-    String[] user_factors = store.getUserFactors(UserInfo.getUserId());
+    // System.debug(session);
+    // for (cym.Browser.SessionVerification v : session.verifications.asList()) System.debug(v);
 
+
+    String[] sessionFactors = new String[] {};
     for (cym.Browser.SessionVerification verification : session.verifications.asList()) {
-      if (verification.authenticatorId == webauthn_platform.id) {
-        user_factors.add('webauthn.platform');
-        break;
-      }
+      cym.Community.Authenticator authenticator = context.authenticators.find('id', verification.authenticatorId);
+      if (authenticator != null && verification.isActive()) sessionFactors.add(authenticator.name);
     }
+    RESPONSE.put('sessionFactors', sessionFactors);
 
     if (context.authenticators.find('name', 'twilio_push') != null) {
       TwilioVerify.Push service = new TwilioVerify.Push(context.authenticators.find('name', 'twilio_push'));
       if (service.getFactors().size() > 0) user_factors.add('twilio_push');
     }
 
-    RESPONSE.put('factors', user_factors);
-    RESPONSE.put('LoginHistoryId', Auth.SessionManagement.getCurrentSession().get('LoginHistoryId'));
-    RESPONSE.put('handle', cym.Browser.getCurrent().handle.extendUntil(Datetime.now().addSeconds(3600)).value);
-    RESPONSE.put('basePath', Site.getBaseRequestUrl());
-
-    RESPONSE.put('startURL', ApexPages.currentPage().getParameters().get('startURL')); // NOPMD.ApexXSSFromUrlParam
-    return null;
+    return response;
   }
 
   private static Map<String, Object> sendSms(User current_user, cym.Community context) {
@@ -144,148 +179,6 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   }
 
   @AuraEnabled
-  public static Map<String, Object> initVerificationEmail() {
-    TwoFactorMethodsInfo info = new Repository().getTwoFactorInfo(UserInfo.getUserId());
-    Auth.VerificationMethod method = Auth.VerificationMethod.EMAIL;
-
-    String transaction_id = info.HasUserVerifiedEmailAddress ? System.UserManagement.initVerificationMethod(method) : System.UserManagement.initRegisterVerificationMethod(method);
-
-    return new Map<String, Object> {
-      'transactionId' => transaction_id
-    };
-  }
-
-  @AuraEnabled
-  public static Map<String, Object> verifyVerificationEmail(String transactionId, String otp, String handle) {
-    TwoFactorMethodsInfo info = new Repository().getTwoFactorInfo(UserInfo.getUserId());
-    Auth.VerificationMethod method = Auth.VerificationMethod.EMAIL;
-
-    Boolean result = info.HasUserVerifiedEmailAddress ? System.UserManagement.verifyVerificationMethod(transactionId, otp, method).success : String.isBlank(System.UserManagement.verifyRegisterVerificationMethod(otp, method));
-
-    cym.Browser browser = cym.Browser.fromHandle(handle);
-    cym.Browser.Session session = findOrAddSession(browser, UserInfo.getUserId()).activate();
-    cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'totp');
-    session.apply(auth, null, null);
-
-    return new Map<String, Object> {
-      'isValid' => result
-    };
-  }
-
-  
-  @AuraEnabled
-  public static Map<String, Object> initRegisterTotp(Id userId) {
-    userId = String.isNotBlank(userId) ? userId : UserInfo.getUserId();
-    TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(userId);
-    Map<String, Object> response = new Map<String, Object> {
-      'registered' => false
-    };
-    if (info.HasTotp) {
-      return new Map<String, Object> {
-        'registered' => true
-      };
-    }
-    response.putAll(Auth.SessionManagement.getQrCode());
-    return response;
-  }
-
-
-  /**
-   * In this sample application, TOTP registration is only done after the user has successfully registered or logged in with another factor (like a password or an SMS)
-   */
-  @AuraEnabled
-  public static Map<String, Object> verifyRegisterTotp(String secret, String otp, String handle, String startURL){
-    try {
-      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(UserInfo.getUserId());
-      if (info.HasTotp) throw new AuraHandledException('invalid_registration');
-
-      cym.Browser browser = cym.Browser.fromHandle(handle);
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, UserInfo.getUserId()).activate();
-
-      // Registering a TOTP makes a DML on a Setup object, it must be run in a different transaction
-      String response = session.getRemoteApex(ChallengeController.RegisterTotp.class).invoke(JSON.serialize(new Map<String, Object> {'secret' => secret, 'otp' => otp}));
-      Boolean isValid = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
-
-      if (isValid) {
-        cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'totp');
-        session.apply(auth, null, null);
-
-        PageReference resume = session.resume(startURL);
-
-        return new Map<String, Object> {
-          'isValid' => true,
-          'redirect' => resume.getUrl()
-        };
-      } else {
-        return new Map<String, Object> {
-          'isValid' => false
-        };
-      }
-    } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
-    }
-  }
-
-  global with sharing class RegisterTotp extends cym.Remote.Function {
-    global override String execute(String param) {
-      Map<String, Object> args = (Map<String, Object>) JSON.deserializeUntyped(param);
-      String secret = (String) args.get('secret');
-      String otp = (String) args.get('otp');
-      Boolean isValid = Auth.SessionManagement.validateTotpTokenForKey(secret, otp);
-      if (!isValid) return JSON.serialize(new Map<String, Object> {'isValid' => false});
-      insert new TwoFactorInfo( // NOPMD.ApexCRUDViolation
-        SharedKey = secret,
-        Type = 'TOTP',
-        UserId = UserInfo.getUserId()
-      );
-      return JSON.serialize(new Map<String, Object> {'isValid' => true});
-    }
-  }
-
-  @AuraEnabled
-  public static Map<String, Object> verifyVerificationTotp(String otp, String handle, String startURL, Id userId) {
-    userId = String.isNotBlank(userId) ? userId : UserInfo.getUserId();
-
-    cym.Browser browser = cym.Browser.fromHandle(handle);
-    cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, userId).activate();
-
-
-    // Verifying a TOTP requires the connected user
-    String response = session.getRemoteApex(ChallengeController.VerifyTotp.class).invoke(JSON.serialize(new Map<String, Object> {'otp' => otp}));
-    Boolean result = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
-
-    if (result) {
-      cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', 'totp');
-      PageReference resume = session.apply(auth, null, null).resume(startURL);
-      return new Map<String, Object> {
-        'result' => true,
-        'redirect' => resume.getUrl()
-      };
-    } else {
-      return new Map<String, Object> {
-        'result' => false
-      };
-    }
-  }
-
-  global with sharing class VerifyTotp extends cym.Remote.Function {
-    global override String execute(String param) {
-      Map<String, Object> args = (Map<String, Object>) JSON.deserializeUntyped(param);
-      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(UserInfo.getUserId());
-
-      String otp = (String) args.get('otp');
-
-      // This call makes a DML. It must be done after the activate call
-      Boolean isValid = info.HasTotp ? System.UserManagement.verifyVerificationMethod(null, otp, Auth.VerificationMethod.TOTP).success : false;
-
-      return JSON.serialize(new Map<String, Object> {'isValid' => isValid});
-    }
-  }
-
-
-
-
-  @AuraEnabled
   public static Object[] listAllTwilioPush(){
     try {
       cym.Community context = cym.Community.getCurrent();
@@ -296,7 +189,6 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
       throw new AuraHandledException(e.getMessage());
     }
   }
-
 
   @AuraEnabled
   public static Object initTwilioPush(String sid) {
@@ -327,60 +219,6 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
-  }
-
-  public without sharing class Repository {
-    public User findById(Id user_id) {
-      return [SELECT // NOPMD.ApexCRUDViolation
-        Id, Name, FirstName, LastName, CommunityNickname, Username, SmallPhotoUrl,
-        Email, TimeZoneSidKey, LanguageLocaleKey, MobilePhone, Street, State, PostalCode, City, Country,
-        LastModifiedDate
-        FROM User
-      WHERE Id = :user_id];
-    }
-
-    public TwoFactorMethodsInfo getTwoFactorInfo(Id user_id) {
-      TwoFactorMethodsInfo[] verified_info = [SELECT // NOPMD.Security-ApexCRUDViolation
-        HasUserVerifiedEmailAddress,
-        HasUserVerifiedMobileNumber,
-        HasVerifiedMobileNumber,
-        HasSalesforceAuthenticator,
-        HasTotp,
-        HasU2F
-        FROM TwoFactorMethodsInfo
-        WHERE UserId = :user_id
-        LIMIT 1
-      ];
-      return verified_info.size() == 1 ? verified_info[0] : null;
-    }
-
-    public String[] getUserFactors(Id user_id) {
-      Set<String> user_factors = new Set<String>();
-      List<cym.WebAuthn.Credential> webAuthnCredentials = cym.WebAuthn.getAllCredentials();
-      for(cym.WebAuthn.Credential cred: webAuthnCredentials) if(cred.transports.indexOf('internal') == -1) user_factors.add('webauthn');
-
-      TwoFactorMethodsInfo info = this.getTwoFactorInfo(user_id);
-      if (info != null) {
-        if (info.HasUserVerifiedMobileNumber || info.HasVerifiedMobileNumber) user_factors.add('sms');
-        if (info.HasSalesforceAuthenticator) user_factors.add('push');
-        if (info.HasTotp) user_factors.add('totp');
-        if (info.HasU2F) user_factors.add('u2f');
-      }
-      return new List<String>(user_factors);
-    }
-  }
-
-
-  public static cym.Browser.Session findOrAddSession(cym.Browser browser, Id userId) {
-    cym.Browser.Session session;
-    for (cym.Browser.Session s : browser.sessions.asList()) {
-      if (s.OwnerId == userId) {
-        session = s;
-        break;
-      }
-    }
-    if (session == null) session = browser.sessions.add(userId);
-    return session;
   }
 
 }

@@ -41,12 +41,13 @@ public with sharing class UserUtils {
     }
 
     public String[] getUserFactors(Id user_id) {
-      Set<String> user_factors = new Set<String>{'password'};
+      Set<String> user_factors = new Set<String>{ 'password' };
       List<cym.WebAuthn.Credential> webAuthnCredentials = cym.WebAuthn.getAllCredentials();
-      for(cym.WebAuthn.Credential cred: webAuthnCredentials) user_factors.add(cred.transports.indexOf('internal') == -1 ? 'webauthn': 'webauthn.platform');
+      for(cym.WebAuthn.Credential cred: webAuthnCredentials) user_factors.add(cred.transports.indexOf('internal') == -1 ? 'webauthn_roaming': 'webauthn_platform');
 
       TwoFactorMethodsInfo info = this.getTwoFactorInfo(user_id);
       if (info != null) {
+        if (info.HasUserVerifiedEmailAddress) user_factors.add('email');
         if (info.HasUserVerifiedMobileNumber || info.HasVerifiedMobileNumber) user_factors.add('sms');
         if (info.HasSalesforceAuthenticator) user_factors.add('push');
         if (info.HasTotp) user_factors.add('totp');

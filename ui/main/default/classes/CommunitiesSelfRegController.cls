@@ -49,6 +49,14 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp);
 
       Id userId = (Id) response.get('userId');
+      community.getRemoteApex(CommunitiesSelfRegController.AssignPermSet.class)
+        .invoke(
+          JSON.serialize(
+            new Map<String, Object> {
+              'userId' => userId
+            }
+          )
+        );
 
       return cym.Browser.getCurrent()
         .sessions
@@ -67,7 +75,7 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
     }
   }
   global with sharing class CreateUser extends cym.Remote.Function {
-    public override String execute(String param) {
+    global override String execute(String param) {
       Map<String, Object> args = (Map<String,Object>) JSON.deserializeUntyped(param);
 
       String email = (String) args.get('email');
@@ -100,6 +108,20 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
     }
   }
 
+  global without sharing class AssignPermSet extends cym.Remote.Function {
+    global override String execute(String param) {
+      Map<String, Object> args = (Map<String,Object>) JSON.deserializeUntyped(param);
+
+      Id userId = (Id) args.get('userId');
+
+      PermissionSet[] permsets = [SELECT Id FROM PermissionSet WHERE Name = 'cym_identity_user']; // NOPMD
+      PermissionSetAssignment psa = new PermissionSetAssignment(PermissionSetId = permsets[0].Id, AssigneeId = userId);
+
+      insert psa; // NOPMD.ApexCRUDViolation
+
+      return JSON.serialize(new Map<String, Object> { 'userId' => userId });
+    }
+  }
 
 
 }

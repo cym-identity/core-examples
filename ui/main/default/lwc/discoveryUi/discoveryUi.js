@@ -6,6 +6,7 @@ import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
 
 import discover from "@salesforce/apex/DiscoveryController.discover";
 import authenticate from "@salesforce/apex/DiscoveryController.authenticate";
+import resetWeakPassword from "@salesforce/apex/DiscoveryController.resetWeakPassword";
 
 export default class DiscoveryUi extends LightningElement {
   app;
@@ -15,7 +16,7 @@ export default class DiscoveryUi extends LightningElement {
   users = [];
 
   startUrl = new URLSearchParams(document.location.search).get('startURL');
-  basePath = STATIC_RESOURCE_URL.split("/resource/")[0];
+  basePath = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0];
   authenticators = [];
   socialProviders;
   Labels = {
@@ -92,22 +93,22 @@ export default class DiscoveryUi extends LightningElement {
   get canShowFooterSection() { return this.app && (this.app.tos_uri || this.app.policy_uri); }
 
   get canShowDiscoverySection() {return ["account_chooser", "discovery"].indexOf(this.step) > -1;}
-  get canShowAuthenticatorSection() {return (["authenticator_chooser", "password", "webauthn", "webauthn.platform", "totp", "webauthn.platform.register",].indexOf(this.step) > -1);}
+  get canShowAuthenticatorSection() {return (["authenticator_chooser", "password", "webauthn", "webauthn_platform", "totp", "webauthn_platform.register",].indexOf(this.step) > -1);}
   get canShowRegistrationSection() {return ["register"].indexOf(this.step) > -1;}
 
   get canShowAccountChooser() { return this.step === "account_chooser";}
   get canShowEmail() {return this.step === "discovery";}
   get canShowPassword() {return this.step === "password";}
-  get canShowWebAuthnPlatform() {return this.step === "webauthn.platform";}
+  get canShowWebAuthnPlatform() {return this.step === "webauthn_platform";}
 
   get canShowRegister() {return this.step === "register";}
-  get canRegisterWebAuthnPlatform() {return this.step === "webauthn.platform.register";}
+  get canRegisterWebAuthnPlatform() {return this.step === "webauthn_platform.register";}
   get canShowTotp() {return this.step === "totp";}
 
   get canShowAuthenticatorOptions() {return (this.canShowAuthenticatorSection && !this.canShowAuthenticatorChooser && this.authenticators.length > 1);}
   get canShowAuthenticatorChooser() {return this.step === "authenticator_chooser";}
   get canShowAuthenticatorChooserTotp() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("totp") > -1);}
-  get canShowAuthenticatorChooserWebAuthnPlatform() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("webauthn.platform") > -1);}
+  get canShowAuthenticatorChooserWebAuthnPlatform() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("webauthn_platform") > -1);}
   get canShowAuthenticatorChooserPassword() {return (this.step === "authenticator_chooser" && this.authenticators.indexOf("password") > -1);}
 
   handleEmailChange(e) {
@@ -116,6 +117,9 @@ export default class DiscoveryUi extends LightningElement {
 
   handlePasswordChange(e) {
     this.password = e.target.value;
+  }
+  handleNewPasswordChange(e) {
+    this.newPassword = e.target.value;
   }
 
   resetEmail() {
@@ -126,7 +130,11 @@ export default class DiscoveryUi extends LightningElement {
         ? "account_chooser"
         : "discovery";
     this.password = "";
+    this.weak_password = false;
   }
+
+  weak_password = false;
+  newPassword;
 
   backToChooser() { this.step = "account_chooser"; }
   backToAuthenticatorChooser() { this.step = "authenticator_chooser"; }
@@ -136,6 +144,8 @@ export default class DiscoveryUi extends LightningElement {
     this.email = "";
     this.userId = "";
     this.error = "";
+    this.weak_password = false;
+    this.newPassword = '';
   }
 
   showAuthenticatorTotp() { this.step = "totp"; }
@@ -151,30 +161,29 @@ export default class DiscoveryUi extends LightningElement {
 
   redirect;
   async loginComplete(redirect) {
-    console.log({redirect});
     if (
-      this.authenticators.indexOf("webauthn.platform") == -1 &&
-      this.step !== "webauthn.platform.register"
+      this.authenticators.indexOf("webauthn_platform") == -1 &&
+      this.step !== "webauthn_platform.register"
     ) {
       this.redirect = redirect;
       this.loading = false;
       this.authenticators = [];
-      this.step = "webauthn.platform.register";
+      this.step = "webauthn_platform.register";
       return;
     }
     return window.location.replace(redirect);
   }
 
+  registerWebAuthnPlatformLoading = true;
   handleRegisterWebAuthnPlatformReady({
     detail: {
       error,
       error_description,
     },
   }) {
-    console.log({error, error_description})
     // The browser does not support WebAuthn or does not have UserVerification
-    if (error)
-      return window.location.replace(this.redirect);
+    if (error) return window.location.replace(this.redirect);
+    this.registerWebAuthnPlatformLoading = false;
   }
 
   async handleDiscover(e) {
@@ -205,30 +214,54 @@ export default class DiscoveryUi extends LightningElement {
     const handle = (
       await (await fetch(this.basePath + "/browser_handle")).json()
     ).handle;
-    authenticate({
-      email: this.email,
-      password: this.password,
-      startURL: this.startUrl,
-      handle,
-    })
-      .then((redirect) => {
-        if (redirect) this.loginComplete(redirect);
-        this.loading = false;
+
+    if (this.weak_password) {
+      return resetWeakPassword({
+        email: this.email,
+        password: this.password,
+        newPassword: this.newPassword,
+        startURL: this.startUrl,
+        handle,
       })
-      .catch(({ body }) => {
-        this.loading = false;
-        this.error = body.message;
-        setTimeout(() => {
-          this.error = undefined;
-        }, 3000);
-      });
+        .then((redirect) => {
+          if (redirect) this.loginComplete(redirect);
+          this.loading = false;
+        })
+        .catch(({ body : {message} }) => {
+          this.loading = false;
+          this.error = message;
+          if (message === 'weak_password') this.weak_password = true;
+          setTimeout(() => {
+            this.error = undefined;
+          }, 3000);
+        });
+    } else {
+      authenticate({
+        email: this.email,
+        password: this.password,
+        startURL: this.startUrl,
+        handle,
+      })
+        .then((redirect) => {
+          if (redirect) this.loginComplete(redirect);
+          this.loading = false;
+        })
+        .catch(({ body : {message} }) => {
+          this.loading = false;
+          this.error = message;
+          if (message === 'weak_password') this.weak_password = true;
+          setTimeout(() => {
+            this.error = undefined;
+          }, 3000);
+        });
+    }
   }
 
   handleWebAuthnPlatformReady({ detail: { error } }) {
     if (error) {
       // The browser does not support WebAuthn or does not have UserVerification
-      // Must remove the webauthn.platform from the list of authenticators and allow the user to choose another method
-      this.removeAuthenticator('webauthn.platform');
+      // Must remove the webauthn_platform from the list of authenticators and allow the user to choose another method
+      this.removeAuthenticator('webauthn_platform');
       this.backToAuthenticatorChooser();
     }
   }
@@ -244,7 +277,7 @@ export default class DiscoveryUi extends LightningElement {
 
   handleWebAuthnPlatformError({ detail: { error, error_description } }) {
     // The user cancelled or none of the credentials registered by the current user are part of the current device
-    this.removeAuthenticator('webauthn.platform');
+    this.removeAuthenticator('webauthn_platform');
     this.backToAuthenticatorChooser();
     this.error = error_description;
     setTimeout(() => {

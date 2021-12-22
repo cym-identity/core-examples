@@ -53,24 +53,78 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
   public static String authenticate(String email, String password, String startURL, String handle){
     try {
       User u = new UserUtils.Repository().findByEmail(email);
-      String userName = u?.Username;
-      if (String.isBlank(userName)) throw new InvalidUsernameException('Your login attempt has failed. Make sure the username and password are correct.');
-      PageReference pr = Site.login(userName, password, startURL);
-
-
+      String username = u?.username;
+      if (String.isBlank(username)) throw new InvalidUsernameException('Your login attempt has failed. Make sure the username and password are correct.');
       cym.Community idp = cym.Community.getCurrent();
-      cym.Browser browser = cym.Browser.fromHandle(handle);
 
-      BrowserSessionUtils.findOrAddSession(browser, u.Id)
+      cym.SalesforceAuthenticator.Password authenticator = (cym.SalesforceAuthenticator.Password) idp.authenticators.find('name', 'password');
+      PageReference pr = (PageReference) authenticator.verifyVerification(
+        new Map<String, Object> {
+          'username' => username,
+          'password' => password,
+          'startURL' => startURL
+        }
+      );
+
+      return BrowserSessionUtils.findOrAddSession(cym.Browser.fromHandle(handle), u.Id)
         .activate()
-        .apply(idp.authenticators.find('name', 'password'), null, new String[] {'pwd'})
+        .apply(authenticator, null, null)
         .resume(startURL)
         .getUrl();
 
-      return pr.getUrl();
+    } catch (Exception ex) {
+      throw new AuraHandledException(ex.getMessage());
+    }
+  }
 
+  @AuraEnabled
+  public static string resetWeakPassword(String email, String password, String newPassword, String startURL, String handle){
+    cym.Community idp = cym.Community.getCurrent();
+    cym.SalesforceAuthenticator.Password authenticator = (cym.SalesforceAuthenticator.Password) idp.authenticators.find('name', 'password');
+    User u = new UserUtils.Repository().findByEmail(email);
+    String username = u?.username;
+    try {
+      if (String.isBlank(username)) throw new InvalidUsernameException('Your login attempt has failed. Make sure the username and password are correct.');
+      PageReference pr = (PageReference) authenticator.verifyVerification(
+        new Map<String, Object> {
+          'username' => username,
+          'password' => password,
+          'startURL' => startURL
+        }
+      );
+      // The flow should always throw a weak_password or else this is not part of the usual flow
+      throw new AuraHandledException('invalid_request');
     } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
+      if (e.getMessage() != 'weak_password') throw new AuraHandledException('invalid_request');
+    }
+
+    try {
+      // Checks that the user chosen password is compliant to Authenticator policy ie.: HaveIBeenPwnd check.
+      authenticator.initRegistration(
+        new Map<String, Object> {
+          'userId' => u.Id,
+          'password' => newPassword,
+          'startURL' => startURL
+        }
+      );
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.fromHandle(handle), u.Id).activate();
+      // Setting the user password requires higher permissions than a Guest user or normal user. Hence calling using the Community Technical User
+      session.getRemoteApex(DiscoveryController.ResetUserPassword.class).invoke(
+        JSON.serialize(
+          new Map<String, Object> {
+            'userId' => u.Id,
+            'oldPassword' => password,
+            'newPassword' => newPassword,
+            'startURL' => startURL
+          }
+        )
+      );
+      return session
+        .apply(authenticator, null, null)
+        .resume(startURL)
+        .getUrl();
+    } catch (Exception ex) {
+      throw new AuraHandledException(ex.getMessage());
     }
   }
 
@@ -108,7 +162,7 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       for (cym.Browser.SessionVerification v : session.verifications.asList()) if (v.authenticatorId == webauthnAuthenticator.Id) {webAuthnVerification = v; break;}
 
       return new Map<String, Object> {
-        'action' => webAuthnVerification != null ? 'webauthn.platform' : (authenticators.size() > 1 ? 'authenticator_chooser' : authenticators[0]),
+        'action' => 'authenticator_chooser', // webAuthnVerification != null ? 'webauthn_platform' : (authenticators.size() > 1 ? 'authenticator_chooser' : authenticators[0]),
         'userId' => user_id,
         'authenticators' => authenticators,
         'socialProviders' => socialProviders
@@ -207,6 +261,25 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       return JSON.serialize(
         new UserUtils.Repository().getUsers(userIds)
       );
+    }
+  }
+
+  global class ResetUserPassword extends cym.Remote.Function {
+    global override String execute(String p) {
+      Map<String, Object> params = (Map<String, Object>) JSON.deserializeUntyped(p);
+      cym.Community idp = cym.Community.getCurrent();
+      cym.SalesforceAuthenticator.Password authenticator = (cym.SalesforceAuthenticator.Password) idp.authenticators.find('name', 'password');
+
+      authenticator.verifyRegistration(
+        new Map<String, Object> {
+          'userId' => params.get('userId'),
+          'oldPassword' => params.get('oldPassword'),
+          'newPassword' => params.get('newPassword'),
+          'startURL' => params.get('startURL')
+        }
+      );
+
+      return '{}';
     }
   }
 

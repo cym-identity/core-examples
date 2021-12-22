@@ -13,12 +13,14 @@ export default class WebauthnChallenge extends LightningElement {
   get canShowButton() { return this.ready && !this.error; }
 
   get webAuthnPath() {
-    let prefix = STATIC_RESOURCE_URL.split("/resource/")[0];
-    if (prefix[0] === '/') prefix = window.location.protocol + '//' + window.location.host + prefix;
-    return prefix + "/webauthn?authenticator=" + encodeURIComponent(this.authenticator);
+    let prefix = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0]
+    return prefix + "/webauthn?authenticator=" + encodeURIComponent(this.authenticator) + '&requestor=' + this.requestor;
   }
 
-  webauthnController = function ({ data: { action, response } }) {
+  requestor = Math.floor(Math.random() * 100_000) + "";
+
+  webauthnController = function ({ data: { action, response, requestor } }) {
+    if (requestor !== this.requestor) return;
     this.loading = false;
     if (action === "ready") {
       const {
@@ -77,22 +79,16 @@ export default class WebauthnChallenge extends LightningElement {
 
   handleInitVerifyWebAuthn() {
     try {
-      console.log(this.webAuthnPath);
       let u = new URL(this.webAuthnPath);
-      console.log({
-        action: "initVerifyWebAuthn",
-        authenticator: this.authenticator,
-        userId: this.userId,
-        startUrl: this.startUrl,
-      }, `${u.protocol}//${u.host}`)
       this.loading = true;
+      const input = {
+        action: "initVerifyWebAuthn",
+        requestor: this.requestor,
+        startUrl: this.startUrl,
+      };
+      if (this.userId != undefined) input.userId = this.userId;
       this.template.querySelector("iframe").contentWindow.postMessage(
-        {
-          action: "initVerifyWebAuthn",
-          authenticator: this.authenticator,
-          userId: this.userId,
-          startUrl: this.startUrl,
-        },
+        input,
         `${u.protocol}//${u.host}`
       );
     } catch(e) {

@@ -1,94 +1,14 @@
 <template>
-  <article class="slds-card" style="padding: 32px 16px; margin: 16px" >
-    <div class="slds-card__body slds-card__body_inner" if:false={showEnrollWebAuthnPlatform}>
-
-      <div class="slds-text-heading_medium slds-text-align_center">Secure your account</div>
-      <c-challenge-email ondone={emailVerifyDone} if:true={showEmail} start-url={startUrl} base-path={basePath}></c-challenge-email>
-      <c-challenge-totp ondone={factorDone} if:true={showTotp} start-url={startUrl} base-path={basePath}></c-challenge-totp>
-      <c-challenge-sms ondone={factorDone} if:true={showSms} start-url={startUrl} base-path={basePath}></c-challenge-sms>
-      <c-challenge-twilio-push ondone={factorDone} if:true={showTwilioPush} start-url={startUrl} base-path={basePath}></c-challenge-twilio-push>
-      <c-webauthn-challenge
-        ondone={factorDone}
-        if:true={showWebAuthn}
-        credentials={credentials}
-        authenticator="webauthn_cross_platform"
-        start-url={startUrl}
-        base-path={basePath}>
-
-        <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
-        <button class="slds-button slds-button_brand" slot="button">
-          <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
-          Use your security key
-        </button>
-      </c-webauthn-challenge>
-
-      <c-webauthn-challenge
-        ondone={handleWebAuthnPlatformDone}
-        if:true={showWebAuthnPlatform}
-        onerror={handleWebAuthnPlatformError}
-        authenticator="webauthn_platform"
-        start-url={startUrl}>
-
-          <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
-          <button class="slds-button slds-button_brand" slot="button">
-            <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
-            Verify with biometrics
-          </button>
-      </c-webauthn-challenge>
-
-      <ul class="slds-has-block-links_space" if:true={showList}>
-        <template for:each={remainingFactors} for:item="r">
-          <li class="slds-item" key={r}>
-            <a onclick={r.onclick}>{r.title}</a>
-          </li>
-        </template>
-      </ul>
-
-      <div class="slds-text-align_left slds-button_stretch" if:true={hasOtherAuthenticators}>
-        <p class="slds-text-heading_small_xx slds-text-align_center">
-          <a onclick={showAllFactors}>Choose a different verification method</a>
-        </p>
-      </div>
-    </div>
-
-    <div class="slds-card__body slds-card__body_inner" if:true={showEnrollWebAuthnPlatform}>
-      <div class="slds-text-heading_medium slds-text-align_center">You’re eligible for a simpler sign-in!</div>
-      <div style="margin: 16px;">
-        <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
-      </div>
-      <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
-      <c-webauthn-register
-        ondone={enrollWebAuthnPlatformDone}
-        onerror={handleEnrollWebAuthnPlatformError}
-        authenticator="webauthn_platform"
-        start-url={startUrl}
-        base-path={basePath}>
-
-        <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
-        <button class="slds-button slds-button_brand" slot="button">
-          <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
-          Register Now!
-        </button>
-      </c-webauthn-register>
-
-      <p class="slds-text-align_center">
-        <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
-      </p>
-      <p class="slds-text-heading_small_xx slds-text-align_center" style="margin: 16px;">
-        <a onclick={toggleLearnMore}>
-          <span if:false={showLearnMore}>Learn More</span>
-          <span if:true={showLearnMore}>Hide</span>
-        </a> | <a onclick={skipEnrollWebAuthnPlatform}>skip</a>
-      </p>
-      <ul class="slds-list_dotted" if:true={showLearnMore}>
-        <li>FIDO is a technology built into all leading desktop devices (PC and Mac) and browsers, that allows users to sign in securely without a password.</li>
-        <li>In the same way your phone uses a biometric, FIDO now enables biometric sign-in on websites viewed on your desktop too.</li>
-        <li>FIDO makes sign-in easy, safe, and private!</li>
-        <li>FIDO technology uses your computer's built-in authentication method (i.e., Windows Hello or Apple Touch ID) to ensure your sign-in information stays safe from hackers because it never leaves your computer.</li>
-        <li>Once you’ve registered your computer’s PIN, facial recognition, fingerprint, or security key, FIDO verifies it’s really you and doesn’t transmit any of your sign-in information over the internet.</li>
-        <li>Registering with FIDO provides you with an additional sign-in option for this device — your password remains valid.</li>
-        <li>Leading companies worldwide in retail, telecommunications, finance, and technology are already using FIDO.</li>
-      </ul>
+  <article class="slds-card slds-grid_align-center">
+    <div class="slds-card__body slds-card__body_inner slds-grid slds-grid_vertical-align-center" style="min-height: 300px;">
+      <lightning-tabset class="slds-col slds-size_1-of-1">
+        <lightning-tab label="Verification">
+          <c-all-challenge></c-all-challenge>
+        </lightning-tab>
+        <lightning-tab label="Registration">
+          <c-all-register></c-all-register>
+        </lightning-tab>
+      </lightning-tabset>
     </div>
 
   </article>

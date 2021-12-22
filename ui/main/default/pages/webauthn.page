@@ -77,20 +77,21 @@
 
           var allowedOrigin = window.location.protocol + '//' + window.location.host;
           function sendMessage(action, response) {
-            window.parent.postMessage({ action: action, response: response }, allowedOrigin);
+            window.parent.postMessage({ action: action, response: response, requestor: input.requestor }, allowedOrigin);
           }
 
           function initRegisterWebAuthn(data) {
-            var authenticator = data.authenticator;
             var userId = data.userId;
             var startUrl = data.startUrl;
+            var input = { action: data.action };
+            if (userId) input.userId = userId;
 
             return fetch(window.location.href, {
               method: 'POST',
               headers: {
                 Accept: 'application/json'
               },
-              body: new URLSearchParams({ authenticator: authenticator, action: data.action, userId: userId })
+              body: new URLSearchParams(input)
             })
               .then(function (resp) { return resp.json(); })
               .then(function (response) {
@@ -100,9 +101,7 @@
                   .then((response) => {
                     var payload = {
                       action: 'verifyRegisterWebAuthn',
-                      authenticator: authenticator,
                       startURL: startUrl,
-                      userId: userId,
                       id: response.id,
                       rawId: base64url.encode(response.rawId),
                       attestationObject: base64url.encode(
@@ -115,7 +114,8 @@
                         ? JSON.stringify(response.response.getTransports())
                         : "[]",
                     };
-                    return payload
+                    if (userId) payload.userId = userId;
+                    return payload;
                   })
                   .then(function (payload) {
                     return fetch(window.location.href, {
@@ -133,16 +133,17 @@
           }
 
           function initVerifyWebAuthn(data) {
-            var authenticator = data.authenticator;
-            var userId = data.userId;
+            var userId = data.userId || null;
             var startUrl = data.startUrl;
+            var input = { action: data.action };
+            if (userId) input.userId = userId;
 
             return fetch(window.location.href, {
               method: 'POST',
               headers: {
                 Accept: 'application/json'
               },
-              body: new URLSearchParams({ authenticator: authenticator, action: data.action, userId: userId })
+              body: new URLSearchParams(input)
             })
               .then(function (resp) { return resp.json(); })
               .then(function (response) {
@@ -151,9 +152,7 @@
                   .then(function (response) {
                     var payload = {
                       action: 'verifyVerifyWebAuthn',
-                      authenticator: authenticator,
                       startURL: startUrl,
-                      userId: userId,
                       id: response.id,
                       rawId: base64url.encode(response.rawId),
                       authenticatorData: base64url.encode(
@@ -164,6 +163,7 @@
                       ),
                       signature: base64url.encode(response.response.signature),
                     }
+                    if (userId) payload.userId = userId;
                     return payload;
                   })
               })

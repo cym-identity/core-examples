@@ -2,6 +2,7 @@
   "orgName": "Demo company",
   "edition": "Developer",
   "adminEmail": "scratch.org@cym-identity.com",
+  "hasSampleData" : true,
   "features": [
     "Communities",
     "Sites",

@@ -87,19 +87,20 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
 
       String userName = email + '.' + UserInfo.getOrganizationId() +'.scratch.com';
 
-      User u = new User();
-      u.Username = userName;
-      u.Email = email;
-      u.FirstName = firstName;
-      u.LastName = lastName;
-      u.CommunityNickname = communityNickname;
-      u.ProfileId = profileId;
-      u.alias = communityNickname;
+      User u = new User(
+        Username = userName,
+        Email = email,
+        FirstName = firstName,
+        LastName = lastName,
+        CommunityNickname = communityNickname,
+        ProfileId = profileId,
+        alias = communityNickname,
 
-      u.LocaleSidKey = UserInfo.getLocale();
-      u.TimeZoneSidKey = UserInfo.getTimeZone().getID();
-      u.LanguageLocaleKey = 'en_US';
-      u.EmailEncodingKey = 'UTF-8';
+        LocaleSidKey = UserInfo.getLocale(),
+        TimeZoneSidKey = UserInfo.getTimeZone().getId(),
+        LanguageLocaleKey = 'en_US',
+        EmailEncodingKey = 'UTF-8'
+      );
 
       insert u; // NOPMD.ApexCRUDViolation
       System.setPassword(u.Id, password);

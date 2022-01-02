@@ -1,6 +1,4 @@
 import { LightningElement } from "lwc";
-import consent_terms_of_service from "@salesforce/label/cym.consent_terms_of_service";
-import consent_privacy_policy from "@salesforce/label/cym.consent_privacy_policy";
 
 import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
 
@@ -20,8 +18,8 @@ export default class DiscoveryUi extends LightningElement {
   authenticators = [];
   socialProviders;
   Labels = {
-    consent_terms_of_service,
-    consent_privacy_policy,
+    consent_terms_of_service : 'Terms of Service',
+    consent_privacy_policy: 'Privacy Policy',
   };
   loading = true;
   email = "";

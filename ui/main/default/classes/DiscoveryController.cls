@@ -256,8 +256,6 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       List<Id> userIds = new List<Id>();
       for (String userId : ConverterUtils.fromObjectArrayToStringArray((Object[]) params.get('userIds'))) userIds.add((Id) userId);
 
-      UserUtils.Repository repo = new UserUtils.Repository();
-
       return JSON.serialize(
         new UserUtils.Repository().getUsers(userIds)
       );

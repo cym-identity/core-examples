@@ -32,6 +32,10 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>MyCustomLogin</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>webauthn</apexPage>
         <enabled>true</enabled>
     </pageAccesses>

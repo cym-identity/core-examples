@@ -2,11 +2,11 @@
   "packageDirectories": [
     {
       "path": "ui",
-      "default": false
+      "default": true
     },
     {
       "path": "force-app",
-      "default": true
+      "default": false
     }
   ],
   "namespace": "",

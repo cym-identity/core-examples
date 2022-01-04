@@ -1,7 +1,7 @@
 /**
  * An apex page controller that supports self registration of users in communities that allow self registration
  */
-global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobalModifier
+global without sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalModifier
 
   public String firstName {get; set;}
   public String lastName {get; set;}
@@ -10,7 +10,7 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
   public String confirmPassword {get; set { confirmPassword = value?.trim(); } }
   public String communityNickname {get; set { communityNickname = value?.trim(); } }
 
-  public CommunitiesSelfRegController() {
+  public MyCommunitiesSelfRegController() {
     String expid = ApexPages.currentPage().getParameters().get('expid');
     if (expId != null) {
         Site.setExperienceId(expId); 
@@ -33,7 +33,7 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
     try {
 
       cym.Community community = cym.Community.getCurrent();
-      String resp = community.getRemoteApex(CommunitiesSelfRegController.CreateUser.class)
+      String resp = community.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
         .invoke(
           JSON.serialize(
             new Map<String, Object> {
@@ -49,7 +49,7 @@ global without sharing class CommunitiesSelfRegController { // NOPMD.AvoidGlobal
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp);
 
       Id userId = (Id) response.get('userId');
-      community.getRemoteApex(CommunitiesSelfRegController.AssignPermSet.class)
+      community.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSet.class)
         .invoke(
           JSON.serialize(
             new Map<String, Object> {

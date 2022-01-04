@@ -1,12 +1,11 @@
 {
   "orgName": "Demo company",
   "edition": "Developer",
-  "adminEmail": "scratch.org@cym-identity.com",
+  "adminEmail": "scratch.org@mydomain.com",
   "hasSampleData" : true,
   "features": [
     "Communities",
-    "Sites",
-    "MutualAuthentication"
+    "Sites"
   ],
   "language": "en_US",
   "settings": {

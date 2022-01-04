@@ -44,9 +44,12 @@ sfdx force:source:push -u YOUR_USER_ALIAS
 
 ### Community
 
+#### CYM Object
+
+1. Navigate to _CYM Identity_ App > _Communities_ Tab > Your Community
 1. The community must have a `RunAs` user defined who has enough rights to access user's `SmallPhotoUrl`
 
-### Managing URLs
+#### Managing URLs
 
 This repository requires a custom URLRewriter to be set up on the Site. It also showcases the integration of a custom URLRewriter and CYM-Identity URLRewirter
 
@@ -54,21 +57,30 @@ This repository requires a custom URLRewriter to be set up on the Site. It also 
 1. On the right panel click on `Setup the URL Rewriter`
 1. On the `URL Rewriter Class` enter the value : `MyCustomUrlRewriter`
 
-### Authenticators
+#### Authenticators
 
 1. An authenticator with the name `password` and provider `cym_SalesforceAuthenticator_Password`
 1. An authenticator with the name `webauthn_platform` and provider `cym_WebAuthn` (handles fingerprints, touchid, ...)
 1. An authenticator with the name `webauthn_roaming` and provider `cym_WebAuthn` (handles security keys like yubikeys ...)
 
+### Site
+
+In order to use all the classes and pages included in this bundle, you need to assign a permission set to your Site's Guest user
+
+1. Navigate to _Setup_ > _User Interface_ > _Sites and Domains_ > _Sites_ > Choose your Site
+1. Click on _Public Access Setting_ > _View Users_ > Choose the user displayed
+1. In the section _Permission Set Assignments_, click on _Edit Assignments_ and add `site guest` permission set
+
 ### Login Experience
 
 #### Visualforce login
-If you prefer to use Visualforce pages, you use the bundled `MyCustomLogin.page`
+
+If you prefer to use Visualforce pages, you can use the bundled `MyCustomLogin.page` and `MyCommunitiesSelfRegController.page`
 
 You first need to assign this page to your community guest profile
 
 1. Navigate to _Setup_ > _User Interface_ > _Sites and Domains_ > _Sites_ > Choose your Site
-1. In the _Site Visualforce Pages_ section, click `Edit` and add `MyCustomLogin.page`
+1. In the _Site Visualforce Pages_ section, click `Edit` and add `MyCustomLogin` & `MyCommunitiesSelfRegController`
 
 Next, you can configure your community to use this page
 
@@ -76,6 +88,7 @@ Next, you can configure your community to use this page
 1. Navigate to the _Workspaces_ of your chosen Community
 1. Navigate to _Administration_ > _Login & Registration_
 1. In the _Login Page Type_ choose `Visualforce Page` and enter the value `MyCustomLogin`
+1. In the _Registration Page Configuration_, choose `Visualforce Page` and enter the value `MyCommunitiesSelfRegController`
 
 #### Experience Page Builder
 

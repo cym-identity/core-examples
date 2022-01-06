@@ -11,21 +11,16 @@ First of all, you'll need to get and setup the CYM-Identity package
 Follow the instructions available on our [website](https://www.cym-identity.com/docs/guides)
 
 1. [Install CYM-Identity](https://www.cym-identity.com/docs/guides/installation)
+2. Give yourself the correct permissions
+    1. Assign yourself a CYM-Identity License
+    1. Assign yourself the `cym-identity admin` permission set
+    ```
+    sfdx force:user:permset:assign --permsetname cym_identity_admin --targetusername YOUR_USER_ALIAS
+    ```
+    `YOUR_USER_ALIAS` should be replace with the alias you have chosen locally on SFDX.
 1. [Set up a Community](https://www.cym-identity.com/docs/guides/communities)
 1. [Set up a Realm (Optional)](https://www.cym-identity.com/docs/guides/realms)
 1. [Set up a Client (Optional)](https://www.cym-identity.com/docs/guides/applications)
-
-
-## Giving yourself the correct permissions
-
-1. Assign yourself a CYM-Identity License
-1. Assign yourself the `cym-identity admin` permission set
-
-```
-sfdx force:user:permset:assign --permsetname cym_identity_admin --targetusername YOUR_USER_ALIAS
-```
-
-`YOUR_USER_ALIAS` should be replace with the alias you have chosen locally on SFDX.
 
 ## Deploying the samples
 
@@ -43,22 +38,34 @@ sfdx force:source:push -u YOUR_USER_ALIAS
 
 ### Community
 
-#### CYM Object
-
-1. Navigate to _CYM Identity_ App > _Communities_ Tab > Your Community
-1. The community must have a `RunAs` user defined who has enough rights to access user's `SmallPhotoUrl`
-
 #### Managing URLs
 
 This repository requires a custom URLRewriter to be set up on the Site. It also showcases the integration of a custom URLRewriter and CYM-Identity URLRewirter
 
 1. Navigate to _CYM Identity_ App > _Communities_ Tab > Your Community
 1. On the right panel click on `Setup the URL Rewriter`
-1. On the `URL Rewriter Class` enter the value : `MyCustomUrlRewriter`
+1. On the `URL Rewriter Class` enter the value `MyCustomUrlRewriter`
 
-#### Authenticators
+#### Configure Salesforce Community
+
+1. Navigate to _Setup_ > _Feature Settings_ > _Digital Experiences_ > _All Sites_
+1. Navigate to the _Workspaces_ of your chosen Community
+1. Navigate to _Administration_ > _Members_
+1. In the profile section, add _sample-external-user_ (This is a customer profile)
+
+#### CYM Object
+
+1. Navigate to _CYM Identity_ App > _Communities_ Tab > Your Community
+1. The community must have a `RunAs` user defined who has enough rights to access user's `SmallPhotoUrl`
+1. Since you have added a new profile to your community, you'll need to `fix` the profiles on the Community Console component
+
+#### CYM Authenticators
+
+By default, these authenticators are already created, if you have removed them, here's how to create them
 
 1. An authenticator with the name `password` and provider `cym_SalesforceAuthenticator_Password`
+1. An authenticator with the name `email` and provider `cym_SalesforceAuthenticator_Email`
+1. An authenticator with the name `totp` and provider `cym_SalesforceAuthenticator_Totp`
 1. An authenticator with the name `webauthn_platform` and provider `cym_WebAuthn` (handles fingerprints, touchid, ...)
 1. An authenticator with the name `webauthn_roaming` and provider `cym_WebAuthn` (handles security keys like yubikeys ...)
 
@@ -74,12 +81,12 @@ In order to use all the classes and pages included in this bundle, you need to a
 
 #### Visualforce login
 
-If you prefer to use Visualforce pages, you can use the bundled `MyCustomLogin.page` and `MyCommunitiesSelfRegController.page`
+If you prefer to use Visualforce pages, you can use the bundled `MyCustomLogin.page` and `MyCustomRegistration.page`
 
 You first need to assign this page to your community guest profile
 
 1. Navigate to _Setup_ > _User Interface_ > _Sites and Domains_ > _Sites_ > Choose your Site
-1. In the _Site Visualforce Pages_ section, click `Edit` and add `MyCustomLogin` & `MyCommunitiesSelfRegController`
+1. In the _Site Visualforce Pages_ section, click `Edit` and add `MyCustomLogin` & `MyCustomRegistration`
 
 Next, you can configure your community to use this page
 
@@ -87,7 +94,9 @@ Next, you can configure your community to use this page
 1. Navigate to the _Workspaces_ of your chosen Community
 1. Navigate to _Administration_ > _Login & Registration_
 1. In the _Login Page Type_ choose `Visualforce Page` and enter the value `MyCustomLogin`
-1. In the _Registration Page Configuration_, choose `Visualforce Page` and enter the value `MyCommunitiesSelfRegController`
+1. In the _Registration Page Configuration_, choose `Visualforce Page` and enter the value `MyCustomRegistration`
+
+> If you use `MyCustomRegistration`, you'll also need to activate _Setup_ > _Users_ > _User Management Setting_ > _Contactless Salesforce Customer Identity Users_
 
 #### Experience Page Builder
 
@@ -117,3 +126,7 @@ This sample implementation works well with Realms created from the [Getting Star
         1. Consent Page `url:/consent`
         1. Challenge Page `url:/challenge`
 1. Hit save
+
+#### Playground
+
+You can configure the [Playground](https://www.cym-identity.com/playground) to test your setup.

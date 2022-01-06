@@ -1,4 +1,3 @@
-
 ## Introduction
 
 This repository contains a Sample implementation for CYM-Identity extension points
@@ -92,16 +91,19 @@ Next, you can configure your community to use this page
 
 #### Experience Page Builder
 
-If you prefer to use Experience Page Builder
+If you prefer to use Experience Page Builder, add the component to your login page
 
 1. Navigate to _Setup_ > _Feature Settings_ > _Digital Experiences_ > _All Sites_
 1. Navigate to the _Builder_ of your chosen Community
 1. Open the configuration for your Login Page
 1. Drag and drop the `Discovery UI` into the correct section of the page
+
+Configure the login page on your Community, if not done already
+
 1. Navigate to _Setup_ > _Feature Settings_ > _Digital Experiences_ > _All Sites_
 1. Navigate to the _Workspaces_ of your chosen Community
 1. Navigate to _Administration_ > _Login & Registration_
-1. In the _Login Page Type_ choose `Experience Page Builder` and enter the name of your Login page.
+1. In _Login Page Type_, choose `Experience Page Builder` and enter the name of your Login page.
 
 > If you only want to use the Authentication Services of CYM-Identity within your community, you can try to login to your community. If you need to authenticate and authorize applications outside Salesforce, you can continue the set up
 

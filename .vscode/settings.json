@@ -1,4 +1,13 @@
 {
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/*.cls-meta.xml": true,
+    "**/*.page-meta.xml": true
+  },
   "search.exclude": {
     "**/node_modules": true,
     "**/bower_components": true,

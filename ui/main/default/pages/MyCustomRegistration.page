@@ -1,28 +1,104 @@
-<apex:page id="communitiesSelfRegPage" showHeader="true" controller="MyCommunitiesSelfRegController" title="{!$Label.site.user_registration}">
-     <apex:define name="body">  
-      <center>
-<apex:form id="theForm" forceSSL="true">
-                    <apex:pageMessages id="error"/>
-                    <apex:panelGrid columns="2" style="margin-top:1em;">
-                      <apex:outputLabel value="First Name" for="firstName"/>
-                      <apex:inputText required="true" id="firstName" value="{!firstName}" label="First Name"/>
-                      <apex:outputLabel value="Last Name" for="lastName"/>
-                      <apex:inputText required="true" id="lastName" value="{!lastName}" label="Last Name"/>
-                      <apex:outputLabel value="{!$Label.site.community_nickname}" for="communityNickname"/>
-                      <apex:inputText required="true" id="communityNickname" value="{!communityNickname}" label="{!$Label.site.community_nickname}"/>
-                      <apex:outputLabel value="{!$Label.site.email}" for="email"/>
-                      <apex:inputText required="true" id="email" value="{!email}" label="{!$Label.site.email}"/>
-                      <apex:outputLabel value="{!$Label.site.password}" for="password"/>
-                      <apex:inputSecret id="password" value="{!password}"/>
-                      <apex:outputLabel value="{!$Label.site.confirm_password}" for="confirmPassword"/>
-                      <apex:inputSecret id="confirmPassword" value="{!confirmPassword}"/>
-                      <apex:outputText value=""/>
-                      <apex:commandButton action="{!registerUser}" value="{!$Label.site.submit}" id="submit"/>
-                    </apex:panelGrid> 
-                  <br/>
-</apex:form>
-     </center>
-      <br/>
-    </apex:define>
+<apex:page id="communitiesSelfRegPage" showHeader="false" controller="MyCommunitiesSelfRegController" title="{!$Label.site.user_registration}"
+  applyBodyTag="false" applyHtmlTag="false" docType="html-5.0">
+
+  <html>
+
+  <head>
+    <title>Register</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <apex:slds />
+    <apex:includeLightning />
+    <style>
+      html,
+      body,
+      body>div.slds-grid,
+      body>div#container {
+        height: 100%;
+        min-height: 100%;
+        background-color: #FAFAFA
+      }
+
+      #auraErrorMessage {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body class="slds-scope">
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+      <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 400px;">
+        <article class="slds-card">
+          <div class="slds-card__body slds-card__body_inner">
+            <apex:form id="theForm" forceSSL="true">
+              <apex:pageMessages id="error" />
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="text-input-id-47">
+                  <apex:outputLabel value="{!$Label.site.email}" for="email" />
+                </label>
+                <div class="slds-form-element__control">
+                  <apex:inputText required="true" id="email" value="{!email}" label="{!$Label.site.email}" styleClass="slds-input" />
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="text-input-id-47">
+                  <apex:outputLabel value="First Name" for="firstName" />
+                </label>
+                <div class="slds-form-element__control">
+                  <apex:inputText required="true" id="firstName" value="{!firstName}" label="First Name" styleClass="slds-input" />
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="text-input-id-47">
+                  <apex:outputLabel value="Last Name" for="lastName" />
+                </label>
+                <div class="slds-form-element__control">
+                  <apex:inputText required="true" id="lastName" value="{!lastName}" label="Last Name" styleClass="slds-input" />
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="text-input-id-47">
+                  <apex:outputLabel value="{!$Label.site.community_nickname}" for="communityNickname" />
+                </label>
+                <div class="slds-form-element__control">
+                  <apex:inputText required="true" id="communityNickname" value="{!communityNickname}" label="{!$Label.site.community_nickname}"
+                    styleClass="slds-input" />
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="text-input-id-47">
+                  <apex:outputLabel value="{!$Label.site.password}" for="password" />
+                </label>
+                <div class="slds-form-element__control">
+                  <apex:inputSecret id="password" value="{!password}" styleClass="slds-input" />
+                </div>
+              </div>
+
+              <div class="slds-form-element">
+                <label class="slds-form-element__label" for="text-input-id-47">
+                  <apex:outputLabel value="{!$Label.site.confirm_password}" for="confirmPassword" />
+                </label>
+                <div class="slds-form-element__control">
+                  <apex:inputSecret id="confirmPassword" value="{!confirmPassword}" styleClass="slds-input" />
+                </div>
+              </div>
+
+              <br/>
+              <apex:commandButton action="{!registerUser}" value="{!$Label.site.submit}" id="submit" styleClass="slds-button slds-button_brand slds-button_stretch"
+              />
+
+            </apex:form>
+
+          </div>
+        </article>
+      </div>
+    </div>
+  </body>
+
+  </html>
 
 </apex:page>

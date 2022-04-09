@@ -1,12 +1,37 @@
 <template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
   <template if:true={clientSessions.length}>
-    <h1>The following applications have access to your data even when you are not using them.</h1> 
-    <lightning-accordion allow-multiple-sections-open>
+    <p class="slds-p-around_small slds-text-heading_small">The following applications have access to your data even when you are not using them.</p>
+
+    <ul class="slds-has-dividers_around-space slds-p-around_small">
       <template for:each={clientSessions} for:item="session">
-        <lightning-accordion-section name={session.client_name} label={session.client_name} key={session.key}>
-          <lightning-button label="Revoke" title="Revoke" onclick={session.revoke}></lightning-button>
-        </lightning-accordion-section>
+        <li key={session.id} class="slds-item">
+          <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+            <div class="slds-col">
+              <span class="slds-avatar slds-avatar_large">
+                <img if:true={session.logo_uri} alt={session.client_name} src={session.logo_uri} title={session.client_name} style="border-radius: 4px;"/>
+              </span>
+            </div>
+            <div class="slds-col">
+              <p class="slds-text-heading_small">{session.client_name}</p>
+              <p class="slds-text-heading_small">Active Sessions : {session.sessions}</p>
+            </div>
+            <div class="slds-col slds-col_bump-left">
+              <lightning-button label="Logout" title="Logout" onclick={session.revoke} variant="destructive"></lightning-button>
+            </div>
+          </div>
+        </li>
       </template>
-    </lightning-accordion>
+    </ul>
+
+    <lightning-button label="Revoke All" title="Revoke All" onclick={revoke}></lightning-button>
+  </template>
+  <template if:true={showEmpty}>
+    <div class="slds-text-align_center">
+      <img src="/img/cms/NoContent_Large.svg" />
+      <p class="slds-p-around_small slds-text-heading_medium">You don't have any active application sessions</p>
+    </div>
   </template>
 </template>

@@ -1,0 +1,80 @@
+<template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+  <div class="slds-p-around_medium">
+    <article class="slds-card slds-card_boundary">
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon size="small" icon-name="utility:lock"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title"><span>Password</span></h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">Last password change : {lastPasswordChangeTime}</div>
+      <footer class="slds-card__footer">
+        <a class="slds-card__footer-action" href="#">Reset Password
+          <span class="slds-assistive-text">Reset Password</span>
+        </a>
+      </footer>
+    </article>
+    <article class="slds-card slds-card_boundary">
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon size="small" icon-name="utility:phone_portrait"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title"><span>Authenticator App</span></h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">
+        <template if:true={hasTotp}>Active since {totpCreationDate}</template>
+        <template if:false={hasTotp}>Register</template>
+      </div>
+    </article>
+
+    <article class="slds-card slds-card_boundary">
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon size="small" icon-name="utility:email"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title"><span>Email</span></h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">
+        <template if:true={hasUserVerifiedEmailAddress}>Verified</template>
+      </div>
+      <footer class="slds-card__footer" if:false={hasUserVerifiedEmailAddress}>
+        <a class="slds-card__footer-action" href="#">Verify your email
+          <span class="slds-assistive-text">Reset Password</span>
+        </a>
+      </footer>
+    </article>
+
+    <article class="slds-card slds-card_boundary">
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <svg width="24px" height="24px" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M23.8636 34.8278C23.7602 34.8278 23.6913 34.8278 23.5879 34.7929C20.1759 33.8852 17.3842 32.1048 15.5231 29.696C13.8344 27.5316 12.9728 24.9832 13.1106 22.5046C13.2485 19.7118 15.5921 17.5823 18.4871 17.5823C21.3822 17.5823 23.7602 19.6419 23.8636 22.2951C23.8636 22.33 23.8636 22.3649 23.8636 22.3998C23.8636 24.285 25.449 25.821 27.448 25.821C29.4125 25.821 30.9979 24.285 30.9979 22.3998C30.9979 16.0113 25.3801 10.8097 18.4871 10.8097C14.6271 10.8097 10.9738 12.4854 8.69914 15.2782C5.97641 18.6645 5.45943 23.2028 7.21714 28.5091C7.28607 28.7185 7.21714 28.928 7.18267 29.0328C7.07928 29.2422 6.87249 29.3819 6.63124 29.4517C6.52784 29.4866 6.45891 29.4866 6.35551 29.4866C5.94194 29.4866 5.59729 29.2422 5.45943 28.928C3.56387 23.2028 4.14977 18.1757 7.18267 14.4404C9.80199 11.2286 14.0067 9.30856 18.4871 9.30856C22.4161 9.30856 26.0694 10.705 28.7576 13.2883C31.3425 15.732 32.8245 19.0834 32.8245 22.4348C32.8245 25.1578 30.4119 27.392 27.4135 27.392C24.5185 27.392 22.1404 25.3323 22.0025 22.6791C22.0025 22.6442 22.0025 22.6093 22.0025 22.5744C22.0025 20.6893 20.4172 19.1532 18.4527 19.1532C16.5226 19.1532 15.0062 20.6194 14.9028 22.6093C14.7994 24.8087 15.5576 27.0428 17.0396 28.928C18.6939 31.0226 21.1409 32.5587 24.1049 33.3616C24.3462 33.4314 24.5529 33.5711 24.6563 33.7805C24.7252 33.8852 24.7597 34.0947 24.6908 34.3042C24.6563 34.6183 24.2772 34.8278 23.8636 34.8278ZM14.7305 34.8278C14.5237 34.8278 14.2824 34.758 14.1445 34.6533C11.5252 32.7332 9.38844 28.8931 8.80252 25.0879C8.11322 20.4449 9.76753 16.7444 13.4208 14.7196C15.0407 13.812 16.7984 13.3581 18.5561 13.3581C21.1065 13.3581 23.519 14.3007 25.3456 15.9764C27.2067 17.7219 28.2407 20.0609 28.2407 22.6093C28.2407 23.0282 27.8271 23.3773 27.3101 23.3773C26.7932 23.3773 26.3795 23.0282 26.3795 22.6093C26.3795 20.4798 25.5524 18.5248 24.0015 17.0586C22.5195 15.6622 20.5895 14.8942 18.5216 14.8942C17.0741 14.8942 15.6955 15.2782 14.3858 15.9764C11.3529 17.6521 9.9743 20.7591 10.5602 24.7388C11.0428 28.0203 12.8349 31.5113 14.9717 33.222C15.0062 33.2569 15.0062 33.2569 15.0407 33.2917C15.1096 33.3267 15.1441 33.3616 15.213 33.3965C15.3853 33.5361 15.5231 33.7107 15.5231 33.9201C15.5576 34.1296 15.4887 34.3042 15.3164 34.4438C15.2819 34.6881 15.0062 34.8278 14.7305 34.8278ZM27.3101 31.2321C24.6563 31.2321 22.5195 30.6037 20.9341 29.3469C18.9007 27.7411 17.5221 24.8785 17.6255 22.3649C17.6255 21.946 18.0391 21.6318 18.5561 21.6318H18.5905C18.8662 21.6318 19.1075 21.7366 19.2798 21.946C19.3832 22.0507 19.4866 22.2253 19.4866 22.4348C19.4177 24.4944 20.555 26.9381 22.2093 28.2647C23.4501 29.2422 25.1733 29.731 27.3101 29.731C27.896 29.731 28.4819 29.696 29.1368 29.6262C29.1712 29.6262 29.2057 29.6262 29.2746 29.6262C29.7226 29.6262 30.1362 29.9055 30.1707 30.2895C30.2052 30.499 30.1018 30.6735 30.0329 30.7783C29.895 30.9877 29.6537 31.0924 29.378 31.1274C28.6542 31.1972 27.9649 31.2321 27.3101 31.2321ZM3.90852 13.8818C3.73619 13.8818 3.5294 13.8469 3.39154 13.7422C3.18476 13.6374 3.0469 13.4279 3.01243 13.2185C2.97797 13.044 3.01243 12.8345 3.15029 12.6949C6.73463 7.91216 12.3868 5.15429 18.6595 5.15429C24.4151 5.15429 29.6882 7.49327 33.1347 11.5428C33.2725 11.6824 33.3415 11.8919 33.307 12.0665C33.2725 12.2759 33.1692 12.4505 32.9623 12.5902C32.79 12.6949 32.6177 12.7647 32.4109 12.7647C32.1007 12.7647 31.825 12.6599 31.6527 12.4505C28.5509 8.81986 23.8292 6.72521 18.6939 6.72521C13.0761 6.72521 7.97536 9.20383 4.73567 13.5327C4.49442 13.7422 4.2187 13.8818 3.90852 13.8818ZM28.6542 5.1892C28.4475 5.1892 28.2752 5.1543 28.1028 5.04956C25.4835 3.4437 22.1059 2.53604 18.625 2.53604C15.1441 2.53604 11.732 3.40879 9.04376 5.04956C8.87145 5.1543 8.69914 5.1892 8.52682 5.1892C8.21662 5.1892 7.9409 5.04956 7.76858 4.8401C7.63071 4.66555 7.59625 4.491 7.63071 4.31645C7.66518 4.10699 7.80304 3.89753 8.00983 3.7928C11.0083 2.01239 14.7649 1 18.625 1C22.4851 1 26.2417 1.97748 29.2057 3.7928C29.4125 3.93244 29.5503 4.10699 29.5848 4.31645C29.6192 4.491 29.5848 4.70046 29.4469 4.8401C29.2402 5.04956 28.9644 5.1892 28.6542 5.1892Z"></path>
+            </svg>
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title"><span>Fingerprints & Security Keys</span></h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">
+        <c-me-authenticators-web-authn></c-me-authenticators-web-authn>
+      </div>
+    </article>
+  </div>
+</template>

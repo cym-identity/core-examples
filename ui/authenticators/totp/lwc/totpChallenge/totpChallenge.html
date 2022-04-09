@@ -2,12 +2,26 @@
 
   <lightning-spinner alternative-text="Loading" size="small" if:true={loading}></lightning-spinner>
 
-  <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Enter the 6 digit code from your Authenticator App</div>
-  <div class="slds-text-align_center slds-p-around_medium">
-    <c-otp-input length={length} onotpchange={handleOtpChange}></c-otp-input>
-  </div>
-  <footer class="slds-card__footer slds-text-align_center slds-button_stretch">
-    <button class="slds-button slds-button_brand slds-button_stretch" onclick={handleNext} disabled={nextDisabled}>Next</button>
-  </footer>
+  <form onsubmit={handleNext}>
+    <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Enter the 6 digit code from your Authenticator App</div>
+    <div class="slds-text-align_center slds-p-around_medium">
+      <div class="slds-form-element">
+        <div class="slds-form-element__control">
+          <input
+            class="slds-input"
+            style="width: 180px; margin: auto; letter-spacing: 15px;"
+            type="text"
+            oninput={handleOtpChange}
+            inputmode="numeric"
+            pattern="\d{6}"
+            value={otp}
+            required>
+        </div>
+      </div>
+    </div>
+    <footer class="slds-card__footer slds-text-align_center slds-button_stretch">
+      <button class="slds-button slds-button_brand slds-button_stretch" disabled={nextDisabled}>Verify</button>
+    </footer>
+  </form>
 
 </template>

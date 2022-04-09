@@ -1,15 +1,12 @@
 import { LightningElement, api } from "lwc";
-import initVerification from "@salesforce/apex/EmailChallengeController.initVerification";
-import verifyVerification from "@salesforce/apex/EmailChallengeController.verifyVerification";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
-import STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
+import { remote } from "c/fetch";
 
 export default class EmailChallenge extends LightningElement {
   length = 6;
   otp;
   transactionId;
-  basePath = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0];
 
   @api done;
   @api startUrl;
@@ -31,25 +28,24 @@ export default class EmailChallenge extends LightningElement {
   async handleNext() {
     this.hideError();
     this.loading = true;
-
-    const { handle } = await (await fetch(this.basePath + '/browser_handle')).json();
-
     try {
-      const { isValid } = await verifyVerification({
-        transactionId: this.transactionId,
-        otp: this.otp,
-        handle,
-        startURL : this.startUrl
-      });
+      const { isValid } = await remote(
+        "EmailChallengeController.VerifyVerification",
+        {
+          transactionId: this.transactionId,
+          otp: this.otp,
+          startURL: this.startUrl,
+        }
+      );
       this.loading = false;
       if (isValid) {
         this.dispatchEvent(new CustomEvent("done"));
       } else {
-        this.displayError('The code entered is invalid');
+        this.displayError("The code entered is invalid");
       }
     } catch (e) {
       this.loading = false;
-      this.displayError('An unexpected error occured');
+      this.displayError("An unexpected error occured");
     }
   }
 
@@ -58,14 +54,14 @@ export default class EmailChallenge extends LightningElement {
     e && e.stopPropagation();
     this.loading = true;
     this.hideError();
-    initVerification()
+    remote("EmailChallengeController.InitVerification")
       .then((resp) => {
         this.loading = false;
         this.transactionId = resp.transactionId;
       })
-      .catch(_ => {
+      .catch((_) => {
         this.loading = false;
-        this.displayError('An unexpected error occured');
+        this.displayError("An unexpected error occured");
       });
   }
 
@@ -74,11 +70,11 @@ export default class EmailChallenge extends LightningElement {
   }
 
   displayError(message) {
-    this.error = message
+    this.error = message;
     const evt = new ShowToastEvent({
-      title: 'Error',
+      title: "Error",
       message: this.error,
-      variant: 'error',
+      variant: "error",
     });
     this.dispatchEvent(evt);
   }

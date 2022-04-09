@@ -1,7 +1,4 @@
-<apex:page showHeader="false" controller="WebAuthnController" contentType="{!contentType}" applyBodyTag="false" applyHtmlTag="false"
-  action="{!init}">
-  <apex:outputPanel layout="none" rendered="{! (contentType == 'application/json;charset=UTF-8')}">{!log}</apex:outputPanel>
-  <apex:outputPanel layout="none" rendered="{! (contentType != 'application/json;charset=UTF-8')}">
+<apex:page showHeader="false" controller="WebAuthnController" applyBodyTag="false" applyHtmlTag="false" action="{!init}">
     <html>
     <head></head>
     <body>
@@ -12,6 +9,7 @@
             error_description: 'WebAuthn not supported on this browser'
           });
           const input = JSON.parse("{! JSENCODE(log) }");
+          console.log(input);
           var base64url = (function () {
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
             // Use a lookup table to find the index.
@@ -52,6 +50,24 @@
             };
           })()
 
+          var remote = async function(action, payload) {
+            return fetch( input.baseUrl + '/remote?action=' + encodeURIComponent(action), {
+              method: 'POST',
+              headers: {
+                'Accept' : 'application/json'
+              },
+              body: new URLSearchParams({
+                payload: JSON.stringify(payload || {})
+              })
+            })
+            .then(resp => resp.json())
+            .then((resp) => {
+              const { error, response } = resp;
+              if (error) return Promise.reject(error);
+              return response;
+            });
+          }
+
           function preformatMakeCredReq(makeCredReq) {
             makeCredReq.challenge = base64url.decode(makeCredReq.challenge);
             if (makeCredReq.user)
@@ -83,24 +99,16 @@
           function initRegisterWebAuthn(data) {
             var userId = data.userId;
             var startUrl = data.startUrl;
-            var input = { action: data.action };
-            if (userId) input.userId = userId;
+            var payload = {'authenticator' : input.authenticator.name};
+            if (userId) payload.userId = userId;
 
-            return fetch(window.location.href, {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json'
-              },
-              body: new URLSearchParams(input)
-            })
-              .then(function (resp) { return resp.json(); })
+            return remote('WebAuthnController.' + data.action, payload)
               .then(function (response) {
                 var publicKey = preformatMakeCredReq(response.publicKey);
                 return navigator.credentials
                   .create({ publicKey: publicKey })
                   .then((response) => {
                     var payload = {
-                      action: 'verifyRegisterWebAuthn',
                       startURL: startUrl,
                       id: response.id,
                       rawId: base64url.encode(response.rawId),
@@ -113,21 +121,10 @@
                       transports: response.response.getTransports
                         ? JSON.stringify(response.response.getTransports())
                         : "[]",
+                      authenticator: input.authenticator.name,
                     };
                     if (userId) payload.userId = userId;
-                    return payload;
-                  })
-                  .then(function (payload) {
-                    return fetch(window.location.href, {
-                      method: 'POST',
-                      headers: {
-                        Accept: 'application/json'
-                      },
-                      body: new URLSearchParams(payload)
-                    }).then(function (resp) { return resp.json(); })
-                  })
-                  .then(function (response) {
-                    return response;
+                    return remote('WebAuthnController.VerifyRegisterWebAuthn', payload);;
                   });
               });
           }
@@ -135,23 +132,15 @@
           function initVerifyWebAuthn(data) {
             var userId = data.userId || null;
             var startUrl = data.startUrl;
-            var input = { action: data.action };
-            if (userId) input.userId = userId;
+            var payload = {'authenticator' : input.authenticator.name};
+            if (userId) payload.userId = userId;
 
-            return fetch(window.location.href, {
-              method: 'POST',
-              headers: {
-                Accept: 'application/json'
-              },
-              body: new URLSearchParams(input)
-            })
-              .then(function (resp) { return resp.json(); })
+            return remote('WebAuthnController.' + data.action, payload)
               .then(function (response) {
                 var publicKey = preformatMakeCredReq(response.publicKey);
                 return navigator.credentials.get({ publicKey: publicKey })
                   .then(function (response) {
                     var payload = {
-                      action: 'verifyVerifyWebAuthn',
                       startURL: startUrl,
                       id: response.id,
                       rawId: base64url.encode(response.rawId),
@@ -162,22 +151,11 @@
                         response.response.clientDataJSON
                       ),
                       signature: base64url.encode(response.response.signature),
+                      authenticator: input.authenticator.name,
                     }
                     if (userId) payload.userId = userId;
-                    return payload;
+                    return remote('WebAuthnController.VerifyVerifyWebAuthn', payload);;
                   })
-              })
-              .then(function (payload) {
-                return fetch(window.location.href, {
-                  method: 'POST',
-                  headers: {
-                    Accept: 'application/json'
-                  },
-                  body: new URLSearchParams(payload)
-                }).then(function (resp) { return resp.json(); })
-              })
-              .then(function (response) {
-                return response;
               });
           }
 
@@ -222,5 +200,4 @@
       </script>
     </body>
     </html>
-  </apex:outputPanel>
 </apex:page>

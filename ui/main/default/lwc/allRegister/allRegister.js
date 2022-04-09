@@ -1,10 +1,10 @@
 import { LightningElement } from "lwc";
+import { remote } from 'c/fetch';
 
 import STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
 
 export default class AllRegister extends LightningElement {
   supportedAuthenticators = ['email', 'sms', 'totp', 'push', 'webauthn_platform', 'webauthn_roaming'];
-  basePath = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0];
   startUrl = new URLSearchParams(document.location.search).get('startURL');
 
   fingerprintUrl = STATIC_RESOURCE_URL + "/img/fingerprint_generic_white.svg";
@@ -24,16 +24,7 @@ export default class AllRegister extends LightningElement {
   }
 
   async connectedCallback() {
-    const { factors, sessionFactors } = await (await (fetch(this.basePath + '/challenge', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json'
-      },
-      body: new URLSearchParams({
-        action: 'loadContext',
-        startURL: this.startUrl
-      })
-    }))).json();
+    const { factors, sessionFactors } = await remote('ChallengeController.LoadContext', {startURL: this.startUrl});
     this.loading = false;
     this.userFactors = factors;
     this.sessionFactors = sessionFactors || [];
@@ -54,14 +45,16 @@ export default class AllRegister extends LightningElement {
   completeAuthenticatorTotp() { this.markAsComplete('totp'); }
   get canShowAuthenticatorChallengeTotp() { return this.factor === 'totp'; }
 
-  get hasAuthenticatorWebAuthnPlatform() { return this.userFactors.indexOf('webauthn_platform') > -1; }
+  // A user can register multiple Built-In Authenticators
+  get hasAuthenticatorWebAuthnPlatform() { return this.sessionFactors.indexOf('webauthn_platform') > -1; }
   get hasCompletedWebAuthnPlatform() { return this.sessionFactors.indexOf('webauthn_platform') > -1; }
   get canShowAuthenticatorChooserWebAuthnPlatform() { return this.supportedAuthenticators.indexOf('webauthn_platform') > -1; }
   showAuthenticatorWebAuthnPlatform() { this.switchTo('webauthn_platform'); }
   completeAuthenticatorWebAuthnPlatform() { this.markAsComplete('webauthn_platform'); }
   get canShowAuthenticatorChallengeWebAuthnPlatform() { return this.factor === 'webauthn_platform'; }
 
-  get hasAuthenticatorWebAuthnRoaming() { return this.userFactors.indexOf('webauthn_roaming') > -1; }
+  // A user can register multiple Roaming Authenticators
+  get hasAuthenticatorWebAuthnRoaming() { return this.sessionFactors.indexOf('webauthn_roaming') > -1; }
   get hasCompletedWebAuthnRoaming() { return this.sessionFactors.indexOf('webauthn_roaming') > -1; }
   get canShowAuthenticatorChooserWebAuthnRoaming() { return this.supportedAuthenticators.indexOf('webauthn_roaming') > -1; }
   showAuthenticatorWebAuthnRoaming() { this.switchTo('webauthn_roaming'); }
@@ -72,8 +65,8 @@ export default class AllRegister extends LightningElement {
   switchTo(to) { if(this.userFactors.indexOf(to) === -1) this.factor = to; }
   markAsComplete(f) {
     console.log({markAsComplete: f})
-    if (this.userFactors.indexOf(f) === -1) this.userFactors.push(f);
-    if (this.sessionFactors.indexOf(f) === -1 ) this.sessionFactors.push(f);
+    if (this.userFactors.indexOf(f) === -1) this.userFactors = [... this.userFactors, f];
+    if (this.sessionFactors.indexOf(f) === -1 ) this.sessionFactors = [... this.sessionFactors, f];
     this.backToChooser();
   }
   backToChooser() { console.log({user: this.userFactors, session: this.sessionFactors, hasAuthenticatorWebAuthnPlatform: this.hasAuthenticatorWebAuthnPlatform}); this.switchTo(undefined); }

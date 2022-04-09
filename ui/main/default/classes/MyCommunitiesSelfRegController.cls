@@ -1,7 +1,7 @@
 /**
  * An apex page controller that supports self registration of users in communities that allow self registration
  */
-global without sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalModifier
+global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalModifier
 
   public String firstName {get; set;}
   public String lastName {get; set;}
@@ -12,9 +12,7 @@ global without sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlob
 
   public MyCommunitiesSelfRegController() {
     String expid = ApexPages.currentPage().getParameters().get('expid');
-    if (expId != null) {
-        Site.setExperienceId(expId); 
-    }
+    if (expId != null) Site.setExperienceId(expId);
     this.email = ApexPages.currentPage().getParameters().get('login_hint');
   }
 
@@ -74,6 +72,47 @@ global without sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlob
       return null;
     }
   }
+
+  global with sharing class RegisterUser extends Fetch.Function {
+    global override Object execute(Map<String, Object> args) {
+
+      String email = (String) args.get('email');
+      String lastName = (String) args.get('lastName');
+      String firstName = (String) args.get('firstName');
+      String communityNickname = (String) args.get('nickName');
+
+      cym.Community community = cym.Community.getCurrent();
+      String resp = community.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
+        .invoke(
+          JSON.serialize(
+            new Map<String, Object> {
+              'email' => email,
+              'lastName' => lastName,
+              'firstName' => firstName,
+              'nickname' => communityNickname
+            }
+          )
+        );
+
+      Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp);
+
+      Id userId = (Id) response.get('userId');
+      community.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSet.class)
+        .invoke(
+          JSON.serialize(
+            new Map<String, Object> {
+              'userId' => userId
+            }
+          )
+        );
+
+      cym.Browser.getCurrent().sessions.add(userId);
+
+      return new Map<String, Object> { 'userId' => userId };
+    }
+  }
+
+
   global with sharing class CreateUser extends cym.Remote.Function {
     global override String execute(String param) {
       Map<String, Object> args = (Map<String,Object>) JSON.deserializeUntyped(param);
@@ -103,13 +142,13 @@ global without sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlob
       );
 
       insert u; // NOPMD.ApexCRUDViolation
-      System.setPassword(u.Id, password);
+      if (String.isNotBlank(password)) System.setPassword(u.Id, password);
 
       return JSON.serialize(new Map<String, Object> { 'userId' => u.Id });
     }
   }
 
-  global without sharing class AssignPermSet extends cym.Remote.Function {
+  global with sharing class AssignPermSet extends cym.Remote.Function {
     global override String execute(String param) {
       Map<String, Object> args = (Map<String,Object>) JSON.deserializeUntyped(param);
 

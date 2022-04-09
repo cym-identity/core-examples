@@ -1,96 +1,41 @@
+
 global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
-  public static final transient Map<String, Object> RESPONSE = new Map<String, Object>();
-  public String log {
-    get {
-      try {
-        return JSON.serialize(RESPONSE);
-      } catch (Exception ex) {
-        return JSON.serialize(new Map<String, Object> {
-          'error' => ex.getMessage(),
-          'error_description' => null,
-          'error_stack_trace' => ex.getStackTraceString().split('\n')
-        });
-      }
-    }
-  }
-
-  public String contentType {get; private set;}
-
   public String backgroundColor {get; private set;}
-
-
-  public ChallengeController() {}
-
-  public PageReference init() {
-    Map<String, String> headers = ApexPages.currentPage().getHeaders();
-
-    this.contentType = headers.get('Accept') == 'application/json' ? 'application/json;charset=UTF-8' : 'text/html;charset=UTF-8';
-
-    // This is a POST request from Javascript
-    if (headers.get('Accept') == 'application/json' && headers.containsKey('Content-Length') && Integer.valueOf(headers.get('Content-Length')) > 0) {
-      String origin = headers.get('Origin');
-      String allowedOrigin = 'https://' + new URL(Site.getBaseRequestUrl()).getHost();
-      // Do not support CORS
-      ApexPages.currentPage().getHeaders().put('Access-Control-Allow-Origin', new URL(Site.getBaseRequestUrl()).getHost());
-
-      // Only requests from the same domain are processed
-      if (origin != allowedOrigin) return null;
-
-      // This an XHR request made from the page itself, process it
-      try {
-        Map<String, String> body = ApexPages.currentPage().getParameters();
-
-        switch on body.remove('action') {
-          when 'loadContext' {
-            if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage(body.get('startURL'));
-            RESPONSE.putAll(loadContext(body.get('startURL')));
-            return null;
-          }
-
-          when else {
-            return null;
-          }
-        }
-      } catch (Exception ex) {
-        RESPONSE.putAll(ConverterUtils.toMap(ex));
-      }
-    } else {
-      this.backgroundColor = [SELECT AssetCategory, TextAsset FROM CustomBrandAsset WHERE AssetCategory = 'LoginQuaternaryColor' AND CustomBrandId IN (SELECT Id FROM CustomBrand WHERE ParentId =: Network.getNetworkId())].TextAsset; 
-      RESPONSE.putAll(Auth.SessionManagement.getCurrentSession());
-    }
-
-    return null;
+  public ChallengeController() {
+    this.backgroundColor = [SELECT AssetCategory, TextAsset FROM CustomBrandAsset WHERE AssetCategory = 'LoginQuaternaryColor' AND CustomBrandId IN (SELECT Id FROM CustomBrand WHERE ParentId =: Network.getNetworkId())].TextAsset; 
   }
 
-  public Map<String, Object> loadContext(String startURL) {
-    Map<String, Object> response = new Map<String, Object> ();
-    cym.Community context = cym.Community.getCurrent();
-    cym.Community.Authenticator webauthn_platform = context.authenticators.find('name', 'webauthn_platform');
+  public with sharing class LoadContext extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      Map<String, Object> response = new Map<String, Object> ();
+      cym.Community context = cym.Community.getCurrent();
+      cym.Community.Authenticator webauthn_platform = context.authenticators.find('name', 'webauthn_platform');
 
-    cym.Browser browser = cym.Browser.getCurrent();
-    cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, UserInfo.getUserId()).sync();
+      cym.Browser browser = cym.Browser.getCurrent();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, UserInfo.getUserId()).sync();
 
-    String[] user_factors = new UserUtils.Repository().getUserFactors(UserInfo.getUserId());
-    if (user_factors.indexOf('password') > -1) user_factors.remove(user_factors.indexOf('password'));
-    RESPONSE.put('factors', user_factors);
+      String[] user_factors = new UserUtils.Repository().getUserFactors(UserInfo.getUserId());
+      if (user_factors.indexOf('password') > -1) user_factors.remove(user_factors.indexOf('password'));
+      RESPONSE.put('factors', user_factors);
 
-    // System.debug(session);
-    // for (cym.Browser.SessionVerification v : session.verifications.asList()) System.debug(v);
+      // System.debug(session);
+      // for (cym.Browser.SessionVerification v : session.verifications.asList()) System.debug(v);
 
 
-    String[] sessionFactors = new String[] {};
-    for (cym.Browser.SessionVerification verification : session.verifications.asList()) {
-      cym.Community.Authenticator authenticator = context.authenticators.find('id', verification.authenticatorId);
-      if (authenticator != null && verification.isActive()) sessionFactors.add(authenticator.name);
+      String[] sessionFactors = new String[] {};
+      for (cym.Browser.SessionVerification verification : session.verifications.asList()) {
+        cym.Community.Authenticator authenticator = context.authenticators.find('id', verification.authenticatorId);
+        if (authenticator != null && verification.isActive()) sessionFactors.add(authenticator.name);
+      }
+      RESPONSE.put('sessionFactors', sessionFactors);
+
+      if (context.authenticators.find('name', 'twilio_push') != null) {
+        TwilioVerify.Push service = (TwilioVerify.Push) context.authenticators.find('name', 'twilio_push');
+        if (service.getFactors().size() > 0) user_factors.add('twilio_push');
+      }
+
+      return response;
     }
-    RESPONSE.put('sessionFactors', sessionFactors);
-
-    if (context.authenticators.find('name', 'twilio_push') != null) {
-      TwilioVerify.Push service = new TwilioVerify.Push(context.authenticators.find('name', 'twilio_push'));
-      if (service.getFactors().size() > 0) user_factors.add('twilio_push');
-    }
-
-    return response;
   }
 
   private static Map<String, Object> sendSms(User current_user, cym.Community context) {
@@ -182,8 +127,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static Object[] listAllTwilioPush(){
     try {
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', 'twilio_push');
-      TwilioVerify.Push service = new TwilioVerify.Push(auth);
+      TwilioVerify.Push service = (TwilioVerify.Push) context.authenticators.find('name', 'twilio_push');
       return service.getFactors();
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
@@ -194,8 +138,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static Object initTwilioPush(String sid) {
     try {
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', 'twilio_push');
-      TwilioVerify.Push service = new TwilioVerify.Push(auth);
+      TwilioVerify.Push service = (TwilioVerify.Push) context.authenticators.find('name', 'twilio_push');
       return service.challenge(sid);
       // Object[] factors = service.getFactors();
       // if (factors.size() > 0) {
@@ -210,8 +153,7 @@ global with sharing class ChallengeController { // NOPMD.AvoidGlobalModifier
   public static String verifyTwilioPush(String challenge){
     try {
       cym.Community context = cym.Community.getCurrent();
-      cym.Community.Authenticator auth = context.authenticators.find('name', 'twilio_push');
-      TwilioVerify.Push service = new TwilioVerify.Push(auth);
+      TwilioVerify.Push service = (TwilioVerify.Push) context.authenticators.find('name', 'twilio_push');
       String verification = service.verify(challenge);
       if (verification != 'approved') return verification;
       // context.session.verifications.add(auth, null, null);

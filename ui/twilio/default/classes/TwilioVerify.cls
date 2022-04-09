@@ -1,4 +1,4 @@
-public inherited sharing class TwilioVerify {
+global inherited sharing class TwilioVerify {
   private static final transient String TWILIO_URL = 'https://verify.twilio.com/v2';
 
   @AuraEnabled(cacheable=true)
@@ -90,16 +90,16 @@ public inherited sharing class TwilioVerify {
 
   }
 
-  public class Push {
-    cym.Community.Authenticator authenticator;
-    public Push(cym.Community.Authenticator authenticator) {
-      this.authenticator = authenticator;
-    }
+  global class Push extends cym.Community.Authenticator {
+    // cym.Community.Authenticator authenticator;
+    // public Push(cym.Community.Authenticator authenticator) {
+    //   this.authenticator = authenticator;
+    // }
 
     public Map<String, Object> getFactor(String sid) {
-      String account_sid = (String) this.authenticator.get('account_sid');
-      String auth_token = (String) this.authenticator.get('auth_token');
-      String service_id = (String) this.authenticator.get('service_sid');
+      String account_sid = (String) this.get('account_sid');
+      String auth_token = (String) this.get('auth_token');
+      String service_id = (String) this.get('service_sid');
       if (String.isBlank(account_sid) || String.isBlank(auth_token) || String.isBlank(service_id)) throw new InvalidArgumentException('Twilio Verify configuration missing');
 
       HttpRequest req = new HttpRequest();
@@ -114,9 +114,9 @@ public inherited sharing class TwilioVerify {
     }
     public Object[] getFactors() { return getFactors(UserInfo.getUserId()); }
     public Object[] getFactors(Id user_id) {
-      String account_sid = (String) this.authenticator.get('account_sid');
-      String auth_token = (String) this.authenticator.get('auth_token');
-      String service_id = (String) this.authenticator.get('service_sid');
+      String account_sid = (String) this.get('account_sid');
+      String auth_token = (String) this.get('auth_token');
+      String service_id = (String) this.get('service_sid');
       if (String.isBlank(account_sid) || String.isBlank(auth_token) || String.isBlank(service_id)) throw new InvalidArgumentException('Twilio Verify configuration missing');
 
       HttpRequest req = new HttpRequest();
@@ -132,9 +132,9 @@ public inherited sharing class TwilioVerify {
     }
 
     public String getAccessToken() {
-      String account_sid = (String) this.authenticator.get('account_sid');
-      String auth_token = (String) this.authenticator.get('auth_token');
-      String service_id = (String) this.authenticator.get('service_sid');
+      String account_sid = (String) this.get('account_sid');
+      String auth_token = (String) this.get('auth_token');
+      String service_id = (String) this.get('service_sid');
       if (String.isBlank(account_sid) || String.isBlank(auth_token) || String.isBlank(service_id)) throw new InvalidArgumentException('Twilio Verify configuration missing');
 
       Map<String, String> payload = new Map<String, String> {
@@ -159,9 +159,9 @@ public inherited sharing class TwilioVerify {
     }
 
     public Map<String, Object> challenge(Id user_id, String sid) {
-      String account_sid = (String) this.authenticator.get('account_sid');
-      String auth_token = (String) this.authenticator.get('auth_token');
-      String service_id = (String) this.authenticator.get('service_sid');
+      String account_sid = (String) this.get('account_sid');
+      String auth_token = (String) this.get('auth_token');
+      String service_id = (String) this.get('service_sid');
       if (String.isBlank(account_sid) || String.isBlank(auth_token) || String.isBlank(service_id)) throw new InvalidArgumentException('Twilio Verify configuration missing');
 
       HttpRequest req = new HttpRequest();
@@ -191,9 +191,9 @@ public inherited sharing class TwilioVerify {
     }
 
     public String verify(Id user_id, String challengeSid) {
-      String account_sid = (String) this.authenticator.get('account_sid');
-      String auth_token = (String) this.authenticator.get('auth_token');
-      String service_id = (String) this.authenticator.get('service_sid');
+      String account_sid = (String) this.get('account_sid');
+      String auth_token = (String) this.get('auth_token');
+      String service_id = (String) this.get('service_sid');
       if (String.isBlank(account_sid) || String.isBlank(auth_token) || String.isBlank(service_id)) throw new InvalidArgumentException('Twilio Verify configuration missing');
 
       HttpRequest req = new HttpRequest();

@@ -26,77 +26,24 @@
 
   <body class="slds-scope">
     <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
-      <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 400px;">
-        <article class="slds-card">
-          <div class="slds-card__body slds-card__body_inner">
-            <apex:form id="theForm" forceSSL="true">
-              <apex:pageMessages id="error" />
-
-              <div class="slds-form-element">
-                <label class="slds-form-element__label" for="text-input-id-47">
-                  <apex:outputLabel value="{!$Label.site.email}" for="email" />
-                </label>
-                <div class="slds-form-element__control">
-                  <apex:inputText required="true" id="email" value="{!email}" label="{!$Label.site.email}" styleClass="slds-input" />
-                </div>
-              </div>
-
-              <div class="slds-form-element">
-                <label class="slds-form-element__label" for="text-input-id-47">
-                  <apex:outputLabel value="First Name" for="firstName" />
-                </label>
-                <div class="slds-form-element__control">
-                  <apex:inputText required="true" id="firstName" value="{!firstName}" label="First Name" styleClass="slds-input" />
-                </div>
-              </div>
-
-              <div class="slds-form-element">
-                <label class="slds-form-element__label" for="text-input-id-47">
-                  <apex:outputLabel value="Last Name" for="lastName" />
-                </label>
-                <div class="slds-form-element__control">
-                  <apex:inputText required="true" id="lastName" value="{!lastName}" label="Last Name" styleClass="slds-input" />
-                </div>
-              </div>
-
-              <div class="slds-form-element">
-                <label class="slds-form-element__label" for="text-input-id-47">
-                  <apex:outputLabel value="{!$Label.site.community_nickname}" for="communityNickname" />
-                </label>
-                <div class="slds-form-element__control">
-                  <apex:inputText required="true" id="communityNickname" value="{!communityNickname}" label="{!$Label.site.community_nickname}"
-                    styleClass="slds-input" />
-                </div>
-              </div>
-
-              <div class="slds-form-element">
-                <label class="slds-form-element__label" for="text-input-id-47">
-                  <apex:outputLabel value="{!$Label.site.password}" for="password" />
-                </label>
-                <div class="slds-form-element__control">
-                  <apex:inputSecret id="password" value="{!password}" styleClass="slds-input" />
-                </div>
-              </div>
-
-              <div class="slds-form-element">
-                <label class="slds-form-element__label" for="text-input-id-47">
-                  <apex:outputLabel value="{!$Label.site.confirm_password}" for="confirmPassword" />
-                </label>
-                <div class="slds-form-element__control">
-                  <apex:inputSecret id="confirmPassword" value="{!confirmPassword}" styleClass="slds-input" />
-                </div>
-              </div>
-
-              <br/>
-              <apex:commandButton action="{!registerUser}" value="{!$Label.site.submit}" id="submit" styleClass="slds-button slds-button_brand slds-button_stretch"
-              />
-
-            </apex:form>
-
-          </div>
-        </article>
-      </div>
+      <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 400px;"></div>
     </div>
+
+    <script type="text/javascript">
+      try {
+        $Lightning.use("c:loginApp", function () {
+          $Lightning.createComponent("c:userRegister",
+            {
+              email: "{!email}"
+            },
+            "container",
+            function (cmp, status) { document.getElementById('loading').style.display = 'none'; }
+          );
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    </script>
   </body>
 
   </html>

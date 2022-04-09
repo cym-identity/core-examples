@@ -1,0 +1,45 @@
+<template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+  <ul class="slds-has-dividers_bottom-space">
+    <template for:each={credentials} for:item="credential">
+      <li key={credential.id} class="slds-item">
+        <div class="slds-grid slds-wrap slds-gutters slds-m-around_small slds-grid_vertical-align-center">
+          <div class="slds-col slds-size_8-of-12">
+            <p><lightning-icon size="small" icon-name={credential.icon} class="slds-p-around_small"></lightning-icon>{credential.name}</p>
+          </div>
+          <div class="slds-col slds-size_4-of-12 slds-col_bump-left">
+            <lightning-button label="Rename" title="Rename" onclick={credential.rename} icon-name="utility:edit"></lightning-button>
+          </div>
+        </div>
+      </li>
+    </template>
+  </ul>
+
+  <template if:true={rename}>
+    <section role="dialog" tabindex="-1" aria-label="Device Biometric Name" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+      <div class="slds-col slds-size_1-of-1">
+        <form onsubmit={rename.continue}>
+          <div class="slds-modal__container">
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+              <lightning-input
+                type="text"
+                name="AuthenticatorName"
+                id="AuthenticatorName"
+                label="Authenticator Name"
+                onchange={rename.handleChange}
+                value={rename.name}></lightning-input>
+            </div>
+            <footer class="slds-modal__footer">
+              <button class="slds-button slds-button_brand" type="submit">Continue</button>
+            </footer>
+          </div>
+        </form>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+
+</template>

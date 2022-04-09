@@ -1,25 +1,29 @@
-import { LightningElement } from 'lwc';
-import getAllConsent from '@salesforce/apex/ProfileController.getAllConsent';
-import revokeConsent from '@salesforce/apex/ProfileController.revokeConsent';
+import { LightningElement } from "lwc";
+import { remote } from "c/fetch";
 
 export default class MeConsent extends LightningElement {
   consents = [];
+  loading = true;
 
-  connectedCallback() {
-    getAllConsent()
-      .then(resp => {
-        this.consents = Object.keys(resp).map(key => {
-          return {
-            key,
-            client: resp[key].client,
-            scopes: resp[key].scopes,
-            revoke: () => {
-              revokeConsent({client_id: key})
-            }
-          }
-        });
-      })
+  get showEmpty() {
+    return !this.loading && this.consents.length === 0;
   }
 
-
+  connectedCallback() {
+    remote("ProfileController.GetAllConsent").then((resp) => {
+      this.consents = resp.map((consent) => {
+        return {
+          ...consent,
+          createdDate: new Date(consent.createdDate).toLocaleString(),
+          revoke() {
+            this.loading = true;
+            remote("ProfileController.RevokeConsent", {
+              client: consent.id,
+            }).then(this.connectedCallback.bind(this));
+          },
+        };
+      });
+      this.loading = false;
+    });
+  }
 }

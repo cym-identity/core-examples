@@ -1,10 +1,10 @@
 import { LightningElement } from "lwc";
+import { remote } from 'c/fetch';
 
 import STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
 
 export default class AllChallenge extends LightningElement {
   supportedAuthenticators = ['email', 'sms', 'totp', 'push', 'webauthn_platform', 'webauthn_roaming'];
-  basePath = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0];
   startUrl = new URLSearchParams(document.location.search).get('startURL');
 
   fingerprintUrl = STATIC_RESOURCE_URL + "/img/fingerprint_generic_white.svg";
@@ -15,28 +15,20 @@ export default class AllChallenge extends LightningElement {
   sessionFactors = [];
   factor;
   loading = true;
+  error;
 
   get canShowAuthenticatorChooserSection() { return !this.factor && !this.completed; }
   get canShowAuthenticatorChallengeSection() { return !!this.factor; }
 
-  get log() {
-    return JSON.stringify(this._errorLog, null, 2);
-  }
-
   async connectedCallback() {
-    const { factors, sessionFactors } = await (await (fetch(this.basePath + '/challenge', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json'
-      },
-      body: new URLSearchParams({
-        action: 'loadContext',
-        startURL: this.startUrl
-      })
-    }))).json();
-    this.loading = false;
-    this.userFactors = factors;
-    this.sessionFactors = sessionFactors || [];
+    try {
+      const { factors, sessionFactors } = await remote('ChallengeController.LoadContext', {startURL: this.startUrl});
+      this.loading = false;
+      this.userFactors = factors;
+      this.sessionFactors = sessionFactors || [];
+    } catch (ex) {
+      this.error = ex;
+    }
   }
 
   get hasAuthenticatorEmail() { return this.userFactors.indexOf('email') > -1; }
@@ -69,10 +61,13 @@ export default class AllChallenge extends LightningElement {
   get canShowAuthenticatorChallengeWebAuthnRoaming() { return this.factor === 'webauthn_roaming'; }
 
 
-  switchTo(to) { this.factor = to; }
+  switchTo(to) {
+    this.factor = to;
+    this.error = null;
+  }
   markAsComplete(f) {
-    if (this.userFactors.indexOf(f) === -1) this.userFactors.push(f);
-    if (this.sessionFactors.indexOf(f) === -1 ) this.sessionFactors.push(f);
+    if (this.userFactors.indexOf(f) === -1) this.userFactors = [... this.userFactors, f];
+    if (this.sessionFactors.indexOf(f) === -1 ) this.sessionFactors = [... this.sessionFactors, f];
     this.backToChooser();
   }
   backToChooser() { this.switchTo(undefined); }
@@ -80,7 +75,6 @@ export default class AllChallenge extends LightningElement {
   handleWebAuthnPlatformReady({
     detail: {
       error,
-      error_description,
     },
   }) {
     // The browser does not support WebAuthn or does not have UserVerification
@@ -102,7 +96,6 @@ export default class AllChallenge extends LightningElement {
   handleWebAuthnRoamingReady({
     detail: {
       error,
-      error_description,
     },
   }) {
     if (error) this.supportedAuthenticators = this.supportedAuthenticators.filter(authenticator => authenticator !== 'webauthn_roaming');
@@ -118,16 +111,17 @@ export default class AllChallenge extends LightningElement {
     console.log('handleWebAuthnRoamingError', JSON.stringify(detail, null, 2))
   }
 
-
-
-
   showLearnMore = false;
   toggleLearnMore() {
     this.showLearnMore = !this.showLearnMore
   }
 
-
   finish() {
     window.location.href = this.startUrl;
+  }
+
+  handleError( {detail} ) {
+    console.log(JSON.parse(JSON.stringify(detail)))
+    this.error = detail;
   }
 }

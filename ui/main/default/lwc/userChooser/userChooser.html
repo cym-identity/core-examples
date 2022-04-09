@@ -1,0 +1,43 @@
+<template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+  <ul class="slds-has-dividers_around-space" if:true={canShowAccountChooser}>
+    <template for:each={_users} for:item="user">
+      <li key={user.Id} class="slds-item selectable" onclick={user.handleClick}>
+        <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+          <div class="slds-col">
+            <span class="slds-avatar slds-avatar_large">
+              <img alt={user.Name} src={user.SmallPhotoUrl} title={user.Name} style="border-radius: 50%;"/>
+            </span>
+          </div>
+          <div class="slds-col">
+            <p class="slds-text-heading_small">{user.FirstName} {user.LastName}</p>
+            <p class="slds-text-heading_x-small">{user.Email}</p>
+          </div>
+          <div class="slds-col slds-col_bump-left">
+            <lightning-icon size="x-small" icon-name="utility:chevronright"></lightning-icon>
+          </div>
+        </div>
+      </li>
+    </template>
+    <li class="slds-item slds-text-align_center" style="border: 0;">
+      <a onclick={chooseAnotherUser}><span>Login as another user</span></a>
+    </li>
+  </ul>
+  <form onsubmit={handleDiscover} if:true={canShowEmail} class="slds-p-top_medium slds-p-left_large slds-p-right_large">
+    <div class="slds-form-element">
+      <label class="slds-form-element__label" for="text-input-email">Email<abbr class="slds-required" title="required">* </abbr></label>
+      <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+        <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:email"></lightning-icon>
+        <input type="email" id="text-input-email" placeholder="Enter email" class="slds-input" required oninput={handleEmailChange} inputmode="email" style="line-height: 42px;" value={email} autofocus />
+      </div>
+    </div>
+    <div if:true={users.length} class="slds-p-around_x-small slds-text-align_center">
+      <a onclick={backToChooser}><span>Choose a different user ({users.length} connected)</span></a>
+    </div>
+    <div class="slds-p-top_medium slds-text-align_center">
+      <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Next</button></p>
+    </div>
+  </form>
+</template>

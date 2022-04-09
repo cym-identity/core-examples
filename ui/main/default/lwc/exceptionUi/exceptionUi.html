@@ -1,0 +1,14 @@
+<template>
+  <div class="slds-grid slds-grid_vertical" if:false={closed}>
+    <div class="slds-col slds-medium-size_1-of-1 slds-size_1-of-1 slds-scoped-notification slds-media slds-media_center slds-theme_error slds-text-align_center" role="status">
+      <div class="slds-media__body">
+        <p>{name}<lightning-icon icon-name="utility:close" alternative-text="close" title="close" style="float: right; cursor: pointer;" variant="inverse" onclick={close}></lightning-icon></p>
+        <a onclick={expand} if:false={expanded}>View details</a>
+        <a onclick={expand} if:true={expanded}>Close details</a>
+      </div>
+    </div>
+    <div class="slds-col" style="background: black; color: white;" if:true={expanded}>
+      <pre style="overflow-wrap: break-word; white-space: break-sapces; padding: 16px; margin: 0;" if:true={stackTrace}>{stackTrace}</pre>
+    </div>
+  </div>
+</template>

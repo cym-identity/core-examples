@@ -1,0 +1,70 @@
+/* https://codepen.io/MikeG42/pen/YzXwPvX */
+.btn {
+  box-sizing: border-box;
+  display: inline-block;
+  text-align: left;
+  white-space: nowrap;
+  text-decoration: none;
+  vertical-align: middle;
+  touch-action: manipulation;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  border: 1px solid #ddd;
+  padding: 4px 8px;
+  margin: 5px auto;
+  border-radius: 4px;
+  color: #fff;
+  fill: #fff;
+  background: #000;
+  line-height: 1em;
+  min-width: 190px;
+  height: 45px;
+  transition: 0.2s ease-out;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  font-weight: 500;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -moz-font-feature-settings: 'liga', 'kern';
+       font-feature-settings: 'liga', 'kern';
+}
+.btn:hover, .btn:focus {
+  background: #111;
+  color: #fff;
+  fill: #fff;
+  border-color: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-decoration: none;
+}
+.btn:active {
+  outline: 0;
+  background: #353535;
+  transition: none;
+}
+.btn__icon, .btn__text, .btn__storename {
+  display: inline-block;
+  vertical-align: top;
+}
+.btn__icon {
+  width: 30px;
+  height: 30px;
+  margin-right: 5px;
+  margin-top: 2px;
+}
+.btn__text {
+  letter-spacing: 0.08em;
+  margin-top: -0.1em;
+  font-size: 10px;
+  margin-left: 4px;
+}
+.btn__storename {
+  display: block;
+  margin-left: 38px;
+  margin-top: -17px;
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}

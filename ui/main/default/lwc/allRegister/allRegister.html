@@ -2,9 +2,9 @@
   <template if:true={canShowAuthenticatorChooserSection}>
     <div class="slds-grid slds-gutters slds-wrap slds-grid_align-center slds-grid_vertical-stretch authenticators-grid">
       <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3" if:true={canShowAuthenticatorChooserEmail}>
-        <article class="slds-card slds-card_boundary selectable" data-registered={hasAuthenticatorEmail} style="height: 100%;" onclick={showAuthenticatorEmail}>
+        <article class="slds-card slds-card_boundary selectable" data-registered={hasAuthenticatorEmail} data-green={hasCompletedEmail} style="height: 100%;" onclick={showAuthenticatorEmail}>
           <div class="slds-card__body slds-text-align_center">
-            <span class="ribbon ribbon-right" data-green={hasCompletedEmail} if:true={hasAuthenticatorEmail}>
+            <span class="ribbon ribbon-right" if:true={hasAuthenticatorEmail}>
               <lightning-icon size="x-small" icon-name="utility:check" if:false={hasCompletedEmail}></lightning-icon>
               <lightning-icon size="x-small" icon-name="utility:check" variant="inverse" if:true={hasCompletedEmail}></lightning-icon>
             </span>
@@ -33,9 +33,9 @@
 
           <lightning-spinner alternative-text="Loading" size="small" slot="spinner" style="height: 100%;"></lightning-spinner>
 
-          <article class="slds-card slds-card_boundary selectable" data-registered={hasAuthenticatorWebAuthnPlatform} style="height: 100%;" slot="button">
+          <article class="slds-card slds-card_boundary selectable" data-green={hasCompletedWebAuthnPlatform} data-registered={hasAuthenticatorWebAuthnPlatform} style="height: 100%;" slot="button">
             <div class="slds-card__body slds-text-align_center slds-icon-text-default" style="padding: 40px 0;">
-              <span class="ribbon ribbon-right" data-green={hasCompletedWebAuthnPlatform} if:true={hasAuthenticatorWebAuthnPlatform}>
+              <span class="ribbon ribbon-right" if:true={hasAuthenticatorWebAuthnPlatform}>
                 <lightning-icon size="x-small" icon-name="utility:check" if:false={hasCompletedWebAuthnPlatform}></lightning-icon>
                 <lightning-icon size="x-small" icon-name="utility:check" variant="inverse" if:true={hasCompletedWebAuthnPlatform}></lightning-icon>
               </span>
@@ -52,9 +52,9 @@
         </c-webauthn-register>
       </div>
       <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-3" if:true={canShowAuthenticatorChooserTotp}>
-        <article class="slds-card slds-card_boundary selectable" data-registered={hasAuthenticatorTotp} style="height: 100%;" onclick={showAuthenticatorTotp}>
+        <article class="slds-card slds-card_boundary selectable" data-green={hasCompletedTotp} data-registered={hasAuthenticatorTotp} style="height: 100%;" onclick={showAuthenticatorTotp}>
           <div class="slds-card__body slds-text-align_center">
-            <span class="ribbon ribbon-right" data-green={hasCompletedTotp} if:true={hasAuthenticatorTotp}>
+            <span class="ribbon ribbon-right" if:true={hasAuthenticatorTotp}>
               <lightning-icon size="x-small" icon-name="utility:check" if:false={hasCompletedTotp}></lightning-icon>
               <lightning-icon size="x-small" icon-name="utility:check" variant="inverse" if:true={hasCompletedTotp}></lightning-icon>
             </span>
@@ -83,9 +83,9 @@
 
           <lightning-spinner alternative-text="Loading" size="small" slot="spinner" style="height: 100%;"></lightning-spinner>
 
-          <article class="slds-card slds-card_boundary selectable" data-registered={hasAuthenticatorWebAuthnRoaming} style="height: 100%;" slot="button">
+          <article class="slds-card slds-card_boundary selectable" data-green={hasCompletedWebAuthnRoaming} data-registered={hasAuthenticatorWebAuthnRoaming} style="height: 100%;" slot="button">
             <div class="slds-card__body slds-text-align_center slds-icon-text-default" style="padding: 40px 0;">
-              <span class="ribbon ribbon-right" data-green={hasCompletedWebAuthnRoaming} if:true={hasAuthenticatorWebAuthnRoaming}>
+              <span class="ribbon ribbon-right" if:true={hasAuthenticatorWebAuthnRoaming}>
                 <lightning-icon size="x-small" icon-name="utility:check" if:false={hasCompletedWebAuthnRoaming}></lightning-icon>
                 <lightning-icon size="x-small" icon-name="utility:check" variant="inverse" if:true={hasCompletedWebAuthnRoaming}></lightning-icon>
               </span>

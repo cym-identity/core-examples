@@ -1,51 +1,48 @@
-<apex:page controller="ChallengeController" showHeader="false" contentType="{!contentType}" applyBodyTag="false" applyHtmlTag="false" action="{!init}" >
- <apex:outputPanel layout="none" rendered="{! (contentType == 'application/json;charset=UTF-8')}">{!log}</apex:outputPanel>
- <apex:outputPanel layout="none" rendered="{! (contentType != 'application/json;charset=UTF-8')}">
-   <html>
-    <head>
-      <apex:slds></apex:slds>
-      <apex:includeLightning></apex:includeLightning>
-      <meta name="viewport" content="width=device-width, initial-scale=1" />
-      <style>
-        html,
-        body,
-        body>div {
-          height: 100%;
-          min-height: 100%;
-          background-color: {!backgroundColor};
-        }
-        #auraErrorMessage:empty {
-          display: none;
-        }
-        #auraErrorMessage {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          background: lightblue;
-          height: auto !important;
-          z-index: 1;
-        }
-      </style>
-      <script src="{!$Resource.IntlTelInput + '/js/intlTelInput.js'}"></script>
-      <script src="{!$Resource.IntlTelInput + '/js/utils.js'}"></script>
-      <title>Verify your Identity</title>
-      <link rel="stylesheet" href="{!$Resource.IntlTelInput + '/css/intlTelInput.css'}" />
-    </head>
-    <body class="slds-scope">
-      <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
-        <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 640px;">
-          <article class="slds-card" style="width:640px; height:500px; margin:auto;" id="loading">
-            <div role="status" class="slds-spinner slds-spinner_x-small">
-              <span class="slds-assistive-text">Loading</span>
-              <div class="slds-spinner__dot-a"></div>
-              <div class="slds-spinner__dot-b"></div>
-            </div>
-          </article>
-        </div>
+<apex:page controller="ChallengeController" showHeader="false" applyBodyTag="false" applyHtmlTag="false" >
+  <html>
+  <head>
+    <apex:slds></apex:slds>
+    <apex:includeLightning></apex:includeLightning>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      html,
+      body,
+      body>div {
+        height: 100%;
+        min-height: 100%;
+        background-color: {!backgroundColor};
+      }
+      #auraErrorMessage:empty {
+        display: none;
+      }
+      #auraErrorMessage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: lightblue;
+        height: auto !important;
+        z-index: 1;
+      }
+    </style>
+    <script src="{!$Resource.IntlTelInput + '/js/intlTelInput.js'}"></script>
+    <script src="{!$Resource.IntlTelInput + '/js/utils.js'}"></script>
+    <title>Verify your Identity</title>
+    <link rel="stylesheet" href="{!$Resource.IntlTelInput + '/css/intlTelInput.css'}" />
+  </head>
+  <body class="slds-scope">
+    <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+      <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 640px;">
+        <article class="slds-card" style="width:640px; height:500px; margin:auto;" id="loading">
+          <div role="status" class="slds-spinner slds-spinner_x-small">
+            <span class="slds-assistive-text">Loading</span>
+            <div class="slds-spinner__dot-a"></div>
+            <div class="slds-spinner__dot-b"></div>
+          </div>
+        </article>
       </div>
-      <script type="text/javascript">window.addEventListener('load', function() {$Lightning.use("c:challengeApp", function () {$Lightning.createComponent("c:challengeUi",{},"container",function (cmp, status) {document.querySelector('#loading').style.display = 'none';});});})</script>
-    </body>
-   </html>
- </apex:outputPanel>
+    </div>
+    <script type="text/javascript">window.addEventListener('load', function() {$Lightning.use("c:challengeApp", function () {$Lightning.createComponent("c:challengeUi",{},"container",function (cmp, status) {document.querySelector('#loading').style.display = 'none';});});})</script>
+  </body>
+  </html>
 </apex:page>

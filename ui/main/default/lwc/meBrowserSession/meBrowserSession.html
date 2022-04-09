@@ -1,3 +1,37 @@
 <template>
-  <lightning-button label="Revoke" title="Revoke" onclick={closeAllSessions}></lightning-button>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+
+  <template if:true={sessions.length}>
+    <ul class="slds-has-dividers_around-space slds-p-around_small">
+      <template for:each={sessions} for:item="session">
+        <li key={session.id} class="slds-item">
+          <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+            <div class="slds-col">
+              <span class="slds-avatar slds-avatar_large">
+                <img if:true={session.icon} alt={session.browser} src={session.icon} title={session.browser} style="border-radius: 4px;"/>
+              </span>
+            </div>
+            <div class="slds-col">
+              <p class="slds-text-heading_small">{session.browser} on {session.platform}</p>
+              <p class="slds-text-heading_x-small">Last seen : {session.lastSeen}</p>
+              <p class="slds-text-heading_x-small" if:true={session.isCurrent}><lightning-icon icon-name="utility:check" alternative-text="info" title="info" size="x-small"></lightning-icon>This device</p>
+            </div>
+            <div class="slds-col slds-col_bump-left">
+              <lightning-button label="Logout" title="Logout" onclick={session.logout} variant="destructive"></lightning-button>
+            </div>
+          </div>
+        </li>
+      </template>
+    </ul>
+    <lightning-button label="Revoke" title="Revoke" onclick={closeAllSessions}></lightning-button>
+  </template>
+
+  <template if:true={showEmpty}>
+    <div class="slds-text-align_center">
+      <img src="/img/cms/NoContent_Large.svg" />
+      <p class="slds-p-around_small slds-text-heading_medium">You don't have any active sessions</p>
+    </div>
+  </template>
 </template>

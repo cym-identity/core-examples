@@ -1,10 +1,10 @@
-<apex:page showHeader="false" controller="DiscoveryController" contentType="{!contentType}" applyBodyTag="false" applyHtmlTag="false" action="{!init}">
+<apex:page showHeader="false" controller="RemoteController" contentType="{!contentType}" applyBodyTag="false" applyHtmlTag="false" action="{!init}">
   <apex:outputPanel layout="none" rendered="{! (contentType == 'application/json;charset=UTF-8')}">{!log}</apex:outputPanel>
   <apex:outputPanel layout="none" rendered="{! (contentType != 'application/json;charset=UTF-8')}">
     <html>
     <head></head>
     <body>
-      <h1>Nothing to show :)</h1>
+      How did you get here! Don't know :)
     </body>
     </html>
   </apex:outputPanel>

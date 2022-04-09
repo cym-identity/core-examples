@@ -1,15 +1,12 @@
 import { LightningElement, api } from "lwc";
-import initRegistration from "@salesforce/apex/EmailChallengeController.initRegistration";
-import verifyRegistration from "@salesforce/apex/EmailChallengeController.verifyRegistration";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 
-import STATIC_RESOURCE_URL from '@salesforce/resourceUrl/MFA';
+import { remote } from "c/fetch";
 
 export default class EmailRegister extends LightningElement {
   length = 6;
   otp;
   transactionId;
-  basePath = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0];
 
   @api done;
   @api startUrl;
@@ -32,23 +29,23 @@ export default class EmailRegister extends LightningElement {
     this.hideError();
     this.loading = true;
 
-    const { handle } = await (await fetch(this.basePath + '/browser_handle')).json();
-
     try {
-      const { isValid } = await verifyRegistration({
-        otp: this.otp,
-        handle,
-        startURL : this.startUrl
-      });
+      const { isValid } = await remote(
+        "EmailChallengeController.VerifyRegistration",
+        {
+          otp: this.otp,
+          startURL: this.startUrl,
+        }
+      );
       this.loading = false;
       if (isValid) {
         this.dispatchEvent(new CustomEvent("done"));
       } else {
-        this.displayError('The code entered is invalid');
+        this.displayError("The code entered is invalid");
       }
     } catch (e) {
       this.loading = false;
-      this.displayError('An unexpected error occured');
+      this.displayError("An unexpected error occured");
     }
   }
 
@@ -57,13 +54,13 @@ export default class EmailRegister extends LightningElement {
     e && e.stopPropagation();
     this.loading = true;
     this.hideError();
-    initRegistration()
+    remote("EmailChallengeController.InitRegistration")
       .then((_) => {
         this.loading = false;
       })
-      .catch(_ => {
+      .catch((_) => {
         this.loading = false;
-        this.displayError('An unexpected error occured');
+        this.displayError("An unexpected error occured");
       });
   }
 
@@ -72,11 +69,11 @@ export default class EmailRegister extends LightningElement {
   }
 
   displayError(message) {
-    this.error = message
+    this.error = message;
     const evt = new ShowToastEvent({
-      title: 'Error',
+      title: "Error",
       message: this.error,
-      variant: 'error',
+      variant: "error",
     });
     this.dispatchEvent(evt);
   }

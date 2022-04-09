@@ -1,4 +1,5 @@
 public with sharing class ConverterUtils {
+  private static final Boolean isSandbox = [SELECT IsSandbox FROM Organization].IsSandbox;
   public static Map<String, String> fromMapObjectToMapString(Map<String, Object> params) {
     Map<String, String> results = new Map<String, String>();
     for (String key : params.keySet()) {
@@ -13,18 +14,17 @@ public with sharing class ConverterUtils {
     return result;
   }
   public static Map<String, Object> toMap(Exception ex) {
-    Map<String, Object> result = new Map<String, Object>();
-    result.put('error', ex.getMessage());
-    result.put('error_description', null);
-    result.put('error_stack_trace', ex.getStackTraceString().split('\n'));
+    Map<String, Object> result = new Map<String, Object> {
+      'error' => ex.getMessage(),
+      'error_type' => ex.getTypeName()
+    };
+    if (ConverterUtils.isSandbox) result.put('error_stack_trace', ex.getStackTraceString().split('\n'));
     return result;
   }
   public static String fromMapToUrlString(Map<String, String> params) {
     String enc = 'UTF-8';
     String[] results = new String[] {};
-    for (String key: params.keySet()) {
-      results.add( EncodingUtil.urlEncode(key, enc) + '=' + EncodingUtil.urlEncode(params.get(key), enc) );
-    }
+    for (String key: params.keySet()) results.add( EncodingUtil.urlEncode(key, enc) + '=' + EncodingUtil.urlEncode(params.get(key), enc) );
     return String.join(results, '&');
   }
 }

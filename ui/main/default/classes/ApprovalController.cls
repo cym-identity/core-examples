@@ -17,10 +17,15 @@ public with sharing class ApprovalController {
   }
 
   @AuraEnabled
-  public static void save(String startURL){
+  public static String save(String startURL){
     try {
       cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
       context.consent.replace(context.request.scope);
+
+      PageReference pr = new PageReference(startURL); // NOPMD-ApexOpenRedirect
+      pr.getParameters().remove('prompt');
+      return pr.getUrl();
+
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }

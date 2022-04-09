@@ -1,62 +1,54 @@
-<apex:page controller="ProfileController" showHeader="false" cache="false" docType="html-5.0" >
+<apex:page controller="ProfileController" showHeader="false" cache="false" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false" >
+  <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <style>
+        html,
+        body,
+        body>div {
+          height: 100%;
+          min-height: 100%;
+          background-color: #FAFAFA;
+        }
+        #auraErrorMessage {
+          display: none;
+        }
+      </style>
+      <title>My Profile</title>
+    </head>
+    <body class="slds-scope">
+      <div class="slds-grid slds-grid_align-center" style="padding-top: 60px;">
+        <div id="spinner">
+          <div class="slds-spinner_container">
+            <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
+              <span class="slds-assistive-text">Loading</span>
+              <div class="slds-spinner__dot-a"></div>
+              <div class="slds-spinner__dot-b"></div>
+            </div>
+          </div>
+        </div>
 
+        <div class="slds-col" style="max-width: 768px; width:100%;" id="appContainer"></div>
+      </div>
+      <script type="text/javascript">
+        var state = JSON.parse("{! JSENCODE(log) }");
+        window.addEventListener('load', function() {
+          $Lightning.use("c:challengeApp", function () {
+            $Lightning.createComponent(
+              "c:meUi",
+              {recordId : "{!$User.Id}"},
+              "appContainer",
+              function (cmp, status) {
+                document.querySelector('#spinner').style.display = 'none';
+              }
+            );
+          });
+        })
+
+      </script>
+
+    </body>
+  </html>
   <apex:slds></apex:slds>
   <apex:includeLightning></apex:includeLightning>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    html,
-    body,
-    body>div {
-      height: 100%;
-      min-height: 100%;
-      background-color: {!backgroundColor};
-    }
-    #auraErrorMessage {
-      display: none;
-    }
-  </style>
-  <title>My Profile</title>
-
-
-  <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
-    <div id="spinner">
-      <div class="slds-spinner_container">
-        <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_brand">
-          <span class="slds-assistive-text">Loading</span>
-          <div class="slds-spinner__dot-a"></div>
-          <div class="slds-spinner__dot-b"></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="slds-col" style="max-width: 500px; width:100%;">
-      <div id="appContainer"></div>
-
-      <!-- <div>
-        <apex:form>
-          <apex:commandButton action="{!done}" value="Finish" id="done"></apex:commandButton>
-        </apex:form>
-      </div> -->
-
-    </div>
-
-
-  </div>
-  <script type="text/javascript">
-    var state = JSON.parse("{! JSENCODE(log) }");
-    window.addEventListener('load', function() {
-      $Lightning.use("c:challengeApp", function () {
-        $Lightning.createComponent(
-          "c:meUi",
-          {recordId : "{!$User.Id}"},
-          "appContainer",
-          function (cmp, status) {
-            document.querySelector('#spinner').style.display = 'none';
-          }
-        );
-      });
-    })
-
-  </script>
-
 </apex:page>

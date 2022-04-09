@@ -4,5 +4,30 @@
     <slot name="button" onclick={handleInitRegisterWebAuthn}></slot>
   </template>
 
+  <template if:true={rename}>
+    <section role="dialog" tabindex="-1" aria-label="Device Biometric Name" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+      <div class="slds-col slds-size_1-of-1">
+        <form onsubmit={rename.continue}>
+          <div class="slds-modal__container">
+            <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+              <lightning-input
+                type="text"
+                name="AuthenticatorName"
+                id="AuthenticatorName"
+                label="Authenticator Name"
+                onchange={rename.handleChange}
+                value={rename.name}></lightning-input>
+            </div>
+            <footer class="slds-modal__footer">
+              <button class="slds-button slds-button_brand" type="submit">Continue</button>
+            </footer>
+          </div>
+        </form>
+      </div>
+    </section>
+    <div class="slds-backdrop slds-backdrop_open"></div>
+  </template>
+
+
   <iframe src={webAuthnPath} width="1px" height="1px" style="display: none;"></iframe>
 </template>

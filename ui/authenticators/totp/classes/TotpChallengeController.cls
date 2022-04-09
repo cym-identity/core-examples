@@ -15,13 +15,17 @@ global with sharing class TotpChallengeController { // NOPMD.AvoidGlobalModifier
    * In this sample application, TOTP registration is only done after the user has successfully registered or logged in with another factor (like a password or an SMS)
    */
   @AuraEnabled
-  public static Map<String, Object> verifyRegister(String secret, String otp, String handle, String startURL){
+  public static Map<String, Object> verifyRegister(String secret, String otp, String handle, String startURL, Id userId){
+    if (userId == null) {
+      if (Auth.CommunitiesUtil.isGuestUser()) return null;
+      userId = UserInfo.getUserId();
+    }
     try {
-      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(UserInfo.getUserId());
+      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(userId);
       if (info.HasTotp) throw new AuraHandledException('invalid_registration');
 
       cym.Browser browser = cym.Browser.fromHandle(handle);
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, UserInfo.getUserId()).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, userId).activate();
       cym.SalesforceAuthenticator.Totp auth = (cym.SalesforceAuthenticator.Totp) cym.Community.getCurrent().authenticators.find('name', 'totp');
 
 

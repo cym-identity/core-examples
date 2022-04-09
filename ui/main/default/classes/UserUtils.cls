@@ -43,7 +43,7 @@ public with sharing class UserUtils {
     public String[] getUserFactors(Id user_id) {
       Set<String> user_factors = new Set<String>{ 'password' };
       List<cym.WebAuthn.Credential> webAuthnCredentials = cym.WebAuthn.getAllCredentials();
-      for(cym.WebAuthn.Credential cred: webAuthnCredentials) user_factors.add(cred.transports.indexOf('internal') == -1 ? 'webauthn_roaming': 'webauthn_platform');
+      for(cym.WebAuthn.Credential cred: webAuthnCredentials) if(cred.transports.indexOf('internal') == -1) user_factors.add( 'webauthn_roaming' );
 
       TwoFactorMethodsInfo info = this.getTwoFactorInfo(user_id);
       if (info != null) {

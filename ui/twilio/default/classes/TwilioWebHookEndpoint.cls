@@ -9,6 +9,9 @@ global with sharing class TwilioWebHookEndpoint {
 
 
     try {
+
+      System.debug(JSON.serializePretty(request));
+
       // The community is linked to CYM Identity
       cym.Community context = cym.Community.getCurrent();
       if (context == null) throw new BadRequestException('invalid_community');
@@ -21,7 +24,7 @@ global with sharing class TwilioWebHookEndpoint {
       cym.Community.Authenticator authenticator = context.authenticators.find('name', authenticatorName);
       if ( authenticator == null ) throw new BadRequestException('invalid_authenticator');
       // Check if the authenticator is a TwilioVerify Push
-      if (authenticator.providerName != 'cym_TwilioVerify_Push') throw new BadRequestException('invalid_authenticator');
+      if (authenticator.providerName != 'TwilioVerify_Push') throw new BadRequestException('invalid_authenticator');
 
       String[] keys = new List<String>(request.params.keySet());
       keys.sort();

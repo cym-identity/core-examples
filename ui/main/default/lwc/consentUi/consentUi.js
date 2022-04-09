@@ -20,8 +20,8 @@ export default class ConsentUi extends LightningElement {
 
   handleSave() {
     this.loading = true;
-    save({startURL : this.startURL}).then(_ => {
-      window.location.replace(this.startURL, {});
+    save({startURL : this.startURL}).then(startURL => {
+      window.location.replace(startURL, {});
     }).catch(err => {
       console.error(JSON.stringify(err.body));
     })

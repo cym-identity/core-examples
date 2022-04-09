@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Profile xmlns="http://soap.sforce.com/2006/04/metadata">
+    <applicationVisibilities>
+        <application>cym__CYM_Identity</application>
+        <default>false</default>
+        <visible>false</visible>
+    </applicationVisibilities>
     <classAccesses>
         <apexClass>ApprovalController</apexClass>
         <enabled>true</enabled>
@@ -9,15 +14,11 @@
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
-        <apexClass>EmailChallengeController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
-        <apexClass>TotpChallengeController</apexClass>
-        <enabled>true</enabled>
-    </classAccesses>
-    <classAccesses>
         <apexClass>DiscoveryController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>EmailChallengeController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
@@ -28,11 +29,48 @@
         <apexClass>SiteLoginController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
-    <custom>true</custom>
-    <pageAccesses>
-        <apexPage>browser_handle</apexPage>
+    <classAccesses>
+        <apexClass>TotpChallengeController</apexClass>
         <enabled>true</enabled>
-    </pageAccesses>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>TwilioVerifyPushTokenEndpoint</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>UserRoleEndpoint</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <custom>true</custom>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>ClientRole__c.Client__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ClientRole__c.Description__c</field>
+        <readable>false</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>ClientRole__c.IsRequiredForLogin__c</field>
+        <readable>false</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>UserClientLink__c.User__c</field>
+        <readable>false</readable>
+    </fieldPermissions>
+    <layoutAssignments>
+        <layout>ClientRole__c-ClientRole Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>UserClientLink__c-User Client Link Layout</layout>
+    </layoutAssignments>
+    <layoutAssignments>
+        <layout>cym__Client__c-cym__Client Layout</layout>
+    </layoutAssignments>
     <pageAccesses>
         <apexPage>UpdateProfile</apexPage>
         <enabled>true</enabled>
@@ -42,11 +80,23 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>browser_handle</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>challenge</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>forbidden</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>me</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>remote</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <userLicense>External Identity</userLicense>

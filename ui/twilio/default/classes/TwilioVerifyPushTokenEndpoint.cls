@@ -23,7 +23,7 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
       String authenticatorName = getAuthenticatorNameFromUri(request.requestUri);
 
       // Check if there's an authenticator with the correct name
-      cym.Community.Authenticator authenticator = context.authenticators.find('name', authenticatorName);
+      TwilioVerify.Push authenticator = (TwilioVerify.Push) context.authenticators.find('name', authenticatorName);
       if( authenticator == null ) {
         response.statusCode = 400;
         response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object> {
@@ -33,13 +33,13 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
       }
 
       // Check if the authenticator is a TwilioVerify Push
-      if (authenticator.providerName != 'cym_TwilioVerify_Push') {
-        response.statusCode = 400;
-        response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object> {
-          'error' => 'invalid_authenticator'
-        }));
-        return;
-      }
+      // if (authenticator.providerName != 'TwilioVerify_Push') {
+      //   response.statusCode = 400;
+      //   response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object> {
+      //     'error' => 'invalid_authenticator'
+      //   }));
+      //   return;
+      // }
 
       // Introspect the current session
       String client_id = (String) authenticator.get('introspection_client_id');
@@ -86,6 +86,8 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
 
       Map<String, Object> introspection = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());
 
+      System.debug(introspection);
+
       // The Access Token has not expired or hasn't been revoked
       if (false == (Boolean) introspection.get('active')) {
         response.statusCode = 401;
@@ -94,6 +96,7 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
         }));
         return;
       }
+
       // The Access Token was issued to the client_id in the configuration
       if ((String) authenticator.get('client_id') != (String) authenticator.get('client_id')) {
         response.statusCode = 403;
@@ -105,22 +108,11 @@ global with sharing class TwilioVerifyPushTokenEndpoint {
 
       // You can check if the user already has a push notification app and block it
 
-      // Initiate a Verify Push Service
-      TwilioVerify.Push service = new TwilioVerify.Push(authenticator);
-
-      // Object[] factors = service.getFactors();
-      // Object[] challenges = new Object[] {};
-
-      // for (Object f: factors) {
-      //   Map<String, Object> factor = (Map<String, Object>) f;
-      //   challenges.add(service.challenge(factor));
-      // }
-
       response.statusCode = 200;
       response.responseBody = Blob.valueOf(JSON.serialize(new Map<String, Object> {
         'identity' => UserInfo.getUserId(),
         'serviceId' => (String) authenticator.get('service_sid'),
-        'token' => service.getAccessToken()
+        'token' => authenticator.getAccessToken()
         // 'factors' => factors,
         // 'challenges' => challenges
       }));

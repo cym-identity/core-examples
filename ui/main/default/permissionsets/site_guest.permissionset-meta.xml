@@ -20,15 +20,15 @@
         <apexClass>TotpChallengeController</apexClass>
         <enabled>true</enabled>
     </classAccesses>
+    <classAccesses>
+        <apexClass>TwilioWebHookEndpoint</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
     <description>Site PermSet to be used on the guest profile</description>
     <hasActivationRequired>false</hasActivationRequired>
     <label>site guest</label>
     <pageAccesses>
         <apexPage>browser_handle</apexPage>
-        <enabled>true</enabled>
-    </pageAccesses>
-    <pageAccesses>
-        <apexPage>discover</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>

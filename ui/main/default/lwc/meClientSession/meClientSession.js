@@ -1,22 +1,34 @@
-import { LightningElement } from 'lwc';
-import getAllClientSession from '@salesforce/apex/ProfileController.getAllClientSession';
-import revokeClientSession from '@salesforce/apex/ProfileController.revokeClientSession';
+import { LightningElement } from "lwc";
+import { remote } from "c/fetch";
 
 export default class MeClientSession extends LightningElement {
   clientSessions = [];
+  loading = true;
+
+  get showEmpty() {
+    return !this.loading && this.clientSessions.length === 0;
+  }
 
   connectedCallback() {
-    getAllClientSession()
-      .then(resp => {
-        this.clientSessions = Object.keys(resp).map(key => {
+    remote("ProfileController.GetAllClientSession")
+      .then((sessions) => {
+        this.clientSessions = sessions.map((session) => {
           return {
-            key,
-            ...resp[key],
-            revoke: () => {
-              revokeClientSession({client_id: key})
-            }
-          }
+            ...session,
+            revoke() {
+              this.loading = true;
+              remote("ProfileController.RevokeClientSession", {
+                client: session.id,
+              }).then(this.connectedCallback.bind(this));
+            },
+          };
         });
-      });
+      })
+      .then((_) => (this.loading = false));
+  }
+  revoke() {
+    remote("ProfileController.RevokeClientSessions").then(
+      this.connectedCallback.bind(this)
+    );
   }
 }

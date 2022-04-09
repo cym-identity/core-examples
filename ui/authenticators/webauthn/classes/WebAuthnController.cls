@@ -11,167 +11,77 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
   public WebAuthnController() {}
 
   public PageReference init() {
-    Map<String, String> headers = ApexPages.currentPage().getHeaders();
+    String name = ApexPages.currentPage().getParameters().get('authenticator');
+    if (String.isBlank(name)) return null;
 
-    this.contentType = headers.get('Accept') == 'application/json' ? 'application/json;charset=UTF-8' : 'text/html;charset=UTF-8';
+    RESPONSE.put('requestor', ApexPages.currentPage().getParameters().get('requestor')); // NOPMD.ApexXSSFromUrlParam
 
-    // This is a POST request from Javascript
-    if (headers.get('Accept') == 'application/json' && headers.containsKey('Content-Length') && Integer.valueOf(headers.get('Content-Length')) > 0) {
-      String origin = headers.get('Origin');
-      String allowedOrigin = 'https://' + new URL(Site.getBaseRequestUrl()).getHost();
-      // Do not support CORS
-      ApexPages.currentPage().getHeaders().put('Access-Control-Allow-Origin', new URL(Site.getBaseRequestUrl()).getHost());
+    cym.Community.Authenticator authenticator = cym.Community.getCurrent().authenticators.find('name', name); // NOPMD.ApexXSSFromUrlParam
+    if (authenticator == null) return null;
 
-      // Only requests from the same domain are processed
-      if (origin != allowedOrigin) return null;
+    String type = (String) authenticator.get('type');
+    String userVerification = (String) authenticator.get('user_verification');
 
-      // This an XHR request made from the page itself, process it
+    RESPONSE.put('authenticator', new Map<String, Object> { 'type' => type, 'userVerification' => userVerification, 'name' => authenticator.name});
+    RESPONSE.put('baseUrl', Site.getBaseRequestUrl());
 
-      try {
-        Map<String, String> body = ApexPages.currentPage().getParameters();
-
-        switch on body.remove('action') {
-          when 'initRegisterWebAuthn' {
-            RESPONSE.putAll(WebAuthnController.initRegisterWebAuthn(body.get('authenticator'), (Id) body.get('userId')));
-            return null;
-          }
-
-          when 'verifyRegisterWebAuthn' {
-            Map<String, String> params = body.clone();
-            String startURL = params.remove('startURL');
-            String authenticator = params.remove('authenticator');
-            Id userId = params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
-            RESPONSE.putAll(WebAuthnController.verifyRegisterWebAuthn(params, authenticator, startURL, userId));
-          }
-
-          when 'initVerifyWebAuthn' {
-            RESPONSE.putAll(WebAuthnController.initVerifyWebAuthn(body.get('authenticator'), (Id) body.get('userId')));
-          }
-
-          when 'verifyVerifyWebAuthn' {
-            Map<String, String> params = body.clone();
-            String startURL = params.remove('startURL');
-            String authenticator = params.remove('authenticator');
-            Id userId = params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
-            RESPONSE.putAll(WebAuthnController.verifyVerifyWebAuthn(params, authenticator, startURL, userId));
-          }
-
-          when else {
-            return null;
-          }
-        }
-      } catch (Exception ex) {
-        RESPONSE.putAll(ConverterUtils.toMap(ex));
-      }
-    } else {
-      String name = ApexPages.currentPage().getParameters().get('authenticator');
-      if (String.isBlank(name)) return null;
-
-      RESPONSE.put('requestor', ApexPages.currentPage().getParameters().get('requestor')); // NOPMD.ApexXSSFromUrlParam
-
-      cym.Community.Authenticator authenticator = cym.Community.getCurrent().authenticators.find('name', name); // NOPMD.ApexXSSFromUrlParam
-      if (authenticator == null) return null;
-
-      String type = (String) authenticator.get('type');
-      String userVerification = (String) authenticator.get('user_verification');
-
-      RESPONSE.put('authenticator', new Map<String, Object> { 'type' => type, 'userVerification' => userVerification});
-    }
     return null;
   }
 
-  public static Map<String, Object> initRegisterWebAuthn(String authenticator, Id userId) {
-    if (userId == null) {
-      if (Auth.CommunitiesUtil.isGuestUser()) return null;
-      userId = UserInfo.getUserId();
-    }
+  public with sharing class InitRegisterWebAuthn extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      String authenticator = (String) params.remove('authenticator');
+      Id userId = params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
+      if (userId == null) {
+        if (Auth.CommunitiesUtil.isGuestUser()) return null;
+        userId = UserInfo.getUserId();
+      }
 
-    cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
-    String response = session.getRemoteApex(
-      WebAuthnController.InitRegisterWebAuthn.class
-    ).invoke(
-      JSON.serialize(
-        new Map<String, Object> {
-          'authenticator' => authenticator,
-          'handle' => cym.Browser.getCurrent().handle.value
-        }
-      )
-    );
+      cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
+      String response = session.getRemoteApex(
+        WebAuthnController.InitRegisterWebAuthnRemote.class
+      ).invoke(
+        JSON.serialize(
+          new Map<String, Object> {
+            'authenticator' => authenticator,
+            'handle' => cym.Browser.getCurrent().handle.value
+          }
+        )
+      );
 
-    return (Map<String, Object>) JSON.deserializeUntyped(response);
-  }
-
-  public static Map<String, Object> verifyRegisterWebAuthn(Map<String, String> publicKeyCredential, String authenticator, String startURL, Id userId) {
-    if (userId == null) {
-      if (Auth.CommunitiesUtil.isGuestUser()) return null;
-      userId = UserInfo.getUserId();
-    }
-
-    cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
-    String response = session.getRemoteApex(
-      WebAuthnController.VerifyRegisterWebAuthn.class
-    ).invoke(
-      JSON.serialize(
-        new Map<String, Object> {
-          'publicKeyCredential' => publicKeyCredential,
-          'authenticator' => authenticator,
-          'handle' => cym.Browser.getCurrent().handle.value
-        }
-      )
-    );
-
-    Map<String, Object> credential = (Map<String, Object>)((Map<String, Object>) JSON.deserializeUntyped(response)).get('credential');
-    try {
-      cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', authenticator);
-      return new Map<String, Object> {
-        'credential' => credential,
-        'url' => session.activate().apply(auth, null, null).resume(startURL).getUrl()
-      };
-    } catch (Exception ex) {
-      return (new Map<String, Object> {
-        'error' => ex.getMessage(),
-        'error_description' => 'verifyVerifyWebAuthn',
-        'error_stack_trace' => ex.getStackTraceString().split('\n')
-      });
+      return (Map<String, Object>) JSON.deserializeUntyped(response);
     }
   }
 
-  public static Map<String, Object> initVerifyWebAuthn(String authenticator, Id userId) {
-    if (userId == null) {
-      if (Auth.CommunitiesUtil.isGuestUser()) return null;
-      userId = UserInfo.getUserId();
-    }
-    String response = WebAuthnController.findOrAddSession(
-      cym.Browser.getCurrent(),
-      userId
-    ).getRemoteApex(
-      WebAuthnController.InitVerifyWebAuthn.class
-    ).invoke(
-      JSON.serialize(
-        new Map<String, Object> {
-          'authenticator' => authenticator,
-          'handle' => cym.Browser.getCurrent().handle.value
-        }
-      )
-    );
-    return (Map<String, Object>) JSON.deserializeUntyped(response);
-  }
+  public with sharing class VerifyRegisterWebAuthn extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      String startURL = (String) params.remove('startURL');
+      String authenticator = (String) params.remove('authenticator');
+      Id userId = (String) params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
+      Map<String, Object> publicKeyCredential = params;
+      if (userId == null) {
+        if (Auth.CommunitiesUtil.isGuestUser()) return null;
+        userId = UserInfo.getUserId();
+      }
 
-  public static Map<String, Object> verifyVerifyWebAuthn(Map<String, String> publicKeyCredential, String authenticator, String startURL, Id userId) {
-    if (userId == null) {
-      if (Auth.CommunitiesUtil.isGuestUser()) return null;
-      userId = UserInfo.getUserId();
-    }
-    cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
-    String response = session.getRemoteApex(WebAuthnController.VerifyVerifyWebAuthn.class).invoke(JSON.serialize(new Map<String, Object> {'publicKeyCredential' => publicKeyCredential, 'authenticator' => authenticator, 'handle' => cym.Browser.getCurrent().handle.value}));
+      cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
+      String response = session.getRemoteApex(
+        WebAuthnController.VerifyRegisterWebAuthnRemote.class
+      ).invoke(
+        JSON.serialize(
+          new Map<String, Object> {
+            'publicKeyCredential' => publicKeyCredential,
+            'authenticator' => authenticator,
+            'handle' => cym.Browser.getCurrent().handle.value
+          }
+        )
+      );
 
-    Boolean is_valid = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
-
-    if (is_valid) {
+      Map<String, Object> credential = (Map<String, Object>)((Map<String, Object>) JSON.deserializeUntyped(response)).get('credential');
       try {
         cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', authenticator);
         return new Map<String, Object> {
-          'isValid' => true,
+          'credential' => credential,
           'url' => session.activate().apply(auth, null, null).resume(startURL).getUrl()
         };
       } catch (Exception ex) {
@@ -182,13 +92,109 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
         });
       }
     }
-    return new Map<String, Object> {
-      'isValid' => false
-    };
+  }
+
+  public with sharing class InitVerifyWebAuthn extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      String authenticator = (String) params.remove('authenticator');
+      Id userId = params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
+      if (userId == null) {
+        if (Auth.CommunitiesUtil.isGuestUser()) return null;
+        userId = UserInfo.getUserId();
+      }
+      String response = WebAuthnController.findOrAddSession(
+        cym.Browser.getCurrent(),
+        userId
+      ).getRemoteApex(
+        WebAuthnController.InitVerifyWebAuthnRemote.class
+      ).invoke(
+        JSON.serialize(
+          new Map<String, Object> {
+            'authenticator' => authenticator,
+            'handle' => cym.Browser.getCurrent().handle.value
+          }
+        )
+      );
+      return (Map<String, Object>) JSON.deserializeUntyped(response);
+    }
+  }
+
+  public with sharing class VerifyVerifyWebAuthn extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      String startURL = (String) params.remove('startURL');
+      String authenticator = (String) params.remove('authenticator');
+      Id userId = (String) params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
+      if (userId == null) {
+        if (Auth.CommunitiesUtil.isGuestUser()) return null;
+        userId = UserInfo.getUserId();
+      }
+      cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
+      String response = session.getRemoteApex(WebAuthnController.VerifyVerifyWebAuthnRemote.class).invoke(JSON.serialize(new Map<String, Object> {'publicKeyCredential' => params, 'authenticator' => authenticator, 'handle' => cym.Browser.getCurrent().handle.value}));
+
+      Boolean is_valid = (Boolean) ((Map<String, Object>) JSON.deserializeUntyped(response)).get('isValid');
+
+      if (is_valid) {
+        try {
+          cym.Community.Authenticator auth = cym.Community.getCurrent().authenticators.find('name', authenticator);
+          return new Map<String, Object> {
+            'isValid' => true,
+            'url' => session.activate().apply(auth, null, null).resume(startURL).getUrl()
+          };
+        } catch (Exception ex) {
+          return (new Map<String, Object> {
+            'error' => ex.getMessage(),
+            'error_description' => 'verifyVerifyWebAuthn',
+            'error_stack_trace' => ex.getStackTraceString().split('\n')
+          });
+        }
+      }
+      return new Map<String, Object> {
+        'isValid' => false
+      };
+    }
+  }
+
+  public with sharing class RenameCredential extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      Id id = (Id) params.remove('id');
+      String name = (String) params.remove('name');
+      Id userId = params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
+      if (userId == null) {
+        if (Auth.CommunitiesUtil.isGuestUser()) return null;
+        userId = UserInfo.getUserId();
+      }
+
+      cym.Community.Authenticator webauthn_platform = cym.Community.getCurrent().authenticators.find('name', 'webauthn_platform');
+
+      if (webauthn_platform == null) throw new InvalidArgumentException('invalid_authenticator');
+
+      cym.Browser.Session session = WebAuthnController.findOrAddSession(cym.Browser.getCurrent(), userId);
+
+      // During a normal registration flow, the authenticator is always used in the current session, must check it before accepting the name change
+      Boolean isWebAuthnPlatformExecutedInCurrentSession = false;
+      for (cym.Browser.SessionVerification verif : session.verifications.asList()) {
+        if (verif.authenticatorId == webauthn_platform.id) {isWebAuthnPlatformExecutedInCurrentSession = true; break;}
+      }
+
+      if (!isWebAuthnPlatformExecutedInCurrentSession) throw new InvalidArgumentException('invalid_authenticator');
+
+      String response = session.getRemoteApex(
+        WebAuthnController.RenameCredentialRemote.class
+      ).invoke(
+        JSON.serialize(
+          new Map<String, Object> {
+            'id' => id,
+            'name' => name
+          }
+        )
+      );
+
+      return (Map<String, Object>) JSON.deserializeUntyped(response);
+    }
   }
 
 
-  global class InitRegisterWebAuthn extends cym.Remote.Function {
+  global class InitRegisterWebAuthnRemote extends cym.Remote.Function {
     global override String execute(String params) {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
@@ -200,7 +206,7 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
     }
   }
 
-  global class VerifyRegisterWebAuthn extends cym.Remote.Function {
+  global class VerifyRegisterWebAuthnRemote extends cym.Remote.Function {
     global override String execute(String params) {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
@@ -222,7 +228,8 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
       return JSON.serialize(
         new Map<String, Object> {
           'credential' => new Map<String, Object> {
-            'id' => EncodingUtil.base64Encode(credential.credentialId),
+            'id' => credential.id,
+            'credentialId' => EncodingUtil.base64Encode(credential.credentialId),
             'aaguid' => EncodingUtil.base64Encode(credential.aaguid),
             'counter' => credential.counter,
             'transports' => credential.transports
@@ -232,7 +239,26 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
     }
   }
 
-  global class InitVerifyWebAuthn extends cym.Remote.Function {
+  global class RenameCredentialRemote extends cym.Remote.Function {
+    global override String execute(String params) {
+      Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
+
+      Id id = (Id) o.get('id');
+      String name = (String) o.get('name');
+
+      cym.WebAuthn.Credential credential;
+      cym.WebAuthn.Credential[] credentials = cym.WebAuthn.getAllCredentials();
+      for(cym.WebAuthn.Credential cred : credentials) if (cred.id == id) {credential = cred; break;}
+
+      if (credential == null) return JSON.serialize(new Map<String, Object> {'error' => 'invalid_credential'});
+
+      credential = credential.rename(name);
+
+      return JSON.serialize(new Map<String, Object> {'name' => credential.id, 'name' => credential.name});
+    }
+  }
+
+  global class InitVerifyWebAuthnRemote extends cym.Remote.Function {
     global override String execute(String params) {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
@@ -244,7 +270,7 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
     }
   }
 
-  global class VerifyVerifyWebAuthn extends cym.Remote.Function {
+  global class VerifyVerifyWebAuthnRemote extends cym.Remote.Function {
     global override String execute(String params) {
       Map<String, Object> o = (Map<String, Object>) JSON.deserializeUntyped(params);
 
@@ -275,4 +301,5 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
     return session;
   }
 
+  public class InvalidArgumentException extends Exception {}
 }

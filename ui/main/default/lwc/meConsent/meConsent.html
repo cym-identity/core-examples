@@ -1,18 +1,63 @@
 <template>
-    <template if:true={consents.length}>
-      <lightning-accordion allow-multiple-sections-open>
-        <template for:each={consents} for:item="consent">
-          <lightning-accordion-section name={consent.client.client_name} label={consent.client.client_name} key={consent.key}>
-            <ul>
-              <template for:each={consent.scopes} for:item="scope">
-                <li key={scope}>
-                  <span>{scope}</span>
-                </li>
-              </template>
-            </ul>
-            <lightning-button label="Revoke" title="Revoke" onclick={consent.revoke}></lightning-button>
-          </lightning-accordion-section>
-        </template>
-      </lightning-accordion>
-    </template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+
+  <template if:true={consents.length}>
+    <div class="slds-p-around_medium">
+      <p class="slds-text-heading_medium">Third-party apps with account access</p>
+      <p>
+        You gave these sites and apps access to some of your Account data, including info that may be sensitive. Remove access for those you no longer trust or use.
+      </p>
+    </div>
+    <ul class="slds-has-dividers_around-space slds-p-around_small">
+      <template for:each={consents} for:item="consent">
+        <li key={consent.id} class="slds-item">
+          <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+            <div class="slds-col">
+              <span class="slds-avatar slds-avatar_medium">
+                <img if:true={consent.logo_uri} alt={consent.client_name} src={consent.logo_uri} title={consent.client_name} style="border-radius: 4px;"/>
+              </span>
+            </div>
+            <div class="slds-col">
+              <p class="slds-text-heading_small">{consent.client_name}</p>
+            </div>
+            <div class="slds-col slds-col_bump-left">
+              <lightning-button label="Remove Access" title="Remove Access" onclick={consent.revoke} variant="brand"></lightning-button>
+            </div>
+          </div>
+          <div class="slds-grid slds-wrap slds-gutters slds-m-around_small">
+            <div class="slds-col slds-size_4-of-12">
+              <p class="slds-p-around_x-small">Has access to</p>
+            </div>
+            <div class="slds-col slds-size_8-of-12">
+              <ul class="slds-has-dividers_bottom-space">
+                <template for:each={consent.scopes} for:item="scope">
+                  <li key={scope} class="slds-item"><span>{scope}</span></li>
+                </template>
+              </ul>
+            </div>
+            <div class="slds-col slds-size_4-of-12">
+              <p class="slds-p-around_x-small">Homepage</p>
+            </div>
+            <div class="slds-col slds-size_8-of-12">
+              <p class="slds-p-around_x-small"><a href={consent.client_uri}>{consent.client_uri}</a></p>
+            </div>
+            <div class="slds-col slds-size_4-of-12">
+              <p class="slds-p-around_x-small">Access given on</p>
+            </div>
+            <div class="slds-col slds-size_8-of-12">
+              <p class="slds-p-around_x-small"><span>{consent.createdDate}</span></p>
+            </div>
+          </div>
+        </li>
+      </template>
+    </ul>
+  </template>
+  <template if:true={showEmpty}>
+    <div class="slds-text-align_center">
+      <img src="/img/cms/FishingDeals_Large.svg" />
+      <p class="slds-p-around_small slds-text-heading_medium">You haven't approved any third party applications</p>
+    </div>
+  </template>
 </template>

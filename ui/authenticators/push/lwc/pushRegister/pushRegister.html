@@ -1,3 +1,6 @@
 <template>
-    
+  <lightning-spinner alternative-text="Loading" size="small" if:true={loading}></lightning-spinner>
+  <p if:false={loading}>
+    <a class="slds-button slds-button_brand" href={redirect}>Enroll</a>
+  </p>
 </template>

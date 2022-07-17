@@ -39,11 +39,29 @@
   </template>
 
   <template if:false={showQRCode}>
-    <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Enter the 6 digit code from your Authenticator App</div>
-    <div class="slds-text-align_center slds-p-around_medium">
-      <c-otp-input length={length} onotpchange={handleOtpChange} ></c-otp-input>
-    </div>
-    <button class="slds-button slds-button_brand slds-button_stretch" onclick={handleNext} disabled={nextDisabled}>Next</button>
+    <form onsubmit={handleNext}>
+      <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Enter the 6 digit code from your Authenticator App</div>
+      <div class="slds-text-align_center slds-p-around_medium">
+        <div class="slds-form-element">
+          <div class="slds-form-element__control">
+            <input
+              class="slds-input"
+              style="width: 180px; margin: auto; letter-spacing: 15px;"
+              type="text"
+              oninput={handleOtpChange}
+              inputmode="numeric"
+              pattern="\d{6}"
+              value={otp}
+              required>
+          </div>
+        </div>
+      </div>
+      <div class="slds-p-top_large slds-text-align_right">
+        <p>
+          <button class="slds-button slds-button_brand slds-button_stretch" disabled={nextDisabled}>Next</button>
+        </p>
+      </div>
+    </form>
   </template>
 
 </template>

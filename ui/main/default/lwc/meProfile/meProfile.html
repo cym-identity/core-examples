@@ -1,0 +1,7 @@
+<template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+
+  <c-user-profile fields={user.fields} attributes={user.attributes} picklists={user.picklists} cta="Save" onsave={handleSave} if:true={user}></c-user-profile>
+</template>

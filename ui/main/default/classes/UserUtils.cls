@@ -1,19 +1,53 @@
 public with sharing class UserUtils {
   public without sharing class Repository {
-    public User[] getUsers(Id[] userIds) {
-      User[] users = [SELECT Id, Email, SmallPhotoUrl, Name, FirstName, LastName FROM User WHERE Id IN :userIds]; // NOPMD.ApexCrudViolation
-      return users;
+    public Object[] getUsers(Id[] userIds) {
+      User[] us = [SELECT Id, Username, IsActive, Email, MobilePhone, SmallPhotoUrl, MediumPhotoUrl, Name, FirstName, LastName FROM User WHERE Id IN :userIds AND IsActive = true]; // NOPMD.ApexCrudViolation
+      Object[] result = new Object[] {};
+      for(User u : us) {
+        result.add(new Map<String, Object> {
+          'id' => u.Id,
+          'name' => u.FirstName + ' ' + u.LastName,
+          'login_hint' => Users.getLoginHint(u),
+          'login_type' => Users.getLoginType(u),
+          'picture' => u.MediumPhotoUrl
+        });
+      }
+      return result;
     }
     public User findById(Id user_id) {
       return [SELECT // NOPMD.ApexCRUDViolation
-        Id, Name, FirstName, LastName, CommunityNickname, Username, SmallPhotoUrl,
-        Email, TimeZoneSidKey, LanguageLocaleKey, MobilePhone, Street, State, PostalCode, City, Country,
+        Id, Username, Name, IsActive, Email, FirstName, LastName, MobilePhone, CommunityNickname, SmallPhotoUrl, MediumPhotoUrl, TimeZoneSidKey, LocaleSidKey,
+        CompanyName, Street, State, PostalCode, City, Country,
+        IsPasswordless__c, MobilePhoneVerified__c, LastPasswordChangeDate,
+        AccountId, ContactId,
         LastModifiedDate
         FROM User
-      WHERE Id = :user_id];
+        WHERE Id = :user_id
+      ];
     }
     public User findByEmail(String email) {
-      User[] users = [SELECT Id, Username, IsActive FROM User WHERE Email = :email]; // NOPMD.ApexCrudViolation
+      User[] users = [SELECT // NOPMD.ApexCrudViolation
+        Id, Username, Name, IsActive, Email, FirstName, LastName, MobilePhone, CommunityNickname, SmallPhotoUrl, MediumPhotoUrl, TimeZoneSidKey, LocaleSidKey,
+        CompanyName, Street, State, PostalCode, City, Country,
+        IsPasswordless__c, MobilePhoneVerified__c,
+        AccountId, ContactId,
+        LastModifiedDate
+        FROM User
+        WHERE Email = :email
+      ];
+      if (users.size() > 0) return users[0];
+      return null;
+    }
+    public User findByUsername(String username) {
+      User[] users = [SELECT // NOPMD.ApexCrudViolation
+        Id, Username, Name, IsActive, Email, FirstName, LastName, MobilePhone, CommunityNickname, SmallPhotoUrl, MediumPhotoUrl, TimeZoneSidKey, LocaleSidKey,
+        CompanyName, Street, State, PostalCode, City, Country,
+        IsPasswordless__c, MobilePhoneVerified__c,
+        AccountId, ContactId,
+        LastModifiedDate
+        FROM User
+        WHERE Username = :username
+      ];
       if (users.size() > 0) return users[0];
       return null;
     }
@@ -41,19 +75,165 @@ public with sharing class UserUtils {
     }
 
     public String[] getUserFactors(Id user_id) {
-      Set<String> user_factors = new Set<String>{ 'password' };
-      List<cym.WebAuthn.Credential> webAuthnCredentials = cym.WebAuthn.getAllCredentials();
-      for(cym.WebAuthn.Credential cred: webAuthnCredentials) if(cred.transports.indexOf('internal') == -1) user_factors.add( 'webauthn_roaming' );
+      User u = this.findById(user_id);
+      Set<String> user_factors = u.IsPasswordless__c ? new Set<String>() : new Set<String> {'password'};
+
+      for(cym.Collection.Item cred: cym.WebAuthn.getAllCredentials().asList()) {
+        if(((cym.WebAuthn.Credential) cred).transports.indexOf('internal') == -1) user_factors.add( 'webauthn_roaming' );
+      }
+
+      ThirdPartyAccountLink[] links = [SELECT SsoProviderName FROM ThirdPartyAccountLink WHERE UserId = :user_id]; // NOPMD.ApexCrudViolation
+      for(ThirdPartyAccountLink link : links) user_factors.add(link.SsoProviderName);
 
       TwoFactorMethodsInfo info = this.getTwoFactorInfo(user_id);
       if (info != null) {
         if (info.HasUserVerifiedEmailAddress) user_factors.add('email');
-        if (info.HasUserVerifiedMobileNumber || info.HasVerifiedMobileNumber) user_factors.add('sms');
+        if (hasVerifiedMobilePhone(u)) user_factors.add('phone');
         if (info.HasSalesforceAuthenticator) user_factors.add('push');
         if (info.HasTotp) user_factors.add('totp');
         if (info.HasU2F) user_factors.add('u2f');
       }
       return new List<String>(user_factors);
     }
+
+    public Map<String, Object> getClaims(String[] scopes) {
+      String[] computedClaims = new String[] {'sub', 'name', 'middle_name', 'nickname', 'preferred_username', 'profile', 'gender', 'birthdate', 'updated_at', 'email', 'email_verified', 'phone', 'phone_verified'};
+      cym__RealmClaim__c[] claims = [SELECT Id, Name FROM cym__RealmClaim__c WHERE cym__Scope__r.Name IN :scopes]; // NOPMD.ApexCRUDViolation
+      Map<String, Object> response = new Map<String, Object> {};
+      for (cym__RealmClaim__c claim : claims) if (computedClaims.indexOf(claim.Name) == -1) response.put(claim.Name, new Map<String, Object> { 'required' => true });
+      return response;
+    }
   }
+
+  public static String buildUsername(String login_hint) {
+    if (login_hint.endsWith('@' + TwitterProvider.AuthProviderId.toLowerCase() + '.io')) return login_hint;
+    if (login_hint.indexOf('@') > 0) return login_hint + '.' + UserInfo.getOrganizationId() + '.io';
+    return login_hint + '@' + UserInfo.getOrganizationId() + '.io';
+  }
+  public static String buildEmail(String login_hint) {
+    if (login_hint.indexOf('@') > 0) return login_hint;
+    return login_hint + '@' + UserInfo.getOrganizationId() + '.io';
+  }
+  public static String buildPhoneNumber(String login_hint) {
+    if (login_hint.indexOf('@') > 0) return null;
+    return login_hint;
+  }
+
+  public static Boolean hasVerifiedMobilePhone(User u) {
+    return ConverterUtils.base64encode(
+      // add the UserId to the mobile number to avoid copy paste from one user to the other
+      Crypto.generateDigest('SHA-256', Blob.valueOf(u.Id + u.MobilePhone))
+    ) == u.MobilePhoneVerified__c;
+  }
+
+  public static String getUserLogin(User u) {
+    if (u.Username == u.MobilePhone + '@' + UserInfo.getOrganizationId() + '.io') return u.MobilePhone;
+    return u.Email;
+  }
+
+  public static Users.LoginType getLoginType(User u) {
+    if (u.Username == u.MobilePhone + '@' + UserInfo.getOrganizationId() + '.io') return Users.LoginType.phone;
+    if (u.Username.endsWith('@' + TwitterProvider.AuthProviderId + '.io')) return Users.LoginType.twitter;
+    return Users.LoginType.email;
+  }
+
+  public static Object[] getCommunityAuthProviders(String startURL) {
+    Auth.AuthConfiguration config = new Auth.AuthConfiguration(Site.getBaseRequestUrl(), startURL);
+
+    PageReference callback = new PageReference( new URL(Network.getLoginUrl(Network.getNetworkId())).getPath() );
+    callback.getParameters().put('startURL', String.isBlank(startURL) ? '/' : startURL);
+
+    cym.Community idp = cym.Community.getCurrent();
+
+    Object[] response = new Object[] {};
+    for (AuthProvider provider : config.getAuthProviders()) {
+      PageReference authorize = new PageReference(Site.getBaseRequestUrl() + '/services/auth/sso/' + UserInfo.getOrganizationId() + '/' + provider.DeveloperName);
+      authorize.getParameters().put('startURL', callback.getUrl());
+      // Only keep authenticators which are provisionned in the cym__Community__c object
+      // This assumes that the name is the same as the AuthProvider.Name
+      if (idp.authenticators.find('name', provider.FriendlyName) == null) continue;
+      response.add(new Map<String, Object> {
+        'id' => provider.Id,
+        'iconUrl' => provider.IconUrl,
+        'friendlyName' => provider.FriendlyName,
+        'url' => authorize.getUrl()
+      });
+    }
+    return response;
+  }
+
+
+  public static Map<String, Object> getPicklists() {
+    return new Map<String, Object> {
+      'locale' => User.LocaleSidKey.getDescribe().getPicklistValues(),
+      'zoneinfo' => User.TimeZoneSidKey.getDescribe().getPicklistValues()
+    };
+  }
+  public static User fromUiModel(Map<String, Object> args) {
+    User u = new User(
+      LanguageLocaleKey = 'en_US',
+      EmailEncodingKey = 'UTF-8'
+    );
+
+    String login = (String) args.get('login');
+
+    u.UserName = UserUtils.buildUsername(login);
+    u.Email = UserUtils.buildEmail(login);
+    u.MobilePhone = UserUtils.buildPhoneNumber(login);
+
+    if (args.containsKey('given_name')) u.FirstName = (String) args.get('given_name');
+    if (args.containsKey('family_name')) u.LastName = (String) args.get('family_name');
+
+    if (args.containsKey('locale')) {
+      String locale = (String) args.get('locale');
+      u.LocaleSidKey = String.isNotBlank(locale) ? locale : UserInfo.getLocale();
+    }
+
+    if (args.containsKey('zoneinfo')) {
+      String zoneinfo = (String) args.get('zoneinfo');
+      u.TimeZoneSidKey = String.isNotBlank(zoneinfo) ? zoneinfo : UserInfo.getTimeZone().getId();
+    }
+
+    if (args.containsKey('address')) {
+      Map<String, Object> address = (Map<String, Object>) args.get('address');
+      if (address == null) address = new Map<String, Object> {};
+      u.Street = (String) address.get('street');
+      u.City = (String) address.get('city');
+      u.State = (String) address.get('state');
+      u.PostalCode = (String) address.get('zipcode');
+      u.Country = (String) address.get('country');
+    }
+
+    if (args.containsKey('company_name')) u.CompanyName = (String) args.get('company_name');
+
+    return u;
+  }
+
+  public static Map<String, Object> fromUser(User u) {
+
+    return null;
+  }
+
+  public static Contact getContact(User u, Account a) {
+    return new Contact(
+      AccountId = a.Id,
+      FirstName = u.FirstName,
+      LastName = u.LastName,
+      Email = getLoginType(u) == Users.LoginType.email ? u.Email : null,
+      MobilePhone = u.MobilePhone
+    );
+  }
+
+  public static Account getAccount(User u) {
+    if (String.isBlank(u.CompanyName)) return null;
+    return new Account(
+      Name = u.CompanyName,
+      BillingStreet = u.Street,
+      BillingCity = u.City,
+      BillingState = u.State,
+      BillingPostalCode = u.PostalCode,
+      BillingCountry = u.Country
+    );
+  }
+
 }

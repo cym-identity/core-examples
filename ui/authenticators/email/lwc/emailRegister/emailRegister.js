@@ -5,11 +5,11 @@ import { remote } from "c/fetch";
 
 export default class EmailRegister extends LightningElement {
   length = 6;
-  otp;
+  otp = "";
   transactionId;
 
-  @api done;
-  @api startUrl;
+  @api user;
+  @api requestId;
 
   error;
   nextDisabled = true;
@@ -21,11 +21,13 @@ export default class EmailRegister extends LightningElement {
 
   handleOtpChange(e) {
     this.hideError();
-    this.otp = e.detail;
+    this.otp = e.target.value;
     this.nextDisabled = !this.otp || this.otp.length != this.length;
   }
 
-  async handleNext() {
+  async handleNext(e) {
+    e.preventDefault();
+    e.stopPropagation();
     this.hideError();
     this.loading = true;
 
@@ -33,8 +35,9 @@ export default class EmailRegister extends LightningElement {
       const { isValid } = await remote(
         "EmailChallengeController.VerifyRegistration",
         {
+          userId: this.user.id,
           otp: this.otp,
-          startURL: this.startUrl,
+          requestId: this.requestId,
         }
       );
       this.loading = false;
@@ -54,7 +57,10 @@ export default class EmailRegister extends LightningElement {
     e && e.stopPropagation();
     this.loading = true;
     this.hideError();
-    remote("EmailChallengeController.InitRegistration")
+    remote("EmailChallengeController.InitRegistration", {
+      userId: this.user.id,
+      requestId: this.requestId,
+    })
       .then((_) => {
         this.loading = false;
       })

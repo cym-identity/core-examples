@@ -1,42 +1,34 @@
 public with sharing class ApprovalController {
 
-  @AuraEnabled
-  public static Map<String, Object> init(String startURL){
-    try {
-      Map<String, String[]> scopes = new Map<String, String[]> ();
+  public class Init extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      String startURL = (String) params.get('startURL');
       cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
-      scopes.put('requested', context.request.scope);
-      scopes.put('existing', context.consent.scopes);
+      cym.ResourceOwner owner = cym.ResourceOwner.getCurrent();
+      cym.ResourceOwner.Consent consent = (cym.ResourceOwner.Consent) owner.consents.find('client', context.client.id);
       return new Map<String, Object> {
-        'scopes' => scopes,
+        'scopes' => new Map<String, String[]> {
+          'requested' => context.authz.scopes,
+          'existing' => consent?.scopes
+        },
         'client' => JSON.deserializeUntyped(JSON.serialize(context.client))
       };
-    } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
     }
   }
 
-  @AuraEnabled
-  public static String save(String startURL){
-    try {
+  public class Save extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      String startURL = (String) params.get('startURL');
       cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
-      context.consent.replace(context.request.scope);
+      cym.ResourceOwner.Consents consents = cym.ResourceOwner.getCurrent().consents;
+      cym.ResourceOwner.Consent consent = (cym.ResourceOwner.Consent) consents.find('client', context.client.id);
+      if (consent == null) consent = consents.add(context);
+      consent.scopes = context.authz.scopes;
+      consent.save();
 
       PageReference pr = new PageReference(startURL); // NOPMD-ApexOpenRedirect
       pr.getParameters().remove('prompt');
       return pr.getUrl();
-
-    } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
     }
-  }
-
-  @AuraEnabled
-  public static Map<String, String[]> getScopeList(String startURL) {
-    Map<String, String[]> scopes = new Map<String, String[]> ();
-    cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
-    scopes.put('requested', context.request.scope);
-    scopes.put('existing', context.consent.scopes);
-    return scopes;
   }
 }

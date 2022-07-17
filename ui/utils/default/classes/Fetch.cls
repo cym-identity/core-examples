@@ -3,8 +3,7 @@ public with sharing class Fetch {
     protected cym.Browser browser = cym.Browser.getCurrent();
     protected cym.Browser.Session session {
       get {
-        for (cym.Browser.Session s : browser.sessions.asList()) if (s.OwnerId == UserInfo.getUserId()) return s;
-        return null;
+        return (cym.Browser.Session) browser.sessions.find('ownerId', UserInfo.getUserId());
       }
     }
     public abstract Object execute(Map<String, Object> params);

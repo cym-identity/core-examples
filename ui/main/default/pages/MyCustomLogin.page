@@ -1,6 +1,5 @@
-<apex:page id="loginPage" showHeader="false" title="{!$Label.site.site_login}" controller="MyCustomLoginController" applyBodyTag="false"
-  applyHtmlTag="false" docType="html-5.0">
-  <html>
+<apex:page id="loginPage" showHeader="false" title="{!$Label.site.site_login}" controller="MyCustomLoginController" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0" action="{!load}">
+  <html lang="en">
     <head>
       <title>Login</title>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -36,7 +35,7 @@
     <body class="slds-scope">
       <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
         <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 640px;">
-          <article class="slds-card" style="width:640px; height:500px; margin:auto;" id="loading">
+          <article class="slds-card" style="width:100%;  max-width: 640px; height:500px; margin:auto;" id="loading">
             <div role="status" class="slds-spinner slds-spinner_x-small">
               <span class="slds-assistive-text">Loading</span>
               <div class="slds-spinner__dot-a"></div>
@@ -49,7 +48,10 @@
         try {
           $Lightning.use("c:loginApp", function () {
             $Lightning.createComponent("c:discoveryUi",
-              {},
+              {
+                login_hint: "{!JSENCODE(login_hint)}",
+                login_type: "{!JSENCODE(login_type)}",
+              },
               "container",
               function (cmp, status) { document.getElementById('loading').style.display = 'none'; }
             );

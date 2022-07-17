@@ -1,6 +1,6 @@
 import { LightningElement, api } from 'lwc';
-import init from '@salesforce/apex/ApprovalController.init';
-import save from '@salesforce/apex/ApprovalController.save';
+
+import { remote } from 'c/fetch';
 
 export default class ConsentUi extends LightningElement {
   @api startURL;
@@ -10,7 +10,7 @@ export default class ConsentUi extends LightningElement {
   client;
 
   connectedCallback() {
-    init({startURL: this.startURL}).then(resp => {
+    remote('ApprovalController.Init', {startURL: this.startURL}).then(resp => {
       this.existing = resp.scopes.existing || [];
       this.requested = resp.scopes.requested.filter(scope => this.existing.indexOf(scope) === -1);
       this.client = resp.client;
@@ -20,7 +20,8 @@ export default class ConsentUi extends LightningElement {
 
   handleSave() {
     this.loading = true;
-    save({startURL : this.startURL}).then(startURL => {
+    remote('ApprovalController.Save', {startURL : this.startURL}).then(startURL => {
+      if (! startURL) return this.loading = false;
       window.location.replace(startURL, {});
     }).catch(err => {
       console.error(JSON.stringify(err.body));

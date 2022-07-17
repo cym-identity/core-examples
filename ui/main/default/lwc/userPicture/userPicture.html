@@ -1,0 +1,11 @@
+<template>
+  <div class="slds-p-around_medium" style="text-align: center;">
+    <img alt={attributes.login} src={picture} title={attributes.login} style="border-radius: 50%; border: 1px solid lightgray; height: 96px;width: 96px;object-fit: cover;"/>
+    <span style="position: absolute;bottom: 10px;margin-left: -20px;">
+      <input type="file" name="picture" accept="image/*" id="picture-button" style="display:none" onchange={handlePictureChanged}>
+      <button class="slds-button slds-m_x-small slds-button_neutral" onclick={handlePictureOpen} type="button" style="padding: 8px;border-radius: 50%;">
+        <lightning-icon size="x-small" icon-name="utility:edit"></lightning-icon>
+      </button>
+    </span>
+  </div>
+</template>

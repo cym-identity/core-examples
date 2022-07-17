@@ -6,6 +6,8 @@ export default class WebauthnChallenge extends LightningElement {
   @api authenticator;
   @api startUrl;
   @api userId;
+  @api requestId;
+  @api mode = 'auto';
   error;
   loading = true;
   ready = false;
@@ -29,6 +31,7 @@ export default class WebauthnChallenge extends LightningElement {
       } = response;
       this.ready = true;
       this.error = error;
+      if (! error && this.mode === 'auto' ) this.handleInitVerifyWebAuthn();
       return this.dispatchEvent(
         new CustomEvent("ready", {
           detail: error? { error, error_description } : {},
@@ -36,7 +39,7 @@ export default class WebauthnChallenge extends LightningElement {
       );
     }
     if (action === "initVerifyWebAuthn") {
-      const { isValid, url, error, error_description } = response;
+      const { isValid, error, error_description } = response;
       if (error)
         return this.dispatchEvent(
           new CustomEvent("error", {
@@ -53,10 +56,9 @@ export default class WebauthnChallenge extends LightningElement {
             },
           })
         );
-      if (url)
-        return this.dispatchEvent(
-          new CustomEvent("done", { detail: { redirect: url } })
-        );
+      return this.dispatchEvent(
+        new CustomEvent("done", { detail: { isValid } })
+      );
     }
     return this.dispatchEvent(
       new CustomEvent("error", {
@@ -85,6 +87,7 @@ export default class WebauthnChallenge extends LightningElement {
         action: "initVerifyWebAuthn",
         requestor: this.requestor,
         startUrl: this.startUrl,
+        requestId: this.requestId,
       };
       if (this.userId != undefined) input.userId = this.userId;
       this.template.querySelector("iframe").contentWindow.postMessage(

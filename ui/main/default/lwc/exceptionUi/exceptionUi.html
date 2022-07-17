@@ -3,8 +3,10 @@
     <div class="slds-col slds-medium-size_1-of-1 slds-size_1-of-1 slds-scoped-notification slds-media slds-media_center slds-theme_error slds-text-align_center" role="status">
       <div class="slds-media__body">
         <p>{name}<lightning-icon icon-name="utility:close" alternative-text="close" title="close" style="float: right; cursor: pointer;" variant="inverse" onclick={close}></lightning-icon></p>
-        <a onclick={expand} if:false={expanded}>View details</a>
-        <a onclick={expand} if:true={expanded}>Close details</a>
+        <template if:true={stackTrace}>
+          <a onclick={expand} if:false={expanded}>View details</a>
+          <a onclick={expand} if:true={expanded}>Close details</a>
+        </template>
       </div>
     </div>
     <div class="slds-col" style="background: black; color: white;" if:true={expanded}>

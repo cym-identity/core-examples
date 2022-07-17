@@ -1,0 +1,9 @@
+<template>
+  <div class="slds-grid slds-grid_vertical" if:true={socialProviders.length}>
+    <p class="slds-text-align_center">
+      <template for:each={socialProviders} for:item="socialProvider">
+        <a key={socialProvider.Id}  class="social-button rounded" href={socialProvider.url} data-social-provider={socialProvider.friendlyName} style={socialProvider.style}></a>
+      </template>
+    </p>
+  </div>
+</template>

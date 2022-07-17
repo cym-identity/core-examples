@@ -1,0 +1,14 @@
+<template>
+  <div style="min-height: 200px;" if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </div>
+  <p if:false={loading}>
+    <slot name="button" onclick={handleInitVerifyClick}></slot>
+  </p>
+  <div if:true={result} style="text-align: center;">
+    <p>Success : {result.success}</p>
+    <p>Message : {result.message}</p>
+    <lightning-icon size="large" variant="success" icon-name="utility:success" if:true={result.success}></lightning-icon>
+    <lightning-icon size="large" variant="error"   icon-name="utility:clear"   if:false={result.success}></lightning-icon>
+  </div>
+</template>

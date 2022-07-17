@@ -1,15 +1,19 @@
-import { LightningElement, api } from 'lwc';
-
-import initRegistration from "@salesforce/apex/PushChallengeController.initRegistration";
+import { LightningElement, api } from "lwc";
+import { remote } from "c/fetch";
 
 export default class PushRegister extends LightningElement {
   @api startUrl;
+  @api requestId;
+  @api redirect;
+
+  loading = true;
+
   connectedCallback() {
-    initRegistration({
-      startURL : this.startUrl
-    })
-    .then(resp => {
-      console.log(resp);
-    })
+    remote("PushChallengeController.InitRegistration", {
+      startURL: this.startUrl,
+    }).then(({redirect}) => {
+      this.redirect = redirect;
+      this.loading = false;
+    });
   }
 }

@@ -3,101 +3,21 @@
  */
 global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalModifier
 
-  public String firstName {get; set;}
-  public String lastName {get; set;}
-  public String email {get; set;}
-  public String password {get; set {password = value?.trim(); } }
-  public String confirmPassword {get; set { confirmPassword = value?.trim(); } }
-  public String communityNickname {get; set { communityNickname = value?.trim(); } }
-
-  public MyCommunitiesSelfRegController() {
-    String expid = ApexPages.currentPage().getParameters().get('expid');
-    if (expId != null) Site.setExperienceId(expId);
-    this.email = ApexPages.currentPage().getParameters().get('login_hint');
-  }
-
-  private boolean isValidPassword() {
-    return password == confirmPassword;
-  }
-
-  public PageReference registerUser() {
-    // it's okay if password is null - we'll send the user a random password in that case
-    if (!isValidPassword()) {
-      ApexPages.Message msg = new ApexPages.Message(ApexPages.Severity.ERROR, Label.site.passwords_dont_match);
-      ApexPages.addMessage(msg);
-      return null;
-    }
-
-    try {
-
-      cym.Community community = cym.Community.getCurrent();
-      String resp = community.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
-        .invoke(
-          JSON.serialize(
-            new Map<String, Object> {
-              'email' => email,
-              'lastName' => lastName,
-              'firstName' => firstName,
-              'nickname' => communityNickname,
-              'password' => password
-            }
-          )
-        );
-
-      Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp);
-
-      Id userId = (Id) response.get('userId');
-      community.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSet.class)
-        .invoke(
-          JSON.serialize(
-            new Map<String, Object> {
-              'userId' => userId
-            }
-          )
-        );
-
-      return cym.Browser.getCurrent()
-        .sessions
-        .add(userId)
-        .activate()
-        .apply(cym.Community.getCurrent().authenticators.find('name', 'password'), null, null)
-        .resume(ApexPages.currentPage().getParameters().get('startURL'));
-
-    } catch(Exception ex) {
-      ApexPages.addMessage(new ApexPages.Message(ApexPages.Severity.ERROR, ex.getMessage()));
-
-      // This message is used for debugging. Do not display this in the UI to the end user.
-      // It has the information around why the user creation failed.
-      System.debug(ex.getMessage());
-      return null;
-    }
-  }
+  public MyCommunitiesSelfRegController() {}
 
   global with sharing class RegisterUser extends Fetch.Function {
     global override Object execute(Map<String, Object> args) {
 
-      String email = (String) args.get('email');
-      String lastName = (String) args.get('lastName');
-      String firstName = (String) args.get('firstName');
-      String communityNickname = (String) args.get('nickName');
-
       cym.Community community = cym.Community.getCurrent();
       String resp = community.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
         .invoke(
-          JSON.serialize(
-            new Map<String, Object> {
-              'email' => email,
-              'lastName' => lastName,
-              'firstName' => firstName,
-              'nickname' => communityNickname
-            }
-          )
+          JSON.serialize(args)
         );
 
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp);
 
       Id userId = (Id) response.get('userId');
-      community.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSet.class)
+      community.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSetAndLicense.class)
         .invoke(
           JSON.serialize(
             new Map<String, Object> {
@@ -105,50 +25,60 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
             }
           )
         );
-
       cym.Browser.getCurrent().sessions.add(userId);
 
-      return new Map<String, Object> { 'userId' => userId };
+      return new Map<String, Object> { 'isValid' => true };
     }
   }
 
-
+  // This function is Supposed to be run with an Admin user
   global with sharing class CreateUser extends cym.Remote.Function {
     global override String execute(String param) {
-      Map<String, Object> args = (Map<String,Object>) JSON.deserializeUntyped(param);
+      return this.execute((Map<String,Object>) JSON.deserializeUntyped(param));
+    }
+    global String execute(Map<String,Object> args) {
 
-      String email = (String) args.get('email');
-      String lastName = (String) args.get('lastName');
-      String firstName = (String) args.get('firstName');
-      String communityNickname = (String) args.get('nickname');
       String password = (String) args.get('password');
-      String profileId = [SELECT Id FROM Profile WHERE Name = 'sample-external-user'].Id;
 
-      String userName = email + '.' + UserInfo.getOrganizationId() +'.scratch.com';
+      String key = ConverterUtils.base64encode(Crypto.generateAesKey(128));
 
-      User u = new User(
-        Username = userName,
-        Email = email,
-        FirstName = firstName,
-        LastName = lastName,
-        CommunityNickname = communityNickname,
-        ProfileId = profileId,
-        alias = communityNickname,
+      User u = UserUtils.fromUiModel(args);
 
-        LocaleSidKey = UserInfo.getLocale(),
-        TimeZoneSidKey = UserInfo.getTimeZone().getId(),
-        LanguageLocaleKey = 'en_US',
-        EmailEncodingKey = 'UTF-8'
-      );
+      u.ProfileId = [SELECT Id FROM Profile WHERE Name = 'sample-external-user'].Id;
+      u.IsPasswordless__c = String.isBlank(password);
+      u.CommunityNickname = key;
+      u.Alias = key.substring(0, 8);
+
+      Account a = UserUtils.getAccount(u);
+      if (a != null) {
+        insert a; // NOPMD.ApexCRUDViolation
+        Contact c = UserUtils.getContact(u, a);
+        insert c; // NOPMD.ApexCRUDViolation
+        u.ContactId = c.Id;
+      }
 
       insert u; // NOPMD.ApexCRUDViolation
-      if (String.isNotBlank(password)) System.setPassword(u.Id, password);
+
+
+      if (!u.IsPasswordless__c) System.setPassword(u.Id, password);
+
+      // Set the user picture if provided
+      Map<String, Object> picture = (Map<String, Object>) args.get('picture');
+      if (picture != null) {
+        ConnectApi.BinaryInput input = new ConnectApi.BinaryInput(
+          EncodingUtil.base64Decode((String) picture.get('blob')),
+          (String) picture.get('contentType'),
+          (String) picture.get('filename')
+        );
+        ConnectApi.UserProfiles.setPhoto((Id) Network.getNetworkId(), u.Id, input);
+      }
 
       return JSON.serialize(new Map<String, Object> { 'userId' => u.Id });
     }
   }
 
-  global with sharing class AssignPermSet extends cym.Remote.Function {
+  // This function is Supposed to be run with an Admin user
+  global with sharing class AssignPermSetAndLicense extends cym.Remote.Function {
     global override String execute(String param) {
       Map<String, Object> args = (Map<String,Object>) JSON.deserializeUntyped(param);
 
@@ -159,9 +89,13 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
 
       insert psa; // NOPMD.ApexCRUDViolation
 
+      PackageLicense[] pls = [SELECT Id FROM PackageLicense WHERE NamespacePrefix = 'cym']; // NOPMD
+      // Subscribers will never fall outside this condition
+      // This is during testing where package licensing isn't available.
+      if (pls.size() > 0) insert new UserPackageLicense(UserId = userId, PackageLicenseId = pls[0].id); // NOPMD
+
       return JSON.serialize(new Map<String, Object> { 'userId' => userId });
     }
   }
-
 
 }

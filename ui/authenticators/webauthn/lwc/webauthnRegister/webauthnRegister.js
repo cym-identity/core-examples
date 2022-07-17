@@ -7,6 +7,7 @@ export default class WebauthnRegister extends LightningElement {
   @api authenticator;
   @api startUrl;
   @api userId;
+  @api requestId;
   error;
   loading = true;
   ready = false;
@@ -51,11 +52,6 @@ export default class WebauthnRegister extends LightningElement {
     }
     if (action === "initRegisterWebAuthn") {
       const { credential, url, error, error_description } = response;
-      console.log(
-        JSON.parse(
-          JSON.stringify({ credential, url, error, error_description })
-        )
-      );
       if (error)
         return this.dispatchEvent(
           new CustomEvent("error", {
@@ -71,40 +67,39 @@ export default class WebauthnRegister extends LightningElement {
             },
           })
         );
-      if (url)
-        // Ask the user to rename
-        this.rename = {
-          id: credential.id,
-          name: this.authenticator === 'webauthn_platform' ? "Built-In Authenticator Name" : "Security Key Name",
-          handleChange: ((e) => {
-            this.rename.name = e.target.value;
-          }).bind(this),
-          continue: ((e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            this.loading = true;
-            remote('WebAuthnController.RenameCredential', {
-                id: this.rename.id,
-                name: this.rename.name,
-                userId : this.userId
-              })
-              .then((resp) => {
-                const { error } = resp;
-                this.rename = undefined;
-                if (error) {
-                  return this.dispatchEvent(
-                    new CustomEvent("error", { detail : resp})
-                  );
-                }
-                this.dispatchEvent(
-                  new CustomEvent("done", { detail: { redirect: url } })
+      // Ask the user to rename
+      this.rename = {
+        id: credential.id,
+        name: this.authenticator === 'webauthn_platform' ? "Built-In Authenticator Name" : "Security Key Name",
+        handleChange: ((e) => {
+          this.rename.name = e.target.value;
+        }).bind(this),
+        continue: ((e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.loading = true;
+          remote('WebAuthnController.RenameCredential', {
+              id: this.rename.id,
+              name: this.rename.name,
+              userId : this.userId
+            })
+            .then((resp) => {
+              const { error } = resp;
+              this.rename = undefined;
+              if (error) {
+                return this.dispatchEvent(
+                  new CustomEvent("error", { detail : resp})
                 );
-              })
-              .catch(console.error.bind(undefined))
-              .then(_ => this.loading = false);
-          }).bind(this),
-        };
-        return;
+              }
+              this.dispatchEvent(
+                new CustomEvent("done", { detail: { redirect: url } })
+              );
+            })
+            .catch(console.error.bind(undefined))
+            .then(_ => this.loading = false);
+        }).bind(this),
+      };
+      return;
     }
     return this.dispatchEvent(
       new CustomEvent("error", {
@@ -134,6 +129,7 @@ export default class WebauthnRegister extends LightningElement {
         authenticator: this.authenticator,
         userId: this.userId,
         startUrl: this.startUrl,
+        requestId: this.requestId,
       },
       `${u.protocol}//${u.host}`
     );

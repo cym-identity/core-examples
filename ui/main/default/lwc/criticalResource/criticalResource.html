@@ -1,0 +1,12 @@
+<template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
+  <div class="slds-grid slds-gutters slds-wrap slds-grid_align-center slds-grid_vertical-stretch authenticators-grid" if:false={loading}>
+    <div class="slds-col slds-size_1-of-3 slds-text-align_center">
+      <p>This icon is top secret, you have to prove your identity every 30 seconds to see it</p>
+      <p class="">
+        <lightning-icon icon-name="utility:payment_gateway" alternative-text="info" title="info" size="large"></lightning-icon></p>
+    </div>
+  </div>
+</template>

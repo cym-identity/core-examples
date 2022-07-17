@@ -12,11 +12,11 @@ public with sharing class UpdateProfileController {
     if (Auth.CommunitiesUtil.isGuestUser()) throw new NoAccessException();
     cym.AuthorizationContext context = cym.AuthorizationContext.getContext(ApexPages.currentPage().getParameters().get('startURL'));
 
-    cym.AuthorizationContext.Request request = context.request;
+    cym.Authorization.Request request = context.authz;
     this.initUser();
 
-    this.askForCompanyName = (request.scope.indexOf('l2') > -1 || request.scope.indexOf('l3') > -1) && String.isBlank(this.user.CompanyName);
-    this.askForAddress = request.scope.indexOf('l3') > -1 && (
+    this.askForCompanyName = (request.scopes.indexOf('l2') > -1 || request.scopes.indexOf('l3') > -1) && String.isBlank(this.user.CompanyName);
+    this.askForAddress = request.scopes.indexOf('l3') > -1 && (
       String.isBlank(this.user.Street) ||
       String.isBlank(this.user.State) ||
       String.isBlank(this.user.PostalCode) ||

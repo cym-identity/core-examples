@@ -1,0 +1,98 @@
+<template>
+  <form onsubmit={handleSubmit} class="slds-p-left_large slds-p-right_large">
+
+    <div class="slds-form-element" if:true={fields.picture}>
+      <c-user-picture attributes={attributes}></c-user-picture>
+    </div>
+
+    <c-util-divider value="PERSONAL INFORMATION"></c-util-divider>
+
+    <input type="hidden" name="login" value={attributes.login} />
+    <div class="slds-form-element" if:true={fields.given_name}>
+      <label class="slds-form-element__label" for="text-input-given_name">First Name<abbr class="slds-required" title="required">*</abbr></label>
+      <div class="slds-form-element__control">
+        <input type="text" id="text-input-given_name" name="given_name" placeholder="Enter your First Name" class="slds-input" required style="line-height: 42px;" value={attributes.given_name}/>
+      </div>
+    </div>
+
+    <div class="slds-form-element" if:true={fields.family_name}>
+      <label class="slds-form-element__label" for="text-input-family_name">Last Name<abbr class="slds-required" title="required">*</abbr></label>
+      <div class="slds-form-element__control">
+        <input type="text" id="text-input-family_name" name="family_name" placeholder="Enter your Last Name" class="slds-input" required style="line-height: 42px;" value={attributes.family_name}/>
+      </div>
+    </div>
+
+    <div class="slds-form-element" if:true={fields.locale}>
+      <label class="slds-form-element__label" for="text-input-Locale">Locale<abbr class="slds-required" title="required">*</abbr></label>
+      <div class="slds-form-element__control">
+        <select id="text-input-Locale" required class="slds-select" name="locale" style="height: 42px; padding: 0 16px 0 12px;">
+          <template for:each={locales} for:item="locale">
+            <option value={locale.value} key={locale.value} if:true={locale.active} selected={locale.defaultValue}>{locale.label}</option>
+          </template>
+        </select>
+      </div>
+    </div>
+
+    <div class="slds-form-element" if:true={fields.zoneinfo}>
+      <label class="slds-form-element__label" for="text-input-ZoneInfo">ZoneInfo<abbr class="slds-required" title="required">*</abbr></label>
+      <div class="slds-form-element__control">
+        <select id="text-input-ZoneInfo" required class="slds-select" name="zoneinfo" style="height: 42px; padding: 0 16px 0 12px;">
+          <template for:each={zoneinfos} for:item="zone">
+            <option value={zone.value} key={zone.value} if:true={zone.active} selected={zone.defaultValue}>{zone.label}</option>
+          </template>
+        </select>
+      </div>
+    </div>
+
+    <div class="slds-form-element" if:true={fields.company_name}>
+      <label class="slds-form-element__label" for="text-input-company_name">Company Name<abbr class="slds-required" title="required" if:true={fields.company_name}>*</abbr></label>
+      <div class="slds-form-element__control">
+        <input type="text" id="text-input-company_name" name="company_name" placeholder="Enter Company Name" class="slds-input" required style="line-height: 42px;" value={attributes.company_name}/>
+      </div>
+    </div>
+
+    <template if:true={fields.address}>
+      <c-util-divider value="ADDRESS"></c-util-divider>
+
+      <div class="slds-form-element">
+        <label class="slds-form-element__label" for="text-input-Street">Street<abbr class="slds-required" title="required">*</abbr></label>
+        <div class="slds-form-element__control">
+          <input type="text" id="text-input-Street" name="address.street" placeholder="Enter Street" class="slds-input" required style="line-height: 42px;" value={attributes.address.street}/>
+        </div>
+      </div>
+
+      <div class="slds-form-element">
+        <label class="slds-form-element__label" for="text-input-City">City<abbr class="slds-required" title="required">*</abbr></label>
+        <div class="slds-form-element__control">
+          <input type="text" id="text-input-City" name="address.city" placeholder="Enter City" class="slds-input" required style="line-height: 42px;" value={attributes.address.city}/>
+        </div>
+      </div>
+
+      <div class="slds-form-element">
+        <label class="slds-form-element__label" for="text-input-State">State<abbr class="slds-required" title="required">*</abbr></label>
+        <div class="slds-form-element__control">
+          <input type="text" id="text-input-State" name="address.state" placeholder="Enter State" class="slds-input" required style="line-height: 42px;" value={attributes.address.state}/>
+        </div>
+      </div>
+
+      <div class="slds-form-element">
+        <label class="slds-form-element__label" for="text-input-ZipCode">ZipCode<abbr class="slds-required" title="required">*</abbr></label>
+        <div class="slds-form-element__control">
+          <input type="text" id="text-input-ZipCode" name="address.zipcode" placeholder="Enter ZipCode" class="slds-input" required style="line-height: 42px;" value={attributes.address.zipcode}/>
+        </div>
+      </div>
+
+      <div class="slds-form-element">
+        <label class="slds-form-element__label" for="text-input-Country">Country<abbr class="slds-required" title="required">*</abbr></label>
+        <div class="slds-form-element__control">
+          <input type="text" id="text-input-Country" name="address.country" placeholder="Enter Country" class="slds-input" required style="line-height: 42px;" value={attributes.address.country}/>
+        </div>
+      </div>
+
+    </template>
+
+    <div class="slds-p-top_large slds-text-align_center">
+      <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">{cta}</button></p>
+    </div>
+  </form>
+</template>

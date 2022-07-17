@@ -37,10 +37,10 @@
                 </template>
               </ul>
             </div>
-            <div class="slds-col slds-size_4-of-12">
+            <div class="slds-col slds-size_4-of-12" if:true={consent.client_uri}>
               <p class="slds-p-around_x-small">Homepage</p>
             </div>
-            <div class="slds-col slds-size_8-of-12">
+            <div class="slds-col slds-size_8-of-12" if:true={consent.client_uri}>
               <p class="slds-p-around_x-small"><a href={consent.client_uri}>{consent.client_uri}</a></p>
             </div>
             <div class="slds-col slds-size_4-of-12">

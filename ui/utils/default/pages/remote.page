@@ -1,7 +1,7 @@
 <apex:page showHeader="false" controller="RemoteController" contentType="{!contentType}" applyBodyTag="false" applyHtmlTag="false" action="{!init}">
   <apex:outputPanel layout="none" rendered="{! (contentType == 'application/json;charset=UTF-8')}">{!log}</apex:outputPanel>
   <apex:outputPanel layout="none" rendered="{! (contentType != 'application/json;charset=UTF-8')}">
-    <html>
+    <html lang="en">
     <head></head>
     <body>
       How did you get here! Don't know :)

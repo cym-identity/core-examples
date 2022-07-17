@@ -1,0 +1,38 @@
+<template>
+  <lightning-spinner alternative-text="Loading" size="small" if:true={loading}></lightning-spinner>
+
+  <c-exception-ui exception={error} if:true={error}></c-exception-ui>
+
+  <div class="slds-text-align_center slds-p-around_medium">
+
+    <div class="slds-text-body_regular">
+      <form onsubmit={handleNext}>
+        <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">{labels.twilio_verify_otp_description}</div>
+        <div class="slds-text-align_center slds-p-around_medium">
+          <div class="slds-form-element">
+            <label class="slds-form-element__label" for="otp"><abbr class="slds-required" title="required">* </abbr>{labels.twilio_verify_otp_otp_label}</label>
+            <div class="slds-form-element__control">
+              <input
+                class="slds-input"
+                style="width: 180px; margin: auto; letter-spacing: 15px;"
+                type="text"
+                oninput={handleOtpChange}
+                inputmode="numeric"
+                pattern="\d{6}"
+                value={otp}
+                required>
+            </div>
+          </div>
+        </div>
+        <div class="slds-p-top_large slds-text-align_right">
+          <p>
+            <span>Didn't receive the code? </span><a class="slds-button" onclick={handleResend}>Resend code</a>
+            <button class="slds-button slds-button_brand slds-button_stretch" style="margin: 16px 0;" disabled={nextDisabled}>{labels.twilio_verify_otp_button}</button>
+          </p>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+</template>

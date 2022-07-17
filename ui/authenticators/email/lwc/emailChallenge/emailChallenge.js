@@ -5,11 +5,11 @@ import { remote } from "c/fetch";
 
 export default class EmailChallenge extends LightningElement {
   length = 6;
-  otp;
+  otp = "";
   transactionId;
 
-  @api done;
-  @api startUrl;
+  @api user;
+  @api requestId;
 
   error;
   nextDisabled = true;
@@ -21,20 +21,23 @@ export default class EmailChallenge extends LightningElement {
 
   handleOtpChange(e) {
     this.hideError();
-    this.otp = e.detail;
+    this.otp = e.target.value;
     this.nextDisabled = !this.otp || this.otp.length != this.length;
   }
 
-  async handleNext() {
+  async handleNext(e) {
+    e.preventDefault();
+    e.stopPropagation();
     this.hideError();
     this.loading = true;
     try {
       const { isValid } = await remote(
         "EmailChallengeController.VerifyVerification",
         {
+          userId: this.user.id,
           transactionId: this.transactionId,
           otp: this.otp,
-          startURL: this.startUrl,
+          requestId: this.requestId,
         }
       );
       this.loading = false;
@@ -54,7 +57,10 @@ export default class EmailChallenge extends LightningElement {
     e && e.stopPropagation();
     this.loading = true;
     this.hideError();
-    remote("EmailChallengeController.InitVerification")
+    remote("EmailChallengeController.InitVerification", {
+      userId: this.user.id,
+      requestId: this.requestId,
+    })
       .then((resp) => {
         this.loading = false;
         this.transactionId = resp.transactionId;

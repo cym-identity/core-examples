@@ -47,7 +47,6 @@
         $Lightning.createComponent(
           "c:consentUi",
           {
-            credentials : navigator.credentials,
             startURL : '{! JSENCODE($CurrentPage.parameters.startURL) }'
           },
           "appContainer",

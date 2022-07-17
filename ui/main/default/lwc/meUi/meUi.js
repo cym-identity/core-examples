@@ -1,11 +1,3 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement } from 'lwc';
 
-export default class MeUi extends LightningElement {
-
-  @api recordId;
-  acceptedFormats = ['png', 'jpg', 'jpeg'];
-  handleUploadFinished(e) {
-    console.log(e, this.recordId);
-  }
-
-}
+export default class MeUi extends LightningElement {}

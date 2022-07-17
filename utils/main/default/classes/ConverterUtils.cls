@@ -27,4 +27,18 @@ public with sharing class ConverterUtils {
     for (String key: params.keySet()) results.add( EncodingUtil.urlEncode(key, enc) + '=' + EncodingUtil.urlEncode(params.get(key), enc) );
     return String.join(results, '&');
   }
+  public static String base64encode(Blob value) {
+    return EncodingUtil.base64Encode(value)
+      .replace('+', '-')
+      .replace('/', '_')
+      .replace('=', ''); // Remove the padding
+  }
+
+  public static Blob base64decode(String value) {
+    return EncodingUtil.base64Decode(
+      value
+        .replace('-', '+')
+        .replace('_', '/')
+    );
+  }
 }

@@ -1,5 +1,5 @@
 <apex:page controller="ProfileController" showHeader="false" cache="false" docType="html-5.0" applyHtmlTag="false" applyBodyTag="false" >
-  <html>
+  <html lang="en">
     <head>
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <style>
@@ -33,7 +33,7 @@
       <script type="text/javascript">
         var state = JSON.parse("{! JSENCODE(log) }");
         window.addEventListener('load', function() {
-          $Lightning.use("c:challengeApp", function () {
+          $Lightning.use("c:loginApp", function () {
             $Lightning.createComponent(
               "c:meUi",
               {recordId : "{!$User.Id}"},

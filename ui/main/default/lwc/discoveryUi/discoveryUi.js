@@ -1,26 +1,23 @@
-import { LightningElement } from "lwc";
+import { LightningElement, api } from "lwc";
 import { remote } from 'c/fetch';
 
-import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
-
 export default class DiscoveryUi extends LightningElement {
-
-  context;
-  app;
-  request;
-  users = [];
-
-  startUrl =
-    new URLSearchParams(document.location.search).get("startURL") || "";
-
+  @api login_hint;
+  startUrl = new URLSearchParams(document.location.search).get("startURL") || "";
   Labels = {
     consent_terms_of_service: "Terms of Service",
     consent_privacy_policy: "Privacy Policy",
   };
+
   loading = true;
   error = null;
-  step = "loading";
+  step = { action: "loading" };
+  app;
+  users = [];
+  socialProviders = []
   logo;
+  requestId;
+  login = { email : false, phone : false }
 
   connectedCallback() {
     remote('DiscoveryController.LoadContext', {
@@ -28,136 +25,93 @@ export default class DiscoveryUi extends LightningElement {
     })
       .then(
         ({
-          forgotPasswordUrl,
-          registrationUrl,
-          socialProviders,
-          paths,
-          request,
-          users,
+          socialProviders = [],
+          login_hint,
+          users = [],
           app,
           logo,
+          requestId,
+          login
         }) => {
-          this.context = {
-            forgotPasswordUrl,
-            registrationUrl,
-            socialProviders : socialProviders || [],
-            paths
-          }
-          this.users = users || [];
-          this.request = request || {};
+          this.socialProviders = socialProviders;
+          this.users = users;
           this.app = app;
-          this.step = "discovery";
           this.logo = this.app?.logo_uri || logo;
+          this.requestId = requestId;
+          this.login = login;
+          // The application has requested that a specific user logs in
+          if (login_hint) {
+            this.handleUserSelected(new CustomEvent('done', {detail : { login_hint }}));
+          // An active Salesforce session exists
+          } else if (this.login_hint) {
+            this.handleUserSelected(new CustomEvent('done', {detail : { login_hint: this.login_hint }}))
+          } else {
+            this.step = { action: "identity.choose" };
+            this.loading = false;
+          }
         }
       )
-      .catch((e) => (this.error = e))
-      .then((_) => (this.loading = false));
+      .catch((e) => (this.error = e, this.loading = false));
   }
 
-  fingerprintUrl = STATIC_RESOURCE_URL + "/img/fingerprint_generic_white.svg";
-  fidoCertifiedUrl =
-    STATIC_RESOURCE_URL + "/img/FIDO_Certified_logo_yellow.png";
-  registerAnimationUrl =
-    STATIC_RESOURCE_URL + "/img/windows_register_animation.gif";
+  get canShowFooterSection() { return this.app && (this.app.tos_uri || this.app.policy_uri); }
 
-  get canShowFooterSection() {
-    return this.app && (this.app.tos_uri || this.app.policy_uri);
-  }
+  get showIdentityChoose() { return this.step.action === 'identity.choose'; }
 
-  get canShowDiscoverySection() {
-    return this.step === "discovery";
-  }
-  get canShowAuthenticatorSection() {
-    return this.step === "authenticator_chooser";
-  }
-  get canShowRegistrationSection() {
-    return this.step === "register";
-  }
+  get showIdentityRegister() { return this.step.action === 'identity.register'; }
+  get showIdentityRegisterPhone() { return this.step.action === 'identity.register.phone'; }
+  get showIdentityRegisterEmail() { return this.step.action === 'identity.register.email'; }
+
+  get showAuthenticatorChallengeTotp() { return this.step.action === 'authenticator.challenge.totp'; }
+  get showAuthenticatorChallengeEmail() { return this.step.action === 'authenticator.challenge.email'; }
+  get showAuthenticatorChallengePhone() { return this.step.action === 'authenticator.challenge.phone'; }
+  get showAuthenticatorChallengeWebauthnPlatform() { return this.step.action === 'authenticator.challenge.webauthn_platform'; }
+  get showAuthenticatorChallengeWebauthnRoaming() { return this.step.action === 'authenticator.challenge.webauthn_roaming'; }
+
+  get showAuthenticatorChallengeTwitter() { return this.step.action === 'authenticator.challenge.Twitter'; }
+  get showAuthenticatorChallengeGoogle() { return this.step.action === 'authenticator.challenge.Google'; }
+  get showAuthenticatorChallengeFacebook() { return this.step.action === 'authenticator.challenge.Facebook'; }
+  get showAuthenticatorChallengeLinkedIn() { return this.step.action === 'authenticator.challenge.LinkedIn'; }
+
+  get twitter() { return this.socialProviders.filter(provider => provider.friendlyName === 'Twitter'); }
+  get google() { return this.socialProviders.filter(provider => provider.friendlyName === 'Google'); }
+  get facebook() { return this.socialProviders.filter(provider => provider.friendlyName === 'Facebook'); }
+  get linkedin() { return this.socialProviders.filter(provider => provider.friendlyName === 'LinkedIn'); }
+
+  get showAuthenticatorRegisterTotp() { return this.step.action === 'authenticator.register.totp'; }
+  get showAuthenticatorRegisterWebauthnPlatform() { return this.step.action === 'authenticator.register.webauthn_platform'; }
+  get showAuthenticatorRegisterWebauthnRoaming() { return this.step.action === 'authenticator.register.webauthn_roaming'; }
 
   handleUserSelected(e) {
     e.stopPropagation();
-    const { action, user } = e.detail;
-    this.step = action;
-    this.user = user;
-    if (this.request) this.request.login_hint = '';
+    this.login_hint = e.detail.login_hint;
+    this.handleStepCompleted();
   }
 
-  backToChooser() {
-    this.step = "discovery";
+  handleStepCompleted() {
+    this.loading = true;
+    remote('DiscoveryController.Discover', {
+      startURL: this.startUrl,
+      login_hint: this.login_hint,
+      requestId: this.requestId,
+    })
+      .then(( detail ) => {
+        if (detail.action === 'redirect') return this.complete(detail.redirect);
+        this.step = detail;
+        this.loading = false;
+      })
+      .catch(e => {
+        this.error = e;
+        this.loading = false;
+      });
   }
 
-  handleLoginDone({ detail : { redirect } }) {
-    console.log({ redirect });
-    console.log(JSON.parse(JSON.stringify(this.user.authenticators)));
-    if (this.user.authenticators.indexOf('webauthn_platform') === -1) {
-      this.redirect = redirect;
-      this.step = "webauthn_platform.register";
-    } else if (this.user.authenticators.indexOf('webauthn_platform') > -1 && this.user.authenticators.indexOf('totp') === -1) {
-      this.redirect = redirect;
-      this.step = "totp.register";
-    } else {
-      this.complete(redirect);
-    }
+  backToChooser() { this.step = { action: "identity.choose" }; }
+
+  handleWebAuthnEnrollCompleted() { this.complete(this.step.redirect); }
+  handleWebAuthnError({ detail : { error, error_description } }) {
+    if (error == 'SecurityError') this.error = { error : error_description };
   }
 
-  redirect;
-  registerWebAuthnPlatformLoading = true;
-
-  get canRegisterWebAuthnPlatform() {
-    return this.step === "webauthn_platform.register";
-  }
-
-  get canChallengeWebAuthnPlatform() {
-    return this.step === 'webauthn_platform.challenge'
-  }
-  handleWebAuthnPlatformReady({ detail : { error } }) {
-    // The browser does not support WebAuthn or does not have UserVerification
-    if (error) return this.complete(this.redirect);
-    this.registerWebAuthnPlatformLoading = false;
-  }
-
-  handleWebAuthnPlatformDone({ detail : { redirect }}) {
-    if (this.user.authenticators.indexOf('totp') === -1) {
-      this.redirect = redirect;
-      this.step = "totp.register";
-    } else {
-      this.complete(redirect);
-    }
-  }
-
-  handleWebAuthnPlatformError({ detail : { error }}) {
-    if (error === 'InvalidStateError') {
-      // The user already has a device authenticator registered
-      // Device authenticators on Windows are registered at OS level, so they are usable across all browsers
-      // Request the user to verify his biometric
-      this.step = 'webauthn_platform.challenge';
-    } else if (error === 'NotAllowedError') {
-      // The user has cancelled the request or the request has timeout
-      // The user must try again
-    } else {
-      // Another error happened, ignore and continue the flow
-      // window.location.replace(this.redirect);
-    }
-  }
-
-  showLearnMore = false;
-  toggleLearnMore() {
-    this.showLearnMore = !this.showLearnMore;
-  }
-
-  skipEnrollWebAuthnPlatform() {
-    return window.location.replace(this.redirect);
-  }
-
-  get canRegisterTotp() {
-    return this.step === 'totp.register';
-  }
-
-  handleTotpRegisterDone({ detail : { redirect }}) {
-    this.complete(redirect);
-  }
-
-  complete(redirect) {
-    window.location.replace(redirect);
-  }
+  complete(redirect) { window.location.replace(redirect); }
 }

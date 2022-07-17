@@ -1,0 +1,8 @@
+<template>
+  <div class="slds-form-element">
+    <label class="slds-form-element__label" for="phone">Phone Number<abbr class="slds-required" title="required">*</abbr></label>
+    <div class="slds-form-element__control">
+      <input class="slds-input phone-input" type="tel" oninput={handlePhoneChanged} oncountrychange={handlePhoneChanged} />
+    </div>
+  </div>
+</template>

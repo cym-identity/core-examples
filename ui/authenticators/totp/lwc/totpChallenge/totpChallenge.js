@@ -1,7 +1,5 @@
 import { LightningElement, api } from "lwc";
-import verifyVerification from "@salesforce/apex/TotpChallengeController.verifyVerification";
-
-import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
+import { remote } from 'c/fetch';
 
 export default class TotpChallenge extends LightningElement {
   otp = "";
@@ -9,18 +7,8 @@ export default class TotpChallenge extends LightningElement {
   nextDisabled = true;
   loading = false;
 
-  @api startUrl;
-  @api userId;
-
-  basePath =
-    STATIC_RESOURCE_URL.split("/resource/")[0][0] === "/"
-      ? window.location.protocol +
-        "//" +
-        window.location.host +
-        STATIC_RESOURCE_URL.split("/resource/")[0]
-      : STATIC_RESOURCE_URL.split("/resource/")[0];
-
-  secret;
+  @api user;
+  @api requestId;
 
   handleScanNext() {
     this.showQRCode = false;
@@ -37,21 +25,14 @@ export default class TotpChallenge extends LightningElement {
     e.preventDefault();
     e.stopPropagation();
     this.loading = true;
-    fetch(this.basePath + "/browser_handle")
-      .then((response) => response.json())
-      .then((resp) => resp.handle)
-      .then((handle) => {
-        return verifyVerification({
-          otp: this.otp,
-          handle: handle,
-          startURL: this.startUrl,
-          userId: this.userId,
-        });
-      })
+    return remote('TotpChallengeController.VerifyVerification', {
+      otp: this.otp,
+      userId: this.user.id,
+      requestId: this.requestId,
+    })
       .then((resp) => {
         const { isValid } = resp;
-        if (isValid)
-          this.dispatchEvent(new CustomEvent("done", { detail: resp }));
+        if (isValid) this.dispatchEvent(new CustomEvent("done", { detail: resp }));
       })
       .catch(({ body }) => {
         this.loading = false;

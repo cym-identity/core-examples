@@ -2,8 +2,8 @@
   <p if:true={loading}>
     <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
   </p>
-  <div class="slds-p-around_medium">
-    <article class="slds-card slds-card_boundary">
+  <div class="slds-p-around_medium" if:false={loading}>
+    <article class="slds-card slds-card_boundary" if:true={lastPasswordChangeTime}>
       <div class="slds-card__header slds-grid">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">
           <div class="slds-media__figure">
@@ -21,6 +21,7 @@
         </a>
       </footer>
     </article>
+
     <article class="slds-card slds-card_boundary">
       <div class="slds-card__header slds-grid">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">
@@ -34,7 +35,26 @@
       </div>
       <div class="slds-card__body slds-card__body_inner">
         <template if:true={hasTotp}>Active since {totpCreationDate}</template>
-        <template if:false={hasTotp}>Register</template>
+        <template if:false={hasTotp}>
+          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" onclick={handleRegisterTotp}>Enroll</button></p>
+
+
+          <template if:true={showAuthenticatorRegisterTotp}>
+            <section role="dialog" tabindex="-1" aria-label="Enroll an Authenticator App" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+              <div class="slds-modal__container">
+                <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleRegisterTotpClose}>
+                  <lightning-icon icon-name="utility:close" alternative-text="close" title="close" variant="inverse"></lightning-icon>
+                </button>
+                <article class="slds-card slds-card_boundary">
+                  <div class="slds-card__body slds-card__body_inner">
+                    <c-totp-register user={user} ondone={handleStepCompleted}></c-totp-register>
+                  </div>
+                </article>
+              </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+          </template>
+        </template>
       </div>
     </article>
 
@@ -53,10 +73,65 @@
         <template if:true={hasUserVerifiedEmailAddress}>Verified</template>
       </div>
       <footer class="slds-card__footer" if:false={hasUserVerifiedEmailAddress}>
-        <a class="slds-card__footer-action" href="#">Verify your email
-          <span class="slds-assistive-text">Reset Password</span>
-        </a>
+        <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" onclick={handleRegisterEmail}>Verify</button></p>
+        <template if:true={showAuthenticatorRegisterEmail}>
+          <section role="dialog" tabindex="-1" aria-label="Verify Your Email" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+              <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={handleRegisterEmailClose}>
+                <lightning-icon icon-name="utility:close" alternative-text="close" title="close" variant="inverse"></lightning-icon>
+              </button>
+              <article class="slds-card slds-card_boundary">
+                <div class="slds-card__body slds-card__body_inner">
+                  <c-email-register user={user} ondone={handleStepCompleted}></c-email-register>
+                </div>
+              </article>
+            </div>
+          </section>
+          <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
       </footer>
+    </article>
+
+
+    <article class="slds-card slds-card_boundary" if:true={socialProviders.available}>
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure"></div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title"><span>Linked Accounts</span></h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">
+        <p class="slds-text-heading_medium slds-text-align_center">Link your social accounts</p>
+        <c-idp-challenge providers={socialProviders.available}></c-idp-challenge>
+        <template if:true={socialProviders.enrolled.length}>
+          <c-util-divider value="ALREADY LINKED"></c-util-divider>
+          <c-idp-challenge providers={socialProviders.enrolled}></c-idp-challenge>
+        </template>
+      </div>
+    </article>
+
+    <article class="slds-card slds-card_boundary">
+      <div class="slds-card__header slds-grid">
+        <header class="slds-media slds-media_center slds-has-flexi-truncate">
+          <div class="slds-media__figure">
+            <lightning-icon size="small" icon-name="utility:alert"></lightning-icon>
+          </div>
+          <div class="slds-media__body">
+            <h2 class="slds-card__header-title"><span>Push Notifications (Salesforce Authenticator)</span></h2>
+          </div>
+        </header>
+      </div>
+      <div class="slds-card__body slds-card__body_inner">
+        <c-push-register start-url="/me" if:false={hasSalesforceAuthenticator}></c-push-register>
+        <p if:true={hasSalesforceAuthenticator}>
+          <span>You already configured the Salesforce Authenticator App</span>
+          <c-push-challenge>
+            <button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" slot="button">Start Verification</button>
+          </c-push-challenge>
+        </p>
+      </div>
     </article>
 
     <article class="slds-card slds-card_boundary">

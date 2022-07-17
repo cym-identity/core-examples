@@ -19,7 +19,8 @@ const remote = async function(action, payload) {
   })
   .then(resp => resp.json())
   .then((resp) => {
-    const { error, response } = resp;
+    const { error, response, redirect } = resp;
+    if (redirect) return window.location.href = redirect;
     if (error) return Promise.reject(error);
     return response;
   });

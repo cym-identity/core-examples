@@ -1,21 +1,40 @@
 global with sharing class PushChallengeController { // NOPMD.AvoidGlobalModifier
 
-  @AuraEnabled
-  public static Map<String, Object> initRegistration(String startURL){
-    try {
+  public with sharing class InitRegistration extends Fetch.Function {
+    public override Object execute(Map<String, Object> param) {
+      String startURL = (String) param.get('startURL');
       // Only allow the registration for already logged in users
       if (Auth.CommunitiesUtil.isGuestUser()) throw new AuraHandledException('This method cannot be called by a guest user');
-      if (Auth.CommunitiesUtil.isInternalUser()) {
-        // Start a SalesforceAuthenticatorRegistration
-        cym.SalesforceAuthenticator.Push authenticator = (cym.SalesforceAuthenticator.Push) cym.Community.getCurrent().authenticators.find('name', 'salesforce_push');
-        PageReference pr = (PageReference) authenticator.initRegistration(new Map<String, Object> {'startURL' => startURL});
-        return new Map<String, Object> {'redirect' => pr.getUrl()};
-      } else {
-        // Start an External User 
-        return null;
-      }
-    } catch (Exception e) {
-      throw new AuraHandledException(e.getMessage());
+      // Start a SalesforceAuthenticatorRegistration
+      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'salesforce_push');
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId());
+      PageReference pr = (PageReference) authenticator.provider.initRegistration(session, new Map<String, Object> {'startURL' => startURL});
+      return new Map<String, Object> {'redirect' => pr.getUrl()};
     }
   }
+
+  public with sharing class InitVerification extends Fetch.Function {
+    public override Object execute(Map<String, Object> param) {
+      // Only allow the registration for already logged in users
+      if (Auth.CommunitiesUtil.isGuestUser()) throw new AuraHandledException('This method cannot be called by a guest user');
+      // Start a SalesforceAuthenticatorRegistration
+      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'salesforce_push');
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId());
+      return authenticator.provider.initVerification(session, null);
+    }
+  }
+
+  public with sharing class VerifyVerification extends Fetch.Function {
+    public override Object execute(Map<String, Object> param) {
+      // Only allow the registration for already logged in users
+      if (Auth.CommunitiesUtil.isGuestUser()) throw new AuraHandledException('This method cannot be called by a guest user');
+      // Start a SalesforceAuthenticatorRegistration
+      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'salesforce_push');
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId());
+      Map<String, Object> result = (Map<String, Object>) authenticator.provider.verifyVerification(session, param);
+      if ((Boolean) result.get('success')) session.apply(authenticator);
+      return result;
+    }
+  }
+
 }

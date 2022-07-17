@@ -1,20 +1,25 @@
 <template>
   <lightning-card>
-    <lightning-tabset>
-      <lightning-tab label="Security">
+    <lightning-tabset active-tab-value="authenticators">
+      <lightning-tab label="Profile" value="profile">
+        <c-me-profile></c-me-profile>
+      </lightning-tab>
+      <lightning-tab label="Security" value="authenticators">
         <c-me-authenticators></c-me-authenticators>
       </lightning-tab>
-      <lightning-tab label="Third Party apps">
+      <lightning-tab label="Third Party apps" value="consent">
         <c-me-consent></c-me-consent>
       </lightning-tab>
-      <lightning-tab label="Applications">
+      <lightning-tab label="Applications" value="client-session">
         <c-me-client-session></c-me-client-session>
       </lightning-tab>
-      <lightning-tab label="Devices (beta)">
+      <lightning-tab label="Devices (beta)" value="browser-session">
         <c-me-browser-session></c-me-browser-session>
       </lightning-tab>
-      <lightning-tab label="Verifications">
-        <c-challenge-ui></c-challenge-ui>
+      <lightning-tab label="Critical" value="critical-resource">
+        <c-protected-resource>
+          <c-critical-resource slot="resource"></c-critical-resource>
+        </c-protected-resource>
       </lightning-tab>
     </lightning-tabset>
   </lightning-card>

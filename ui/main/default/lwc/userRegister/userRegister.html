@@ -1,93 +1,11 @@
 <template>
+  <p if:true={loading}>
+    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+  </p>
   <article class="slds-card">
     <div class="slds-card__body slds-card__body_inner">
       <c-exception-ui exception={error} if:true={error}></c-exception-ui>
-      <form onsubmit={handleRegister} class="slds-p-left_large slds-p-right_large" if:false={userId}>
-
-        <div class="slds-form-element">
-          <label class="slds-form-element__label" for="text-input-Email">Email<abbr class="slds-required" title="required">* </abbr></label>
-          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
-            <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:lock"></lightning-icon>
-            <input type="email" id="text-input-Email" placeholder="Enter your Email" class="slds-input" required oninput={handleEmailChange} style="line-height: 42px;" autofocus value={email}/>
-          </div>
-        </div>
-
-        <div class="slds-form-element">
-          <label class="slds-form-element__label" for="text-input-FirstName">First Name<abbr class="slds-required" title="required">* </abbr></label>
-          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
-            <input type="text" id="text-input-FirstName" placeholder="Enter your First Name" class="slds-input" required oninput={handleFirstNameChange} style="line-height: 42px;"/>
-          </div>
-        </div>
-
-        <div class="slds-form-element">
-          <label class="slds-form-element__label" for="text-input-LastName">Last Name<abbr class="slds-required" title="required">* </abbr></label>
-          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
-            <input type="text" id="text-input-LastName" placeholder="Enter your Last Name" class="slds-input" required oninput={handleLastNameChange} style="line-height: 42px;"/>
-          </div>
-        </div>
-
-        <div class="slds-form-element">
-          <label class="slds-form-element__label" for="text-input-Nickname">Nickname<abbr class="slds-required" title="required">* </abbr></label>
-          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
-            <input type="text" id="text-input-Nickname" placeholder="Enter your Nickname" class="slds-input" required oninput={handleNicknameChange} style="line-height: 42px;"/>
-          </div>
-        </div>
-
-        <div class="slds-p-top_large slds-text-align_center">
-          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" type="submit">Register</button></p>
-        </div>
-      </form>
-
-      <template if:true={userId}>
-        <template if:true={canRegisterWebAuthnPlatform}>
-          <lightning-spinner alternative-text="Loading" size="small" if:true={registerWebAuthnPlatformLoading}></lightning-spinner>
-          <div data-invisible={registerWebAuthnPlatformLoading} style="padding: 16px;">
-            <div class="slds-text-heading_medium slds-text-align_center">You're eligible for a simpler sign-in!</div>
-            <div style="margin: 16px;">
-              <img src={registerAnimationUrl} alt="Biometrics Sign In Animated Image" />
-            </div>
-            <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
-            <c-webauthn-register
-              onready={handleWebAuthnPlatformReady}
-              ondone={handleWebAuthnPlatformDone}
-              onerror={handleWebAuthnPlatformError}
-              authenticator="webauthn_platform"
-              start-url={startUrl}
-              user-id={userId}
-              style="display: block;">
-
-              <lightning-spinner alternative-text="Loading" size="small" slot="spinner"></lightning-spinner>
-              <button class="slds-button slds-button_brand slds-button_stretch" slot="button" style="margin: 16px 0;">
-                <img src={fingerprintUrl} alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
-                Register your biometrics
-              </button>
-
-            </c-webauthn-register>
-            <div class="slds-text-heading_medium slds-text-align_center">
-              <img src={fidoCertifiedUrl} alt="FIDO Certified Logo" width="40px" />
-            </div>
-            <p class="slds-text-heading_small_xx slds-text-align_center" style="margin: 16px;">
-              <a onclick={toggleLearnMore}>
-                <span if:false={showLearnMore}>Learn More</span>
-                <span if:true={showLearnMore}>Hide</span>
-              </a>
-            </p>
-            <ul class="slds-list_dotted" if:true={showLearnMore}>
-              <li>FIDO is a technology built into all leading desktop devices (PC and Mac) and browsers, that allows users to sign in securely without a password.</li>
-              <li>In the same way your phone uses a biometric, FIDO now enables biometric sign-in on websites viewed on your desktop too.</li>
-              <li>FIDO makes sign-in easy, safe, and private!</li>
-              <li>FIDO technology uses your computer's built-in authentication method (i.e., Windows Hello or Apple Touch ID) to ensure your sign-in information stays safe from hackers because it never leaves your computer.</li>
-              <li>Once you've registered your computer's PIN, facial recognition, fingerprint, or security key, FIDO verifies it's really you and doesn't transmit any of your sign-in information over the internet.</li>
-              <li>Registering with FIDO provides you with an additional sign-in option for this device — your password remains valid.</li>
-              <li>Leading companies worldwide in retail, telecommunications, finance, and technology are already using FIDO.</li>
-            </ul>
-          </div>
-        </template>
-        <template if:false={canRegisterWebAuthn}>
-          Show password prompt
-        </template>
-      </template>
-
+      <c-user-profile fields={user.fields} attributes={user.attributes} picklists={user.picklists} cta="Register" onsave={handleRegister}></c-user-profile>
     </div>
   </article>
 </template>

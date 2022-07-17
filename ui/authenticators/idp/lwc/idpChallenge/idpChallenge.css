@@ -1,0 +1,99 @@
+.social-button.rounded {
+  display: inline-block;
+  height: 50px;
+  line-height: 50px;
+  width: 50px;
+  border-radius: 50%;
+  margin: 10px;
+  padding-left: 0;
+}
+
+.social-button.rounded > span {
+  display: none;
+}
+
+
+.social-button {
+  background-position: 25px 0px;
+  box-sizing: border-box;
+  color: rgb(255, 255, 255);
+  cursor: pointer;
+  display: inline-block;
+  height: 50px;
+  line-height: 50px;
+  text-align: left;
+  text-decoration: none;
+  text-transform: uppercase;
+  vertical-align: middle;
+  width: 100%;
+  border-radius: 3px;
+  margin: 10px auto;
+  outline: rgb(255, 255, 255) none 0px;
+  padding-left: 20%;
+  transition: all 0.2s cubic-bezier(0.72, 0.01, 0.56, 1) 0s;
+  -webkit-transition: all 0.3s ease;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+.social-button:hover {
+  text-decoration: none;
+}
+
+.social-button[data-social-provider="Facebook"] {
+  background: rgb(255, 255, 255) no-repeat scroll 7px 0px / 30px 50px padding-box border-box;
+  border: 1px solid rgb(60, 90, 154);
+  -webkit-transition: all 0.8s ease-out;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease-out;
+}
+
+.social-button[data-social-provider="Facebook"]:hover {
+  box-shadow: 0 3px 6px rgba(60, 90, 154, 0.16), 0 3px 6px rgba(60, 90, 154, 0.23);
+}
+
+.social-button[data-social-provider="Google"] {
+  background: rgb(255, 255, 255) no-repeat scroll 0px 0px / 50px 50px padding-box border-box;
+  border: 1px solid rgb(220, 74, 61);
+  -webkit-transition: all 0.8s ease-out;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease-out;
+}
+
+.social-button[data-social-provider="Google"]:hover {
+  box-shadow: 0 3px 6px rgba(220, 74, 61, 0.16), 0 3px 6px rgba(220, 74, 61, 0.23);
+}
+
+.social-button[data-social-provider="Twitter"] {
+  background: rgb(255, 255, 255) no-repeat scroll 0px 0px / 50px 50px padding-box border-box;
+  border: 1px solid rgb(85, 172, 238);
+  -webkit-transition: all 0.8s ease-out;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease-out;
+}
+
+.social-button[data-social-provider="Twitter"]:hover {
+  box-shadow: 0 3px 6px rgba(85, 172, 238, 0.16), 0 3px 6px rgba(85, 172, 238, 0.23);
+}
+
+.social-button[data-social-provider="LinkedIn"] {
+  background: rgb(255, 255, 255) no-repeat scroll 10px 0px / 30px 45px padding-box border-box;
+  border: 1px solid rgb(0, 119, 181);
+  -webkit-transition: all 0.8s ease-out;
+  -moz-transition: all 0.3s ease;
+  -ms-transition: all 0.3s ease;
+  -o-transition: all 0.3s ease;
+  transition: all 0.3s ease-out;
+}
+
+.social-button[data-social-provider="LinkedIn"]:hover {
+  box-shadow: 0 3px 6px rgba(0, 119, 181, 0.16), 0 3px 6px rgba(0, 119, 181, 0.23);
+}

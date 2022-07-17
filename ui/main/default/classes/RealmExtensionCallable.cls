@@ -4,12 +4,12 @@ global with sharing class RealmExtensionCallable implements Callable { // NOPMD.
       return new Repository().findByEmail((String) args.get('sub')).Id;
     }
 
-    User current_user = new Repository().findById((Id) args.get('user_id'));
+    User current_user = new Repository().findById((Id) args.get('user'));
     if (action == 'before:authorize:page') {
       Map<String, String> request = (Map<String, String>) args.get('request');
 
       // Check if there are some roles required for login
-      if (new Repository().isMissingRequiredClientRoles(request.get('client_id'), (Id) args.get('user_id'))) { return '/forbidden'; }
+      if (new Repository().isMissingRequiredClientRoles(request.get('client_id'), (Id) args.get('user'))) { return '/forbidden'; }
 
       String[] scopes = ((String) request.get('scope')).split(' ');
       if (scopes.indexOf('l3') > -1 && (
@@ -28,7 +28,7 @@ global with sharing class RealmExtensionCallable implements Callable { // NOPMD.
       return null;
     }
     if (action == 'get:claims') {
-      Id user_id = (Id) args.get('user_id');
+      Id user_id = (Id) args.get('user');
       String[] claims = (String[]) args.get('claims');
 
       // Group roles by client_id
@@ -60,16 +60,17 @@ global with sharing class RealmExtensionCallable implements Callable { // NOPMD.
       return new PageReference('/approval');
     }
     if (action == 'ciba:init:challenge') {
-      TwilioVerify.Push service = (TwilioVerify.Push) cym.Community.getCurrent().authenticators.find('name', 'twilio_push');
+      TwilioVerify.Push service = (TwilioVerify.Push) ((cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'twilio_push')).provider;
       Object[] factors = service.getFactors(current_user.Id);
       if (factors.size() == 0) return null;
       Map<String, Object> status = service.challenge(current_user.Id, (String)((Map<String, Object>) factors[0]).get('sid'));
       return new Map<String, Object> { 'auth_req_id' => (String) status.get('sid')};
     }
     if (action == 'ciba:verify:challenge') {
-      TwilioVerify.Push service = (TwilioVerify.Push) cym.Community.getCurrent().authenticators.find('name', 'twilio_push');
+      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'twilio_push');
+      TwilioVerify.Push service = (TwilioVerify.Push) authenticator.provider;
       String status = service.verify((Id) args.get('user_id'), (String) args.get('auth_req_id'));
-      return new Map<String, Object> { 'status' => status, 'amrs' => service.amrs };
+      return new Map<String, Object> { 'status' => status, 'amrs' => authenticator.amrs };
     }
     return null;
   }

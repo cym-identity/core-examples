@@ -1,14 +1,25 @@
 public with sharing class BrowserSessionUtils {
 
+  public static String getRequestId() {
+    return getRequestId(ApexPages.currentPage().getParameters().get('startURL')); // NOPMD.ApexXSSFromURLParam
+  }
+  public static String getRequestId(String startURL) {
+    try {
+      return cym.AuthorizationContext.getContext(startURL).authn.iid;
+    } catch (Exception ignored) { System.debug(ConverterUtils.toMap(ignored)); }
+    return ConverterUtils.base64encode(Crypto.generateAesKey(256));
+  }
+
   public static cym.Browser.Session findOrAddSession(cym.Browser browser, Id userId) {
-    cym.Browser.Session session;
-    for (cym.Browser.Session s : browser.sessions.asList()) {
-      if (s.OwnerId == userId) {
-        session = s;
-        break;
-      }
-    }
+    cym.Browser.Session session = (cym.Browser.Session) browser.sessions.find('ownerId', userId);
     if (session == null) session = browser.sessions.add(userId);
     return session;
+  }
+
+  public static cym.Browser.SessionVerification findAuthenticatorSessionVerification(cym.Browser.SessionVerifications verifications, cym.Community.Authenticator authenticator, String requestId) {
+    if (authenticator == null) return null;
+    cym.Collection filtered = verifications.filter('Id', authenticator.id).filter('isActive', true).filter('requestId', requestId);
+    if (filtered.size() > 0) return (cym.Browser.SessionVerification) filtered.get(0);
+    return null;
   }
 }

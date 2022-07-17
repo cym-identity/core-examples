@@ -25,11 +25,6 @@ public with sharing class RemoteController {
       if (origin != allowedOrigin) return null;
 
       // This an XHR request made from the page itself, process it
-      // if (!Auth.CommunitiesUtil.isGuestUser()) RESPONSE.put('sf-session', Auth.SessionManagement.getCurrentSession());
-      // Object[] sessions = new Object[] {};
-      // for (cym.Browser.Session s : cym.Browser.getCurrent().sessions.asList()) if (s.OwnerId == UserInfo.getUserId()) sessions.add(new Map<String, Object> { 'session' => s, 'verifications' => s.verifications.asList()});
-      // RESPONSE.put('sessions', sessions);
-
       try {
         Map<String, String> body = ApexPages.currentPage().getParameters();
 
@@ -43,8 +38,9 @@ public with sharing class RemoteController {
         if (!Fetch.Function.class.isAssignableFrom(action)) return null;
 
         Fetch.Function fn = (Fetch.Function) action.newInstance();
-        RESPONSE.put('response', fn.execute(payload));
-
+        Object result = fn.execute(payload);
+        if (response != null && result instanceof PageReference) RESPONSE.put('redirect', ((PageReference) result).getUrl());
+        else RESPONSE.put('response', result);
       } catch (Exception ex) {
         RESPONSE.put('error', ConverterUtils.toMap(ex));
       }

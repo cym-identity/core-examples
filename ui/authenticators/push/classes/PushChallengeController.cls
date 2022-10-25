@@ -7,6 +7,7 @@ global with sharing class PushChallengeController { // NOPMD.AvoidGlobalModifier
       if (Auth.CommunitiesUtil.isGuestUser()) throw new AuraHandledException('This method cannot be called by a guest user');
       // Start a SalesforceAuthenticatorRegistration
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'salesforce_push');
+      if (authenticator == null) return new Map<String, Object> { 'isEnabled' => false };
       cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId());
       PageReference pr = (PageReference) authenticator.provider.initRegistration(session, new Map<String, Object> {'startURL' => startURL});
       return new Map<String, Object> {'redirect' => pr.getUrl()};

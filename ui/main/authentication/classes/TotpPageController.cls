@@ -49,8 +49,24 @@ public with sharing class TotpPageController extends AuthPageController {
 
     AuthContext.Step next = context.next();
 
-    if (next.kind == AuthContext.StepKind.REDIRECT) return context.owner.session.resume(this.startURL);
+    if ( next.kind == AuthContext.StepKind.REDIRECT ) {
+      Boolean isWebAuthnEnabled = Boolean.valueOf(params.get('is-webauthn'));
+      if (isWebAuthnEnabled) {
+        PageReference pr = new PageReference('/web_authn');
+        pr.getParameters().putAll(
+          new Map<String, String> {
+            'login_hint' => this.request.login_hint,
+            'startURL'   => this.startURL,
+            'iid'        => this.request.iid
+          }
+        );
+        return pr;
+      } else {
+        return context.owner.session.resume(this.startURL);
+      }
+    } else {
+      return context.getNextStep(next, this.startURL);
+    }
 
-    return context.getNextStep(next, this.startURL);
   }
 }

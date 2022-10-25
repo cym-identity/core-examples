@@ -6,13 +6,16 @@ export default class PushRegister extends LightningElement {
   @api requestId;
   @api redirect;
 
+  isEnabled = false;
+
   loading = true;
 
   connectedCallback() {
     remote("PushChallengeController.InitRegistration", {
       startURL: this.startUrl,
-    }).then(({redirect}) => {
+    }).then(({redirect, isEnabled}) => {
       this.redirect = redirect;
+      this.isEnabled = isEnabled;
       this.loading = false;
     });
   }

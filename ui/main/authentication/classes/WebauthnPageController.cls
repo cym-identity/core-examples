@@ -12,8 +12,6 @@ public with sharing class WebauthnPageController extends AuthPageController {
 
     if (next.authenticator?.name != 'webauthn_platform') return context.getNextStep(next, this.startURL);
 
-    DEBUG_LOG.put('context', context);
-    DEBUG_LOG.put('authenticators', context.idp.authenticators.asObjects());
     this.kind = context.owner.authenticators.indexOf('webauthn_platform') == -1 ? 'register' : 'verify';
     this.publicKey = JSON.serialize(
       context.owner.authenticators.indexOf('webauthn_platform') == -1 ?
@@ -46,9 +44,11 @@ public with sharing class WebauthnPageController extends AuthPageController {
 
     AuthContext.Step next = context.next();
 
-    if (next.kind == AuthContext.StepKind.REDIRECT) return context.owner.session.resume(this.startURL);
-
-    return context.getNextStep(next, this.startURL);
+    if ( next.kind == AuthContext.StepKind.REDIRECT ) {
+      return context.owner.session.resume(this.startURL);
+    } else {
+      return context.getNextStep(next, this.startURL);
+    }
   }
 
 }

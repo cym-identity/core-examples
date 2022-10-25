@@ -41,24 +41,25 @@ public with sharing class EmailPageController extends AuthPageController {
     context.owner.session.apply(next.authenticator, this.request.iid);
 
     // ReCompute the next step now that the user has verified her email
-    if (true) return context.getNextStep(context.next(), this.startURL);
+    next = context.next();
 
-
-
-    Boolean isWebAuthnEnabled = Boolean.valueOf(params.get('is-webauthn'));
-
-    if ( isWebAuthnEnabled && context.next().kind == AuthContext.StepKind.REDIRECT ) {
-      PageReference pr = new PageReference('/web_authn');
-      pr.getParameters().putAll(
-        new Map<String, String> {
-          'login_hint' => this.request.login_hint,
-          'startURL'   => this.startURL,
-          'iid'        => this.request.iid
-        }
-      );
-      return pr;
+    if ( next.kind == AuthContext.StepKind.REDIRECT ) {
+      Boolean isWebAuthnEnabled = Boolean.valueOf(params.get('is-webauthn'));
+      if (isWebAuthnEnabled) {
+        PageReference pr = new PageReference('/web_authn');
+        pr.getParameters().putAll(
+          new Map<String, String> {
+            'login_hint' => this.request.login_hint,
+            'startURL'   => this.startURL,
+            'iid'        => this.request.iid
+          }
+        );
+        return pr;
+      } else {
+        return context.owner.session.resume(this.startURL);
+      }
     } else {
-      return context.owner.session.resume(this.startURL);
+      return context.getNextStep(next, this.startURL);
     }
   }
 

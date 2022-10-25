@@ -15,7 +15,7 @@ export default class WebauthnChallenge extends LightningElement {
   get canShowButton() { return this.ready && !this.error; }
 
   get webAuthnPath() {
-    let prefix = STATIC_RESOURCE_URL.split("/resource/")[0][0] === '/' ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0]
+    let prefix = STATIC_RESOURCE_URL[0] === "/" ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0]
     return prefix + "/webauthn?authenticator=" + encodeURIComponent(this.authenticator) + '&requestor=' + this.requestor;
   }
 

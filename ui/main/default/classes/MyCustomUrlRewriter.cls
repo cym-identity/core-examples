@@ -11,8 +11,26 @@ global with sharing class MyCustomUrlRewriter implements Site.UrlRewriter { // N
       }
       // Here goes your existing code
       Map<String, String> params = pr.getParameters();
-      if (pr.getUrl().startsWith('/MyCustomLogin')) {
-        PageReference p = new PageReference('/auth/login');
+      if (pr.getUrl().startsWith('/web_authn')) {
+        PageReference p = new PageReference('/auth/webauthn');
+        p.getParameters().putAll(params);
+        results.add(p);
+        continue;
+      }
+      if (pr.getUrl().startsWith('/discover')) {
+        PageReference p = new PageReference('/auth/discover');
+        p.getParameters().putAll(params);
+        results.add(p);
+        continue;
+      }
+      if (pr.getUrl().startsWith('/email')) {
+        PageReference p = new PageReference('/auth/email');
+        p.getParameters().putAll(params);
+        results.add(p);
+        continue;
+      }
+      if (pr.getUrl().startsWith('/totp')) {
+        PageReference p = new PageReference('/auth/totp');
         p.getParameters().putAll(params);
         results.add(p);
         continue;
@@ -34,24 +52,25 @@ global with sharing class MyCustomUrlRewriter implements Site.UrlRewriter { // N
 
   private PageReference mapAuthRequestUrl(PageReference userFriendlyPage) {
     String uri = userFriendlyPage.getUrl();
-    System.debug(JSON.serializePretty(userFriendlyPage.getHeaders()));
     Map<String, String> params = userFriendlyPage.getParameters();
-    if (uri.startsWith('/auth/login')) {
-      PageReference pr = new PageReference('/MyCustomLogin');
+    if (uri.startsWith('/auth/webauthn')) {
+      PageReference pr = new PageReference('/web_authn');
       pr.getParameters().putAll(params);
-      pr.getParameters().put('step', 'login');
       return pr;
     }
-    if (uri.startsWith('/auth/register')) {
-      PageReference pr = new PageReference('/MyCustomLogin');
+    if (uri.startsWith('/auth/discover')) {
+      PageReference pr = new PageReference('/discover');
       pr.getParameters().putAll(params);
-      pr.getParameters().put('step', 'register');
       return pr;
     }
-    if (uri.startsWith('/auth/challenge')) {
-      PageReference pr = new PageReference('/MyCustomLogin');
+    if (uri.startsWith('/auth/email')) {
+      PageReference pr = new PageReference('/email');
       pr.getParameters().putAll(params);
-      pr.getParameters().put('step', 'challenge');
+      return pr;
+    }
+    if (uri.startsWith('/auth/totp')) {
+      PageReference pr = new PageReference('/totp');
+      pr.getParameters().putAll(params);
       return pr;
     }
     return userFriendlyPage;

@@ -1,6 +1,7 @@
+# .forceignore v2
+
 # List files or directories below to ignore them when running force:source:push, force:source:pull, and force:source:status
 # More information: https://developer.salesforce.com/docs/atlas.en-us.sfdx_dev.meta/sfdx_dev/sfdx_dev_exclude_source.htm
-#
 
 package.xml
 
@@ -11,110 +12,114 @@ package.xml
 # LWC Jest
 **/__tests__/**
 
+**/*SessionSetting*
+.PasswordPolicy
+.ExperienceBundle
+
 
 force-app/main/default/applications/
 force-app/main/default/appMenus/
 force-app/main/default/certs/
 
-force-app/main/default/classes/ChangePasswordController.cls
-force-app/main/default/classes/ChangePasswordControllerTest.cls
-force-app/main/default/classes/CommunitiesLandingController.cls
-force-app/main/default/classes/CommunitiesLandingControllerTest.cls
-force-app/main/default/classes/CommunitiesLoginController.cls
-force-app/main/default/classes/CommunitiesLoginControllerTest.cls
-force-app/main/default/classes/CommunitiesSelfRegConfirmController.cls
-force-app/main/default/classes/CommunitiesSelfRegConfirmControllerTest.cls
-# force-app/main/default/classes/CommunitiesSelfRegController.cls
-force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls
-force-app/main/default/classes/ForgotPasswordController.cls
-force-app/main/default/classes/ForgotPasswordControllerTest.cls
-force-app/main/default/classes/MyProfilePageController.cls
-force-app/main/default/classes/MyProfilePageControllerTest.cls
-# force-app/main/default/classes/SiteLoginController.cls
-force-app/main/default/classes/SiteLoginControllerTest.cls
-force-app/main/default/classes/SiteRegisterController.cls
-force-app/main/default/classes/SiteRegisterControllerTest.cls
+force-app/main/default/classes/ChangePasswordController.cls-meta.xml
+force-app/main/default/classes/ChangePasswordControllerTest.cls-meta.xml
+force-app/main/default/classes/CommunitiesLandingController.cls-meta.xml
+force-app/main/default/classes/CommunitiesLandingControllerTest.cls-meta.xml
+force-app/main/default/classes/CommunitiesLoginController.cls-meta.xml
+force-app/main/default/classes/CommunitiesLoginControllerTest.cls-meta.xml
+force-app/main/default/classes/CommunitiesSelfRegConfirmController.cls-meta.xml
+force-app/main/default/classes/CommunitiesSelfRegConfirmControllerTest.cls-meta.xml
+force-app/main/default/classes/CommunitiesSelfRegController.cls-meta.xml
+force-app/main/default/classes/CommunitiesSelfRegControllerTest.cls-meta.xml
+force-app/main/default/classes/ForgotPasswordController.cls-meta.xml
+force-app/main/default/classes/ForgotPasswordControllerTest.cls-meta.xml
+force-app/main/default/classes/MyProfilePageController.cls-meta.xml
+force-app/main/default/classes/MyProfilePageControllerTest.cls-meta.xml
+# force-app/main/default/classes/SiteLoginController.cls-meta.xml
+force-app/main/default/classes/SiteLoginControllerTest.cls-meta.xml
+force-app/main/default/classes/SiteRegisterController.cls-meta.xml
+force-app/main/default/classes/SiteRegisterControllerTest.cls-meta.xml
 
 force-app/main/default/components/
 force-app/main/default/connectedApps/
 force-app/main/default/cspTrustedSites/
+force-app/main/default/experiences/
 force-app/main/default/navigationMenus/
 force-app/main/default/networkBranding/
 force-app/main/default/networks/
 
-force-app/main/default/pages/AnswersHome.page
-force-app/main/default/pages/BandwidthExceeded.page
-force-app/main/default/pages/ChangePassword.page
-force-app/main/default/pages/CommunitiesLanding.page
-force-app/main/default/pages/CommunitiesLogin.page
-force-app/main/default/pages/CommunitiesSelfReg.page
-force-app/main/default/pages/CommunitiesSelfRegConfirm.page
-force-app/main/default/pages/CommunitiesTemplate.page
-force-app/main/default/pages/Exception.page
-force-app/main/default/pages/FileNotFound.page
-force-app/main/default/pages/ForgotPassword.page
-force-app/main/default/pages/ForgotPasswordComfirm.page
-force-app/main/default/pages/IdeasHome.page
-force-app/main/default/pages/InMaintenance.page
-force-app/main/default/pages/MyProfilePage.page
-force-app/main/default/pages/SiteLogin.page
-force-app/main/default/pages/SiteRegister.page
-force-app/main/default/pages/SiteRegisterConfirm.page
-force-app/main/default/pages/SiteTemplate.page
-force-app/main/default/pages/StdExceptionTemplate.page
-force-app/main/default/pages/Unauthorized.page
-force-app/main/default/pages/UnderConstruction.page
+force-app/main/default/pages/AnswersHome.page-meta.xml
+force-app/main/default/pages/BandwidthExceeded.page-meta.xml
+force-app/main/default/pages/ChangePassword.page-meta.xml
+force-app/main/default/pages/CommunitiesLanding.page-meta.xml
+force-app/main/default/pages/CommunitiesLogin.page-meta.xml
+force-app/main/default/pages/CommunitiesSelfReg.page-meta.xml
+force-app/main/default/pages/CommunitiesSelfRegConfirm.page-meta.xml
+force-app/main/default/pages/CommunitiesTemplate.page-meta.xml
+force-app/main/default/pages/Exception.page-meta.xml
+force-app/main/default/pages/FileNotFound.page-meta.xml
+force-app/main/default/pages/ForgotPassword.page-meta.xml
+force-app/main/default/pages/ForgotPasswordComfirm.page-meta.xml
+force-app/main/default/pages/IdeasHome.page-meta.xml
+force-app/main/default/pages/InMaintenance.page-meta.xml
+# force-app/main/default/pages/MyProfilePage.page-meta.xml
+# force-app/main/default/pages/SiteLogin.page-meta.xml
+force-app/main/default/pages/SiteRegister.page-meta.xml
+force-app/main/default/pages/SiteRegisterConfirm.page-meta.xml
+force-app/main/default/pages/SiteTemplate.page-meta.xml
+force-app/main/default/pages/StdExceptionTemplate.page-meta.xml
+force-app/main/default/pages/Unauthorized.page-meta.xml
+force-app/main/default/pages/UnderConstruction.page-meta.xml
 
-force-app/main/default/profiles/accounts Profile.profile-meta.xml
-force-app/main/default/profiles/Admin.profile-meta.xml
-force-app\main\default\layouts\WebAuthnCredential__c-WebAuthnCredential Layout.layout-meta.xml
-
-force-app/main/default/staticresources/SiteSamples/
-force-app/main/default/staticresources/SiteSamples.resource-meta.xml
+# force-app/main/default/staticresources/SiteSamples/
+# force-app/main/default/staticresources/SiteSamples.resource-meta.xml
 force-app/main/default/siteDotComSites/
 force-app/main/default/sites/
 
-ChangePasswordController.cls
-ChangePasswordControllerTest.cls
-CommunitiesLandingController.cls
-CommunitiesLandingControllerTest.cls
-CommunitiesLoginController.cls
-CommunitiesLoginControllerTest.cls
-CommunitiesSelfRegConfirmController.cls
-CommunitiesSelfRegConfirmControllerTest.cls
-# CommunitiesSelfRegController.cls
-CommunitiesSelfRegControllerTest.cls
-ForgotPasswordController.cls
-ForgotPasswordControllerTest.cls
-MyProfilePageController.cls
-MyProfilePageControllerTest.cls
-# SiteLoginController.cls
-SiteLoginControllerTest.cls
-SiteRegisterController.cls
-SiteRegisterControllerTest.cls
+force-app/main/default/profiles/accounts Profile.profile-meta.xml
+force-app/main/default/profiles/Admin.profile-meta.xml
 
-AnswersHome.page
-BandwidthExceeded.page
-ChangePassword.page
-CommunitiesLanding.page
-CommunitiesLogin.page
-CommunitiesSelfReg.page
-CommunitiesSelfRegConfirm.page
-CommunitiesTemplate.page
-Exception.page
-FileNotFound.page
-ForgotPassword.page
-ForgotPasswordComfirm.page
-IdeasHome.page
-InMaintenance.page
-MyProfilePage.page
-SiteLogin.page
-SiteRegister.page
-SiteRegisterConfirm.page
-SiteTemplate.page
-StdExceptionTemplate.page
-Unauthorized.page
-UnderConstruction.page
+ChangePasswordController.cls-meta.xml
+ChangePasswordControllerTest.cls-meta.xml
+CommunitiesLandingController.cls-meta.xml
+CommunitiesLandingControllerTest.cls-meta.xml
+CommunitiesLoginController.cls-meta.xml
+CommunitiesLoginControllerTest.cls-meta.xml
+CommunitiesSelfRegConfirmController.cls-meta.xml
+CommunitiesSelfRegConfirmControllerTest.cls-meta.xml
+CommunitiesSelfRegController.cls-meta.xml
+CommunitiesSelfRegControllerTest.cls-meta.xml
+ForgotPasswordController.cls-meta.xml
+ForgotPasswordControllerTest.cls-meta.xml
+MyProfilePageController.cls-meta.xml
+MyProfilePageControllerTest.cls-meta.xml
+# SiteLoginController.cls-meta.xml
+SiteLoginControllerTest.cls-meta.xml
+SiteRegisterController.cls-meta.xml
+SiteRegisterControllerTest.cls-meta.xml
+
+AnswersHome.page-meta.xml
+BandwidthExceeded.page-meta.xml
+ChangePassword.page-meta.xml
+CommunitiesLanding.page-meta.xml
+CommunitiesLogin.page-meta.xml
+CommunitiesSelfReg.page-meta.xml
+CommunitiesSelfRegConfirm.page-meta.xml
+CommunitiesTemplate.page-meta.xml
+Exception.page-meta.xml
+FileNotFound.page-meta.xml
+ForgotPassword.page-meta.xml
+ForgotPasswordComfirm.page-meta.xml
+IdeasHome.page-meta.xml
+InMaintenance.page-meta.xml
+# MyProfilePage.page-meta.xml
+# SiteLogin.page-meta.xml
+SiteRegister.page-meta.xml
+SiteRegisterConfirm.page-meta.xml
+SiteTemplate.page-meta.xml
+StdExceptionTemplate.page-meta.xml
+Unauthorized.page-meta.xml
+UnderConstruction.page-meta.xml
 
 
 
@@ -122,5 +127,4 @@ Default_Navigation.navigationMenu
 cbidentity.networkBranding
 identity1.site
 SiteSamples.resource
-
 

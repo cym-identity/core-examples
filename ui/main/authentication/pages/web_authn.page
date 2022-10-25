@@ -1,0 +1,128 @@
+<apex:page
+  id="webauthnPage"
+  showHeader="false"
+  title="{!$Label.site.site_login}"
+  controller="WebAuthnPageController"
+  cache="false"
+  action="{!load}"
+  applyBodyTag="false"
+  applyHtmlTag="false"
+  docType="html-5.0">
+
+	<apex:composition template="authtemplate">
+		<apex:define name="card">
+
+      <apex:outputPanel styleClass="slds-p-top_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
+      </apex:outputPanel>
+
+      <apex:form styleClass="slds-text-align_center">
+        <input type="hidden" name="startURL" value="{!$CurrentPage.parameters.startURL}" />
+        <input type="hidden" name="payload" id="payload" value="{}" />
+        <input type="hidden" name="is-webauthn" id="is-webauthn" value="false" />
+        <footer style="height:0px; visibility:hidden;" id="webauthn-submit-container">
+          <apex:commandButton action="{!next}"/>
+        </footer>
+      </apex:form>
+
+      <div class="slds-col slds-size_1-of-1">
+        <p class="slds-text-align_center">
+          Welcome&nbsp;<a>{!$CurrentPage.parameters.login_hint}</a>
+        </p>
+      </div>
+
+      <apex:outputPanel rendered="{! kind == 'register' }" layout="block" style="padding: 16px;">
+        <div class="slds-text-heading_medium slds-text-align_center">You're eligible for a simpler sign-in!</div>
+        <div style="margin: 16px;">
+          <img src="{! URLFOR($Resource.MFA, '/img/windows_register_animation.gif') }" alt="Biometrics Sign In Animated Image" />
+        </div>
+        <div class="slds-text-heading_small slds-text-align_center">Enter the password, PIN, finger scan, face scan or security key you use to unlock your computer</div>
+        <button class="slds-button slds-button_brand slds-button_stretch" style="margin: 16px 0;" id="webauthn-register-btn">
+          <img src="{! URLFOR($Resource.MFA, '/img/fingerprint_generic_white.svg') }" alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+          Register your biometrics
+        </button>
+        <div class="slds-text-heading_medium slds-text-align_center">
+          <img src="{! URLFOR($Resource.MFA, '/img/FIDO_Certified_logo_yellow.png') }" alt="FIDO Certified Logo" width="40px" />
+        </div>
+        <ul class="slds-accordion">
+          <li class="slds-accordion__list-item">
+            <section class="slds-accordion__section">
+              <div class="slds-accordion__summary">
+                <h2 class="slds-accordion__summary-heading">
+                  <button class="slds-button slds-button_reset slds-accordion__summary-action" aria-controls="referenceId-45" aria-expanded="true" title="Accordion summary">
+                    <svg class="slds-accordion__summary-action-icon slds-button__icon slds-button__icon_left" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                      <use xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#switch')}"></use>
+                    </svg>
+                    <span class="slds-accordion__summary-content">Learn more</span>
+                  </button>
+                </h2>
+              </div>
+              <div class="slds-accordion__content" id="referenceId-45">
+                <ul class="slds-list_dotted">
+                  <li>FIDO is a technology built into all leading desktop devices (PC and Mac) and browsers, that allows users to sign in securely without a password.</li>
+                  <li>In the same way your phone uses a biometric, FIDO now enables biometric sign-in on websites viewed on your desktop too.</li>
+                  <li>FIDO makes sign-in easy, safe, and private!</li>
+                  <li>FIDO technology uses your computer's built-in authentication method (i.e., Windows Hello or Apple Touch ID) to ensure your sign-in information stays safe from hackers because it never leaves your computer.</li>
+                  <li>Once you've registered your computer's PIN, facial recognition, fingerprint, or security key, FIDO verifies it's really you and doesn't transmit any of your sign-in information over the internet.</li>
+                  <li>Registering with FIDO provides you with an additional sign-in option for this device — your password remains valid.</li>
+                  <li>Leading companies worldwide in retail, telecommunications, finance, and technology are already using FIDO.</li>
+                </ul>
+              </div>
+            </section>
+          </li>
+        </ul>
+        <script type="text/javascript">
+          var webauthn_register_btn = document.getElementById('webauthn-register-btn');
+          webauthn_register_btn.addEventListener('click', function() {
+            navigator.credentials
+              .create({ publicKey: preformatMakeCredReq(JSON.parse('{! publicKey }').publicKey) })
+              .then(function(response) {
+                document.getElementById('payload').value = JSON.stringify({
+                  id: response.id,
+                  rawId: base64url.encode(response.rawId),
+                  attestationObject: base64url.encode(response.response.attestationObject),
+                  clientDataJSON: base64url.encode(response.response.clientDataJSON),
+                  transports: response.response.getTransports
+                    ? JSON.stringify(response.response.getTransports())
+                    : "[]",
+                });
+                document.querySelector('#webauthn-submit-container>input[type="submit"]').click();
+              });
+          });
+        </script>
+      </apex:outputPanel>
+
+      <apex:outputPanel rendered="{! kind == 'verify' }" layout="block" style="padding: 16px;">
+        <div class="slds-grid slds-gutters slds-wrap slds-grid_align-center slds-grid_vertical-stretch authenticators-grid">
+          <div class="slds-col slds-small-size_1-of-3 slds-size_1-of-1">
+            <button class="slds-button slds-button_brand slds-button_stretch" style="margin: 16px 0;" id="webauthn-verify-btn">
+              <img src="{! URLFOR($Resource.MFA, '/img/fingerprint_generic_white.svg') }" alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+              Verify with biometrics
+            </button>
+          </div>
+        </div>
+        <div class="slds-text-heading_medium slds-text-align_center">
+          <img src="{! URLFOR($Resource.MFA, '/img/FIDO_Certified_logo_yellow.png') }" alt="FIDO Certified Logo" width="40px" />
+        </div>
+        <script type="text/javascript">
+          var webauthn_register_btn = document.getElementById('webauthn-verify-btn');
+          webauthn_register_btn.addEventListener('click', function() {
+            navigator.credentials
+              .get({ publicKey: preformatMakeCredReq(JSON.parse('{! publicKey }').publicKey) })
+              .then(function(response) {
+                document.getElementById('payload').value = JSON.stringify({
+                  id: response.id,
+                  rawId: base64url.encode(response.rawId),
+                  authenticatorData: base64url.encode(response.response.authenticatorData),
+                  clientDataJSON: base64url.encode(response.response.clientDataJSON),
+                  signature: base64url.encode(response.response.signature),
+                });
+                document.querySelector('#webauthn-submit-container>input[type="submit"]').click();
+              });
+          });
+
+        </script>
+      </apex:outputPanel>
+    </apex:define>
+	</apex:composition>
+</apex:page>

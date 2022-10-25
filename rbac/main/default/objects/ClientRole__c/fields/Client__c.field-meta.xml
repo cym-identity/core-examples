@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Client__c</fullName>
+    <externalId>false</externalId>
+    <label>Client</label>
+    <referenceTo>cym__Client__c</referenceTo>
+    <relationshipLabel>ClientRoles</relationshipLabel>
+    <relationshipName>ClientRoles</relationshipName>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

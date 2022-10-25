@@ -8,6 +8,8 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
   global with sharing class RegisterUser extends Fetch.Function {
     global override Object execute(Map<String, Object> args) {
 
+      String requestId = (String) args.get('requestId');
+
       cym.Community community = cym.Community.getCurrent();
       String resp = community.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
         .invoke(
@@ -25,7 +27,8 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
             }
           )
         );
-      cym.Browser.getCurrent().sessions.add(userId);
+      cym.Browser.Session session = cym.Browser.getCurrent().sessions.add(userId);
+      if (String.isNotBlank((String) args.get('password'))) session.apply((cym.Community.Authenticator) community.authenticators.find('name', 'password'), requestId);
 
       return new Map<String, Object> { 'isValid' => true };
     }

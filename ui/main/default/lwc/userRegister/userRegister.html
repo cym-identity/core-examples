@@ -5,7 +5,20 @@
   <article class="slds-card">
     <div class="slds-card__body slds-card__body_inner">
       <c-exception-ui exception={error} if:true={error}></c-exception-ui>
-      <c-user-profile fields={user.fields} attributes={user.attributes} picklists={user.picklists} cta="Register" onsave={handleRegister}></c-user-profile>
+      <c-user-profile fields={user.fields} attributes={user.attributes} picklists={user.picklists} cta="Register" onsave={handleProfileFilled} if:false={profile}></c-user-profile>
+      <template if:true={profile}>
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="text-input-password">Password<abbr class="slds-required" title="required">* </abbr></label>
+          <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+            <lightning-icon size="x-small" class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" icon-name="utility:lock"></lightning-icon>
+            <input type="password" autocomplete="new-password" id="text-input-password" placeholder="Enter your password" class="slds-input" required oninput={handlePasswordChange} style="line-height: 42px;" autofocus/>
+          </div>
+        </div>
+        <div class="slds-p-top_large slds-text-align_center">
+          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" if:false={password} onclick={handleRegister}>Continue without password</button></p>
+          <p><button class="slds-button slds-m_x-small slds-button_brand slds-button_stretch" if:true={password} onclick={handleRegister}>Continue</button></p>
+        </div>
+      </template>
     </div>
   </article>
 </template>

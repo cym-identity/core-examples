@@ -18,7 +18,7 @@ export default class WebauthnRegister extends LightningElement {
 
   get webAuthnPath() {
     let prefix =
-      STATIC_RESOURCE_URL.split("/resource/")[0][0] === "/"
+      STATIC_RESOURCE_URL[0] === "/"
         ? window.location.protocol +
           "//" +
           window.location.host +

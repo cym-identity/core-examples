@@ -25,6 +25,7 @@ export default class TotpChallenge extends LightningElement {
       this.showQRCode = true;
       this.qrCodeUrl = resp.qrCodeUrl;
       this.secret = resp.secret;
+      this.mobileUrl = resp.mobileUrl;
     })
     .catch(console.error)
     .then(_ => this.loading = false);

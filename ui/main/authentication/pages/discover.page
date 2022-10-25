@@ -1,0 +1,77 @@
+<apex:page
+  id="discoverPage"
+  showHeader="false"
+  title="{!$Label.site.site_login}"
+  controller="DiscoverPageController"
+  action="{!load}"
+  applyBodyTag="false"
+  applyHtmlTag="false"
+  docType="html-5.0">
+
+	<apex:composition template="authtemplate">
+		<apex:define name="card">
+      <apex:outputPanel styleClass="slds-p-around_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
+      </apex:outputPanel>
+
+      <apex:outputPanel rendered="{! AND(users != null) }" layout="block">
+        <ul class="slds-has-dividers_around-space">
+
+          <apex:repeat value="{!users}" var="user" id="theRepeat">
+            <li class="slds-item selectable">
+
+              <a href="{!user.next}" style="color: inherit;text-decoration: inherit;cursor: inherit;">
+                <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                  <div class="slds-col">
+                    <span class="slds-avatar slds-avatar_large">
+                      <img alt="{!user.name}" src="{!user.picture}" title="{!user.name}" style="border-radius: 50%;"/>
+                    </span>
+                  </div>
+                  <div class="slds-col">
+                    <p class="slds-text-heading_small">{!user.name}</p>
+                    <p class="slds-text-heading_x-small">{!user.login_hint}</p>
+                  </div>
+                  <div class="slds-col slds-col_bump-left">
+                    <svg class="slds-button__icon slds-button__icon_left" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                      <use xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                    </svg>
+                  </div>
+                </div>
+              </a>
+            </li>
+          </apex:repeat>
+
+        </ul>
+        <p class="divider slds-p-top_medium"><span>OR</span></p>
+      </apex:outputPanel>
+
+      <apex:form styleClass="slds-form">
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="email">
+            {!$Label.Site.Email}
+            <abbr class="slds-required" title="required">*</abbr>
+          </label>
+          <div class="slds-form-element__control">
+            <input type="email" id="email" name="login_hint" required="required" placeholder="{!$Label.Site.Email}" class="slds-input" />
+          </div>
+        </div>
+        <input type="hidden" name="startURL" value="{!$CurrentPage.parameters.startURL}" />
+
+        <footer class="slds-card__footer slds-text-align_center">
+          <apex:commandButton value="Continue" action="{!next}" styleClass="slds-button slds-button_brand" />
+        </footer>
+      </apex:form>
+      <apex:outputPanel layout="block">
+        <p class="divider"><span>OR</span></p>
+        <div class="slds-grid slds-grid_vertical">
+          <p class="slds-text-align_center">
+            <apex:repeat value="{!providers}" var="provider">
+              <a class="social-button rounded" href="{!provider.url}" data-social-provider="{!provider.friendlyName}"></a>
+            </apex:repeat>
+          </p>
+        </div>
+      </apex:outputPanel>
+    </apex:define>
+	</apex:composition>
+
+</apex:page>

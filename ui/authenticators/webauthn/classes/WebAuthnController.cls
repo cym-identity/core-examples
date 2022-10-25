@@ -52,7 +52,7 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
         userId = UserInfo.getUserId();
       }
 
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId);
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', (String) params.remove('authenticator'));
 
       // Polyfill the transports based on the authenticator type. It allows to remember if the credential is platform specific or not
@@ -106,7 +106,7 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
         userId = UserInfo.getUserId();
       }
 
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId);
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', (String) params.remove('authenticator'));
 
       Map<String, Object> response = (Map<String, Object>) authenticator.provider.verifyVerification(session, params);
@@ -149,7 +149,7 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
       cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId);
 
       // During a normal registration flow, the authenticator is always used in the current session, must check it before accepting the name change
-      if (session.verifications.find('authenticatorId', webauthn_platform.id) == null) throw new InvalidArgumentException('invalid_authenticator');
+      if (session.verifications.find('authenticator', webauthn_platform.id) == null) throw new InvalidArgumentException('invalid_authenticator');
 
       String response = session.getRemoteApex(
         WebAuthnController.RenameCredentialRemote.class

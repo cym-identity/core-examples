@@ -1,0 +1,55 @@
+<apex:page
+  id="emailPage"
+  showHeader="false"
+  title="{!$Label.site.site_login}"
+  controller="EmailPageController"
+  action="{!load}"
+  applyBodyTag="false"
+  applyHtmlTag="false"
+  docType="html-5.0">
+
+	<apex:composition template="authtemplate">
+		<apex:define name="card">
+      <apex:outputPanel styleClass="slds-p-top_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
+      </apex:outputPanel>
+
+      <apex:form styleClass="slds-text-align_center">
+        <div class="slds-col slds-size_1-of-1">
+          <p class="slds-text-align_center">
+            Welcome&nbsp;<a>{!$CurrentPage.parameters.login_hint}</a>
+          </p>
+        </div>
+
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="given_name">Code</label>
+          <div class="slds-form-element__control">
+            <input
+              class="slds-input"
+              style="width: 180px; margin: auto; letter-spacing: 15px;"
+              type="text"
+              inputmode="numeric"
+              name="otp"
+              pattern="\d{6}"/>
+          </div>
+        </div>
+
+        <div class="slds-p-top_large slds-text-align_right">
+          <p>
+            <span>Didn't receive the code? </span>
+            <apex:commandButton value="Resend Code" action="{!resend}" styleClass="slds-button"/>
+          </p>
+        </div>
+
+        <input type="hidden" name="startURL" value="{!$CurrentPage.parameters.startURL}" />
+        <input type="hidden" name="login_hint" value="{!$CurrentPage.parameters.login_hint}" />
+        <input type="hidden" name="is-webauthn" id="is-webauthn" value="false" />
+        <footer class="slds-card__footer slds-text-align_center">
+          <apex:commandButton value="{!$Label.Site.Submit}" action="{!next}" styleClass="slds-button slds-button_brand"/>
+        </footer>
+      </apex:form>
+
+    </apex:define>
+	</apex:composition>
+
+</apex:page>

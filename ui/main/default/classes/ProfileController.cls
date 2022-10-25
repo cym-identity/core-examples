@@ -308,6 +308,33 @@ global with sharing class ProfileController { // NOPMD.AvoidGlobalModifiers
     }
   }
 
+
+  public with sharing class GetSecurityProfile extends Fetch.Function {
+    public override Object execute(Map<String, Object> params) {
+      if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage('/me');
+      TwoFactorMethodsInfo info = new UserUtils.Repository().getTwoFactorInfo(UserInfo.getUserId());
+      User u = new UserUtils.Repository().findById(UserInfo.getUserId());
+      return new Map<String, Object> {
+        'id' => UserInfo.getUserId(),
+        'identifiers' => new Map<String, Object> {
+          'primary' => Users.getPrimaryIdentifier(u),
+          'secondary' => Users.getSecondaryIdentifier(u)
+        },
+        'authenticators' => new Map<String, Object> {
+          'password' => new Map<String, Object> {'enabled' => true, 'lastModifiedDate' => new UserRepository().getLastPasswordChangeDate()?.getTime()},
+          'totp' => !info.hasTotp ? new Map<String, Object> {'enabled' => false} : new Map<String, Object> {'enabled' => true, 'createdDate' => new UserRepository().getTotpEnrollementDate().getTime() },
+          'socialProviders' => new Map<String, Object> {
+            'available' => UserUtils.getCommunityAuthProviders('/me'),
+            'enrolled' => new UserUtils.Repository().findThirdPartyAccountLink(UserInfo.getUserId())
+          },
+          'push' => new Map<String, Object> {'enabled' => info.HasSalesforceAuthenticator }
+        }
+      };
+    }
+  }
+
+
+
   public with sharing class CheckCriticalAccess extends Fetch.Function {
     public override Object execute(Map<String, Object> param) {
       cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId());
@@ -318,8 +345,8 @@ global with sharing class ProfileController { // NOPMD.AvoidGlobalModifiers
       Boolean isValid = false;
       for (cym.Collection.Item v : verifications) {
         cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) v;
-        if (verification.authenticatorId == webauthn_platform.id && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
-        if (verification.authenticatorId == salesforce_push.id   && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
+        if (verification.authenticator == webauthn_platform.id && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
+        if (verification.authenticator == salesforce_push.id   && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
       }
       return new Map<String, Object> { 'isValid' => isValid };
     }

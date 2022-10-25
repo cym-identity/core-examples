@@ -15,6 +15,9 @@ export default class MeAuthenticators extends LightningElement {
 
   modal;
 
+  identifiers = {};
+  authenticators = {};
+
   get showAuthenticatorRegisterTotp() {
     return !this.hasTotp && this.modal === 'authenticator.register.totp';
   }
@@ -26,6 +29,10 @@ export default class MeAuthenticators extends LightningElement {
 
   async connectedCallback() {
     this.loading = true;
+    remote("ProfileController.GetSecurityProfile").then(({identifiers, authenticators, id}) => {
+      this.identifiers = identifiers;
+      this.authenticators = authenticators;
+    }).catch(console.error);
     remote("ProfileController.GetSecurityStatus")
       .then(
         ({ lastPasswordChangeTime, hasUserVerifiedEmailAddress, hasTotp, totpCreationDate, socialProviders, id, hasSalesforceAuthenticator }) => {

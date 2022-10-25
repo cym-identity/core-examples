@@ -1,5 +1,8 @@
 public with sharing class UserUtils {
   public without sharing class Repository {
+    public User[] findUsers(Set<Id> userIds) {
+      return (User[]) [SELECT Id, Username, IsActive, Email, MobilePhone, SmallPhotoUrl, MediumPhotoUrl, Name, FirstName, LastName FROM User WHERE Id IN :userIds AND IsActive = true]; // NOPMD.ApexCrudViolation
+    }
     public Object[] getUsers(Id[] userIds) {
       User[] us = [SELECT Id, Username, IsActive, Email, MobilePhone, SmallPhotoUrl, MediumPhotoUrl, Name, FirstName, LastName FROM User WHERE Id IN :userIds AND IsActive = true]; // NOPMD.ApexCrudViolation
       Object[] result = new Object[] {};
@@ -88,11 +91,11 @@ public with sharing class UserUtils {
       TwoFactorMethodsInfo info = this.getTwoFactorInfo(user_id);
       if (info != null) {
         if (info.HasUserVerifiedEmailAddress) user_factors.add('email');
-        if (hasVerifiedMobilePhone(u)) user_factors.add('phone');
         if (info.HasSalesforceAuthenticator) user_factors.add('push');
         if (info.HasTotp) user_factors.add('totp');
         if (info.HasU2F) user_factors.add('u2f');
       }
+      if (hasVerifiedMobilePhone(u)) user_factors.add('phone');
       return new List<String>(user_factors);
     }
 
@@ -106,7 +109,6 @@ public with sharing class UserUtils {
   }
 
   public static String buildUsername(String login_hint) {
-    if (login_hint.endsWith('@' + TwitterProvider.AuthProviderId.toLowerCase() + '.io')) return login_hint;
     if (login_hint.indexOf('@') > 0) return login_hint + '.' + UserInfo.getOrganizationId() + '.io';
     return login_hint + '@' + UserInfo.getOrganizationId() + '.io';
   }
@@ -138,6 +140,7 @@ public with sharing class UserUtils {
   }
 
   public static Object[] getCommunityAuthProviders(String startURL) {
+    if (Test.isRunningTest()) return new Object[] {};
     Auth.AuthConfiguration config = new Auth.AuthConfiguration(Site.getBaseRequestUrl(), startURL);
 
     PageReference callback = new PageReference( new URL(Network.getLoginUrl(Network.getNetworkId())).getPath() );
@@ -147,11 +150,12 @@ public with sharing class UserUtils {
 
     Object[] response = new Object[] {};
     for (AuthProvider provider : config.getAuthProviders()) {
+      if (idp.authenticators.find('name', provider.FriendlyName) == null) continue;
+
       PageReference authorize = new PageReference(Site.getBaseRequestUrl() + '/services/auth/sso/' + UserInfo.getOrganizationId() + '/' + provider.DeveloperName);
       authorize.getParameters().put('startURL', callback.getUrl());
       // Only keep authenticators which are provisionned in the cym__Community__c object
       // This assumes that the name is the same as the AuthProvider.Name
-      if (idp.authenticators.find('name', provider.FriendlyName) == null) continue;
       response.add(new Map<String, Object> {
         'id' => provider.Id,
         'iconUrl' => provider.IconUrl,
@@ -184,15 +188,11 @@ public with sharing class UserUtils {
     if (args.containsKey('given_name')) u.FirstName = (String) args.get('given_name');
     if (args.containsKey('family_name')) u.LastName = (String) args.get('family_name');
 
-    if (args.containsKey('locale')) {
-      String locale = (String) args.get('locale');
-      u.LocaleSidKey = String.isNotBlank(locale) ? locale : UserInfo.getLocale();
-    }
+    String locale = (String) args.get('locale');
+    u.LocaleSidKey = String.isNotBlank(locale) ? locale : UserInfo.getLocale();
 
-    if (args.containsKey('zoneinfo')) {
-      String zoneinfo = (String) args.get('zoneinfo');
-      u.TimeZoneSidKey = String.isNotBlank(zoneinfo) ? zoneinfo : UserInfo.getTimeZone().getId();
-    }
+    String zoneinfo = (String) args.get('zoneinfo');
+    u.TimeZoneSidKey = String.isNotBlank(zoneinfo) ? zoneinfo : UserInfo.getTimeZone().getId();
 
     if (args.containsKey('address')) {
       Map<String, Object> address = (Map<String, Object>) args.get('address');
@@ -235,5 +235,144 @@ public with sharing class UserUtils {
       BillingCountry = u.Country
     );
   }
+
+  public enum AuthenticationStepType {
+    IDENTITY_REGISTER,
+    IDENTITY_VERIFY,
+    AUTHENTICATOR_REGISTER,
+    AUTHENTICATOR_VERIFY,
+    REDIRECT
+  }
+
+  public class AuthenticationStep {
+    public AuthenticationStepType type;
+    public cym.Community.Authenticator authenticator;
+    public cym.Browser.Session session;
+    public AuthenticationStep(AuthenticationStepType type, cym.Community.Authenticator authenticator, cym.Browser.Session session) {
+      this.type = type;
+      this.authenticator = authenticator;
+      this.session = session;
+    }
+    public PageReference getPage(Map<String, String> redirectParams) {
+      PageReference next = this.nextPage();
+      if (next == null) return null;
+      next.getParameters().putAll(redirectParams);
+      return next;
+    }
+    private PageReference nextPage() {
+      switch on this.type {
+        when IDENTITY_REGISTER {
+          return new Auth.AuthConfiguration(Site.getBaseRequestUrl(), '/').getSelfRegistrationEnabled() ? new PageReference('/register') : null;
+        }
+        when IDENTITY_VERIFY {
+          if (this.authenticator.name == 'email') {
+            return new PageReference('/email');
+          }
+          return null;
+        }
+        when AUTHENTICATOR_VERIFY {
+          switch on this.authenticator.name {
+            when 'password' {
+              return new PageReference('/password');
+            }
+            when 'email' {
+              return new PageReference('/email');
+            }
+            when else {
+              return null;
+            }
+          }
+        }
+        when else {
+          return null;
+        }
+      }
+    }
+  }
+
+  public static AuthenticationStep nextAuthenticationStep(cym.Browser browser, String[][] acrs, cym.Authentication.Request request, String startURL) {
+    String requestId = request.iid;
+    Integer maxAge = request.max_age;
+    String login_hint = request.login_hint;
+
+    if (browser == null) throw new InvalidArgumentException('You must initiate the browser before calling this function');
+    if (String.isBlank(login_hint)) throw new InvalidArgumentException('login_hint cannot be empty');
+    if (String.isBlank(requestId)) requestId = ConverterUtils.base64encode(Crypto.generateAesKey(128));
+
+    cym.Community idp = cym.Community.getCurrent();
+
+    User u = new UserUtils.Repository().findByUsername(UserUtils.buildUsername(login_hint));
+
+    if (u == null) return new AuthenticationStep(AuthenticationStepType.IDENTITY_REGISTER, null, null);
+
+    cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, u.Id);
+
+    String[] userAuthenticators = new UserUtils.Repository().getUserFactors(UserInfo.getUserId());
+
+    // The user has never verified his / her identity in the current session. It must be done right now and will also verify the email / phone
+    if (userAuthenticators.indexOf(Users.getLoginType(login_hint).name()) == -1) {
+      return new AuthenticationStep(AuthenticationStepType.IDENTITY_VERIFY, (cym.Community.Authenticator) idp.authenticators.find('name', Users.getLoginType(login_hint).name()), session);
+    }
+
+    cym.Community.Authenticator webauthnAuthenticator = (cym.Community.Authenticator) idp.authenticators.find('name', 'webauthn_platform');
+
+    // Webauthn_platform is configured for the community
+    if (webauthnAuthenticator != null) {
+
+      // The user has already used device biometrics on this session
+      if (session.verifications.find('authenticator', webauthnAuthenticator.id) != null) userAuthenticators.add('webauthn_platform');
+    }
+
+    // Filter the ACR to see which paths the user can go through
+    String[][] availableFactorsForUser = new String[][]{};
+    for (String[] factors : acrs) {
+      Boolean isAvailableForUser = true;
+      for (String factor : factors) if (userAuthenticators.indexOf(factor) == -1) { isAvailableForUser = false; break; }
+      if (isAvailableForUser) availableFactorsForUser.add(factors);
+    }
+
+    // The user will be requested to complete the first available combination
+    if (availableFactorsForUser.size() > 0) {
+      String[] factors = availableFactorsForUser[0];
+      for (String factor : factors) {
+        cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', factor);
+        cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticator', authenticator?.get('Id'));
+        if (verification != null && verification.isActive(requestId, maxAge == null ? authenticator.ttl : maxAge)) continue;
+        return new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_VERIFY, authenticator, session);
+      }
+      // If we reach this point, it means that the user has completed all factors from the combination
+      // Log her in
+      return userAuthenticators.indexOf('webauthn_platform') == -1?
+        new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_REGISTER, webauthnAuthenticator, session):
+        new AuthenticationStep(AuthenticationStepType.REDIRECT, null, session);
+    }
+
+    String[] requestedFactors;
+    // The user cannot complete any of the combinations
+    // Pick the first one where she has an authenticator, or the first one of all
+    for (String[] factors : acrs) {
+      for (String factor : factors) if (userAuthenticators.indexOf(factor) > -1) { requestedFactors = factors; break; }
+      if (requestedFactors != null) break;
+    }
+    if (requestedFactors == null) requestedFactors = acrs[0];
+
+    for (String factor : requestedFactors) {
+      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', factor);
+      cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticator', authenticator?.get('Id'));
+      if (verification == null || !verification.isActive(requestId, maxAge == null ? authenticator.ttl : maxAge)) {
+        return userAuthenticators.indexOf(factor) > -1 ?
+          new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_VERIFY, authenticator, session):
+          new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_REGISTER, authenticator, session);
+      }
+    }
+
+    throw new InvalidArgumentException('Reached an unreacheable location');
+  }
+
+
+  public class InvalidArgumentException extends Exception {}
+
+
+
 
 }

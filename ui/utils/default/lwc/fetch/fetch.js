@@ -1,11 +1,13 @@
 import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
-const path =
-  STATIC_RESOURCE_URL.split("/resource/")[0][0] === "/"
+const path = (
+    // When using components on Experience builder, the STATIC_RESOURCE_URL looks like /resource/123456/MFA
+    // When using compoennts on Lightning out, the STATIC_RESOURCE_URL looks like https://xxx.x/resource/123456/MFA
+    STATIC_RESOURCE_URL.split("/resource/")[0][0] === "/"
     ? window.location.protocol +
       "//" +
-      window.location.host +
-      STATIC_RESOURCE_URL.split("/resource/")[0]
-    : STATIC_RESOURCE_URL.split("/resource/")[0] + "/remote";
+      window.location.host
+    : ""
+  ) + STATIC_RESOURCE_URL.split("/resource/")[0] + "/remote";
 
 const remote = async function(action, payload) {
   return fetch( path + '?action=' + encodeURIComponent(action), {

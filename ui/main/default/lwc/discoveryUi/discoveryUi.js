@@ -67,6 +67,7 @@ export default class DiscoveryUi extends LightningElement {
   get showAuthenticatorChallengePhone() { return this.step.action === 'authenticator.challenge.phone'; }
   get showAuthenticatorChallengeWebauthnPlatform() { return this.step.action === 'authenticator.challenge.webauthn_platform'; }
   get showAuthenticatorChallengeWebauthnRoaming() { return this.step.action === 'authenticator.challenge.webauthn_roaming'; }
+  get showAuthenticatorChallengePassword() { return this.step.action === 'authenticator.challenge.password'; }
 
   get showAuthenticatorChallengeTwitter() { return this.step.action === 'authenticator.challenge.Twitter'; }
   get showAuthenticatorChallengeGoogle() { return this.step.action === 'authenticator.challenge.Google'; }
@@ -79,6 +80,7 @@ export default class DiscoveryUi extends LightningElement {
   get linkedin() { return this.socialProviders.filter(provider => provider.friendlyName === 'LinkedIn'); }
 
   get showAuthenticatorRegisterTotp() { return this.step.action === 'authenticator.register.totp'; }
+  get showAuthenticatorRegisterPhone() { return this.step.action === 'authenticator.register.phone'; }
   get showAuthenticatorRegisterWebauthnPlatform() { return this.step.action === 'authenticator.register.webauthn_platform'; }
   get showAuthenticatorRegisterWebauthnRoaming() { return this.step.action === 'authenticator.register.webauthn_roaming'; }
 

@@ -9,12 +9,12 @@
     </p>
 
     <div class="slds-p-top_medium slds-text-align_center">
-      <img src={logo} style="height:96px;" if:true={logo}/>
+      <img src={logo} style="max-height:96px;max-width:300px" if:true={logo}/>
       <div if:true={app}>
         <a if:true={app.client_uri} href={app.client_uri} class="slds-card__header-link slds-truncate" title={app.client_name} target="_blank" rel="noreferrer">
-          <span class="slds-text-heading_large">{app.client_name}</span>
+          <span class="slds-text-heading_medium">{app.client_name}</span>
         </a>
-        <span class="slds-text-heading_large" if:false={app.client_uri}>{app.client_name}</span>
+        <span class="slds-text-heading_medium" if:false={app.client_uri}>{app.client_name}</span>
       </div>
     </div>
 
@@ -51,6 +51,10 @@
           <c-twilio-sms-challenge user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-twilio-sms-challenge>
         </template>
 
+        <template if:true={showAuthenticatorRegisterPhone}>
+          <c-twilio-sms-register user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-twilio-sms-register>
+        </template>
+
         <template if:true={showAuthenticatorChallengePhone}>
           <c-twilio-sms-challenge user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-twilio-sms-challenge>
         </template>
@@ -61,6 +65,10 @@
 
         <template if:true={showAuthenticatorChallengeEmail}>
           <c-email-challenge user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-email-challenge>
+        </template>
+
+        <template if:true={showAuthenticatorChallengePassword}>
+          <c-password-challenge user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-password-challenge>
         </template>
 
         <template if:true={showAuthenticatorChallengeTwitter}>

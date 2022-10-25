@@ -5,6 +5,10 @@
       "default": false
     },
     {
+      "path": "rbac",
+      "default": false
+    },
+    {
       "path": "ui",
       "default": false
     },

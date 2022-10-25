@@ -13,7 +13,7 @@ global with sharing class MyCustomLoginController { // NOPMD.AvoidGlobalModifier
   public PageReference load() {
     if (!Auth.CommunitiesUtil.isGuestUser()) {
       String requestId = BrowserSessionUtils.getRequestId();
-      BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId()).activate().sync(requestId);
+      BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), UserInfo.getUserId()).sync(requestId);
       User u = new UserUtils.Repository().findByUsername(UserInfo.getUserName());
       this.login_hint = Users.getLoginHint(u);
       this.login_type = Users.getLoginType(u).name();

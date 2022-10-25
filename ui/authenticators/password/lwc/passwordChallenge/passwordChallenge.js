@@ -3,10 +3,8 @@ import { remote } from "c/fetch";
 
 export default class PasswordChallenge extends LightningElement {
   @api user;
-  @api context;
+  @api requestId;
 
-  startUrl =
-    new URLSearchParams(document.location.search).get("startURL") || "";
   loading = false;
   error;
 
@@ -28,25 +26,29 @@ export default class PasswordChallenge extends LightningElement {
     return (
       this.weak_password
         ? remote("DiscoveryController.ResetWeakPassword", {
-            email: this.user.email,
+            userId: this.user.id,
             password: this.password,
             newPassword: this.newPassword,
-            startURL: this.startUrl,
+            requestId: this.requestId,
           })
         : remote("DiscoveryController.Authenticate", {
-            email: this.user.email,
+            userId: this.user.id,
             password: this.password,
-            startURL: this.startUrl,
+            requestId: this.requestId,
           })
     )
-      .then(({ redirect }) => {
-        if (redirect)
-          this.dispatchEvent(new CustomEvent("done", { detail: { redirect } }));
+      .then(({ isValid }) => {
+        if (isValid)
+          this.dispatchEvent(new CustomEvent("done", { detail: {} }));
       })
       .catch((ex) => {
         this.error = ex;
         if (this.error.error === "weak_password") this.weak_password = true;
       })
       .then((_) => (this.loading = false));
+  }
+
+  handleForgotPassword() {
+    console.log('handleForgotPassword');
   }
 }

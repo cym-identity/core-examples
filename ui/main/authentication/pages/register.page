@@ -1,0 +1,48 @@
+<apex:page id="discoverPage" showHeader="false" title="{!$Label.site.site_login}" controller="RegisterPageController" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0">
+
+	<apex:composition template="authtemplate">
+		<apex:define name="card">
+      <apex:outputPanel styleClass="slds-p-top_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px"/>
+      </apex:outputPanel>
+      <apex:form>
+
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="email">{!$Label.Site.Email}</label>
+          <div class="slds-form-element__control">
+            <input type="text" id="login_hint" name="login_hint" class="slds-input" disabled="disabled" value="{!$CurrentPage.parameters.login_hint}" />
+          </div>
+        </div>
+
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="given_name">First Name</label>
+          <div class="slds-form-element__control">
+            <input type="text" id="given_name" required="required" name="given_name" class="slds-input"/>
+          </div>
+        </div>
+
+        <div class="slds-form-element">
+          <label class="slds-form-element__label" for="family_name">Last Name</label>
+          <div class="slds-form-element__control">
+            <input type="text" id="family_name" required="required" name="family_name" class="slds-input"/>
+          </div>
+        </div>
+
+        <input type="hidden" name="startURL" value="{!$CurrentPage.parameters.startURL}" />
+        <footer class="slds-card__footer slds-text-align_center">
+          <apex:commandButton value="{!$Label.Site.Submit}" action="{!next}" styleClass="slds-button slds-button_brand" onclick="return validate();"/>
+        </footer>
+      </apex:form>
+
+      <script type="text/javascript">
+        var given_name = document.getElementById("given_name");
+        var family_name = document.getElementById("family_name");
+
+        function validate() { return (!! given_name.value || !! family_name.value); }
+      </script>
+
+
+    </apex:define>
+	</apex:composition>
+
+</apex:page>

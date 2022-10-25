@@ -38,8 +38,10 @@ export default class WebauthnEnroll extends LightningElement {
     } else if (error === 'NotAllowedError') {
       // The user has cancelled the request or the request has timeout
       // The user must try again
+      this.registerWebAuthnPlatformLoading = false;
     } else {
-      // Another error happened, stay put
+      // Another error happened, finish the flow
+      this.dispatchEvent(new CustomEvent('done', {detail : { registered : false }}));
     }
   }
 

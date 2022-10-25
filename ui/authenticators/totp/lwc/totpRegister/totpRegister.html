@@ -36,6 +36,9 @@
         <span class="btn__storename">Google Play</span>
       </a>
     </p>
+    <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px" if:true={mobileUrl}>
+      <a href={mobileUrl}>Open in App</a>
+    </div>
   </template>
 
   <template if:false={showQRCode}>

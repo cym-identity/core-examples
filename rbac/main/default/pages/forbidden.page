@@ -1,0 +1,33 @@
+<apex:page showHeader="false" cache="true">
+  <apex:slds></apex:slds>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    html,
+    body,
+    body>div {
+      height: 100%;
+      min-height: 100%;
+      background-color: #FAFAFA
+    }
+    #auraErrorMessage:empty {
+      display: none;
+    }
+    #auraErrorMessage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: lightblue;
+      height: auto !important;
+      z-index: 1;
+    }
+  </style>
+  <div class="slds-grid slds-grid_vertical-align-center slds-grid_align-center">
+    <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 640px;">
+      <article class="slds-card slds-grid slds-grid_vertical-align-center slds-text-align_center slds-grid_vertical" style="width:640px; padding:100px;">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Forbidden_Symbol_Transparent.svg/1200px-Forbidden_Symbol_Transparent.svg.png" style="width: 200px;"/>
+        <p class="slds-text-heading_medium" style="margin: 50px 0">You are not allowed to access this application</p>
+      </article>
+    </div>
+  </div>
+</apex:page>

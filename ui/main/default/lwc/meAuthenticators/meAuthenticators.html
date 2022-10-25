@@ -3,6 +3,9 @@
     <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
   </p>
   <div class="slds-p-around_medium" if:false={loading}>
+    <c-me-identifiers if:true={identifiers} identifiers={identifiers}></c-me-identifiers>
+
+
     <article class="slds-card slds-card_boundary" if:true={lastPasswordChangeTime}>
       <div class="slds-card__header slds-grid">
         <header class="slds-media slds-media_center slds-has-flexi-truncate">

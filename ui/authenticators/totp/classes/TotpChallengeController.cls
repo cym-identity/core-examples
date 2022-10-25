@@ -14,7 +14,11 @@ global with sharing class TotpChallengeController { // NOPMD.AvoidGlobalModifier
       }
 
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
-      return authenticator.provider.initRegistration(session, params);
+      Map<String, Object> init = (Map<String, Object>) authenticator.provider.initRegistration(session, params);
+      Map<String, Object> response = new Map<String, Object> ();
+      response.putAll(init);
+      response.put('mobileUrl', 'otpauth://totp/' + EncodingUtil.urlEncode(new UserUtils.Repository().findById(userId).Username, 'UTF-8') + '?secret=' + (String) init.get('secret'));
+      return response;
     }
   }
 
@@ -28,7 +32,7 @@ global with sharing class TotpChallengeController { // NOPMD.AvoidGlobalModifier
       if (info.HasTotp) throw new AuraHandledException('invalid_registration');
 
       cym.Browser browser = cym.Browser.getCurrent();
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, userId).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, userId);
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
 
       Map<String, Object> response = (Map<String, Object>) authenticator.provider.verifyRegistration(session, params);
@@ -44,7 +48,7 @@ global with sharing class TotpChallengeController { // NOPMD.AvoidGlobalModifier
       String requestId = (String) params.remove('requestId');
       params.put('description', 'Totp challenge');
 
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), (Id) params.get('userId')).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), (Id) params.get('userId'));
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
 
       Map<String, Object> response = (Map<String, Object>) authenticator.provider.verifyVerification(session, params);

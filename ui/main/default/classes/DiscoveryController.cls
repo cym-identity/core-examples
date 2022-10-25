@@ -1,6 +1,16 @@
 global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
-  public static final String[] firstFactors = new String[] { 'webauthn_platform', 'email', 'phone', 'Twitter', 'Facebook', 'Google', 'LinkedIn' };
-  public static final String[] secondFactors = new String[] { 'totp' };
+  public static final String[] FIRST_FACTORS  = new String[] { 'webauthn_platform', 'password', 'email', 'phone', 'Twitter', 'Facebook', 'Google', 'LinkedIn' };
+  public static final String[] SECOND_FACTORS = new String[] { 'totp' };
+  public static final String[] DEFAULT_SCOPES = new String[] { 'profile' };
+  private static final Map<String, Object> REQUIRED_CLAIM = new Map<String, Object> { 'required' => true };
+  public static final Map<String, Object> DEFAULT_CLAIMS = new Map<String, Object> { 'given_name' => REQUIRED_CLAIM, 'family_name' => REQUIRED_CLAIM };
+  public static final String[][] DEFAULT_ACR = new String[][] {
+    new String[] { 'webauthn_platform' },
+    new String[] { 'password', 'phone' },
+    new String[] { 'password', 'email' },
+    new String[] { 'email', 'phone' }
+  };
+
 
   public with sharing class LoadContext extends Fetch.Function {
     public override Object execute(Map<String, Object> params) {
@@ -53,7 +63,7 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
 
       String acr;
       Integer maxAge;
-      String[] scopes = new String[] {'profile'};
+      String[] scopes;
       try {
         cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
         cym.Authentication.Request authn = context.authn;
@@ -73,16 +83,15 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
             'picture' => Site.getBaseRequestUrl() + '/profilephoto/005/M'
           },
           'socialProviders' => UserUtils.getCommunityAuthProviders(startURL),
-          'fields'=> new UserUtils.Repository().getClaims(scopes),
+          'fields'=> scopes != null ? new UserUtils.Repository().getClaims(scopes) : DEFAULT_CLAIMS,
           'picklists' => UserUtils.getPicklists()
         }
       };
 
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), user_id).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), user_id);
 
-      String[] authenticators = ConverterUtils.fromObjectArrayToStringArray(
-        (Object[]) JSON.deserializeUntyped(session.getRemoteApex(DiscoveryController.ListUserAuthenticators.class).invoke())
-      );
+      // String[] authenticators = (String[]) JSON.deserialize(session.getRemoteApex(DiscoveryController.ListUserAuthenticators.class).invoke(), List<String>.class);
+      String[] authenticators = new UserUtils.Repository().getUserFactors(UserInfo.getUserId());
 
       Map<String, Object> attributes = new Map<String, Object> {
         'id' => user_id,
@@ -90,14 +99,13 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
         'picture' =>  u.MediumPhotoUrl
       };
 
-      // The user has not verified his / her identity in the current session. It must be done right now and will also verify the email / phone
+      // The user has never verified his / her identity in the current session. It must be done right now and will also verify the email / phone
       if (authenticators.indexOf(Users.getLoginType(login_hint).name()) == -1) {
         return new Map<String, Object> {
           'action' => 'identity.register.' + Users.getLoginType(login_hint),
           'user' => new Map<String, Object> { 'attributes' => attributes }
         };
       }
-
 
       // Check the available authenticators and choose the right one
       cym.Community idp = cym.Community.getCurrent();
@@ -107,60 +115,70 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       if (webauthnAuthenticator != null) {
 
         // The user has already used device biometrics on this session
-        if (session.verifications.find('authenticatorId', webauthnAuthenticator.id) != null) authenticators.add('webauthn_platform');
+        if (session.verifications.find('authenticator', webauthnAuthenticator.id) != null) authenticators.add('webauthn_platform');
       }
 
-      // The minimum possible is the Identity Verification method : email or phone or a social provider
-      Boolean completedFirstFactor = false;
-      for (String a : firstFactors) {
-        cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticatorId', idp.authenticators.find('name', a)?.get('Id'));
-        if (verification != null && verification.isActive(maxAge) && verification.requestId == requestId) { completedFirstFactor = true; break; }
+      Map<String, Object> next = getNextAction(session, authenticators, DEFAULT_ACR, requestId, maxAge, startURL);
+      next.put('user', new Map<String, Object> { 'attributes' => attributes });
+      return next;
+    }
+  }
+
+  public static Map<String, Object> getNextAction(cym.Browser.Session session, String[] userAuthenticators, String[][] acrs, String requestId, Integer maxAge, String startURL) {
+    cym.Community idp = cym.Community.getCurrent();
+    // Filter the ACR to see which paths the user can go through
+    String[][] availableFactorsForUser = new String[][]{};
+    for (String[] factors : acrs) {
+      Boolean isAvailableForUser = true;
+      for (String factor : factors) if (userAuthenticators.indexOf(factor) == -1) { isAvailableForUser = false; break; }
+      if (isAvailableForUser) availableFactorsForUser.add(factors);
+    }
+
+    // The user will be requested to complete the first available combination
+    if (availableFactorsForUser.size() > 0) {
+      String[] factors = availableFactorsForUser[0];
+      for (String factor : factors) {
+        cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', factor);
+        cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticator', authenticator?.get('Id'));
+        if (verification != null && verification.isActive(requestId, maxAge == null ? authenticator.ttl : maxAge)) continue;
+        return new Map<String, Object> {'action' => 'authenticator.challenge.' + factor};
       }
-
-      if (!completedFirstFactor) {
-        String firstFactor;
-        for (String factor : firstFactors) if (authenticators.indexOf(factor) > -1) { firstFactor = factor; break; }
-        return new Map<String, Object> {
-          'action' => 'authenticator.challenge.' + firstFactor,
-          'user' => new Map<String, Object> { 'attributes' => attributes }
-        };
-      }
-
-
-      if (acr == 'AAL1') {
-        if (authenticators.indexOf('totp') > -1) {
-          cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticatorId', idp.authenticators.find('name', 'totp')?.get('Id'));
-          if (verification == null || !verification.isActive(maxAge) || verification.requestId != requestId) return new Map<String, Object> {
-            'action' => 'authenticator.challenge.totp',
-            'user' => new Map<String, Object> { 'attributes' => attributes }
-          };
-
-        }
-        // Either the user hasn't registered TOTP yet or has a valid verification
-
-        // The user hasn't registered Totp yet
-        if (authenticators.indexOf('totp') == -1) return new Map<String, Object> {
-          'action' => 'authenticator.register.totp',
-          'user' => new Map<String, Object> { 'attributes' => attributes }
-        };
-      }
-
+      // If we reach this point, it means that the user has completed all factors from the combination
+      // Log her in
       return new Map<String, Object> {
         // Propose webauthn_platform enrollement
         // Ask the user to register webauthn_platform - The UI is responsible to detect if the navigator doesn't support it
-        'action' => authenticators.indexOf('webauthn_platform') == -1 ? 'authenticator.register.webauthn_platform' : 'redirect',
-        'user' => new Map<String, Object> { 'attributes' => attributes },
+        'action' => userAuthenticators.indexOf('webauthn_platform') == -1 ? 'authenticator.register.webauthn_platform' : 'redirect',
         'redirect' => session.resume(startURL).getUrl()
       };
     }
+
+    String[] requestedFactors;
+    // The user cannot complete any of the combinations
+    // Pick the first one where she has an authenticator, or the first one of all
+    for (String[] factors : acrs) {
+      for (String factor : factors) if (userAuthenticators.indexOf(factor) > -1) { requestedFactors = factors; break; }
+      if (requestedFactors != null) break;
+    }
+    if (requestedFactors == null) requestedFactors = acrs[0];
+
+    for (String factor : requestedFactors) {
+      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', factor);
+      cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticator', authenticator?.get('Id'));
+      if (verification == null || !verification.isActive(requestId, maxAge == null ? authenticator.ttl : maxAge)) {
+        return new Map<String, Object> {'action' => 'authenticator.'+ (userAuthenticators.indexOf(factor) > -1 ? 'challenge' : 'register') +  '.' + factor};
+      }
+    }
+
+    throw new InvalidArgumentException('Reached an unreacheable location');
   }
 
   public with sharing class Authenticate extends Fetch.Function {
     public override Object execute(Map<String, Object> params) {
-      String email = (String) params.get('email');
-      String startURL = (String) params.get('startURL');
+      Id userId = (Id) params.get('userId');
       String password = (String) params.get('password');
-      User u = new UserUtils.Repository().findByEmail(email);
+      String requestId = (String) params.get('requestId');
+      User u = new UserUtils.Repository().findById(userId);
       String username = u?.username;
       if (String.isBlank(username)) throw new InvalidUsernameException('Your login attempt has failed. Make sure the username and password are correct.');
       cym.Community idp = cym.Community.getCurrent();
@@ -170,16 +188,16 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
 
       if (provider.compromiseInstances(password) > 0) throw new InvalidPasswordException('weak_password');
 
-      PageReference pr = Site.login(username, password, startUrl);
+
+      PageReference pr = Site.login(username, password, '/');
 
       if (pr == null) throw new InvalidUsernameException('Your login attempt has failed. Make sure the username and password are correct.');
 
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId);
+      session.apply((cym.Community.Authenticator) idp.authenticators.find('name', 'password'), requestId);
+
       return new Map<String, Object> {
-        'redirect' => BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), u.Id)
-          .activate()
-          .apply(authenticator)
-          .resume(startURL)
-          .getUrl()
+        'isValid' => true
       };
     }
   }
@@ -199,7 +217,7 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
 
       // Checks that the user chosen password is compliant to Authenticator policy ie.: HaveIBeenPwnd check.
       if (provider.compromiseInstances(newPassword) > 0) throw new InvalidPasswordException('weak_password');
-      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), u.Id).activate();
+      cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), u.Id);
       // Setting the user password requires higher permissions than a Guest user or normal user. Hence calling using the Community Technical User
       session.getRemoteApex(DiscoveryController.ResetUserPassword.class).invoke(
         JSON.serialize(
@@ -244,6 +262,16 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       Site.changePassword(newPassword, newPassword, oldPassword);
 
       return '{}';
+    }
+  }
+
+
+  private class Factor {
+    String authenticatorName;
+    Integer maxAge;
+    public Factor(String authenticatorName, Integer maxAge) {
+      this.authenticatorName = authenticatorName;
+      this.maxAge = maxAge;
     }
   }
 

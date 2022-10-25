@@ -15,11 +15,4 @@ public with sharing class BrowserSessionUtils {
     if (session == null) session = browser.sessions.add(userId);
     return session;
   }
-
-  public static cym.Browser.SessionVerification findAuthenticatorSessionVerification(cym.Browser.SessionVerifications verifications, cym.Community.Authenticator authenticator, String requestId) {
-    if (authenticator == null) return null;
-    cym.Collection filtered = verifications.filter('Id', authenticator.id).filter('isActive', true).filter('requestId', requestId);
-    if (filtered.size() > 0) return (cym.Browser.SessionVerification) filtered.get(0);
-    return null;
-  }
 }

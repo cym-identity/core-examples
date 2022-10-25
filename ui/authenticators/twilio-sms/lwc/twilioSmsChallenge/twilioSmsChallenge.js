@@ -33,7 +33,8 @@ export default class TwilioSmsChallenge extends LightningElement {
 
   transactionId;
   connectedCallback() {
-    this.handleResend();
+    // this.handleResend();
+    this.loading = false;
   }
 
   handleNext(e) {

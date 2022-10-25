@@ -1,14 +1,14 @@
 <apex:page showHeader="false" controller="WebAuthnController" applyBodyTag="false" applyHtmlTag="false" action="{!init}">
-    <html>
+  <html>
     <head></head>
     <body>
       <script type="text/javascript">
         (function () {
+          var input = JSON.parse("{! JSENCODE(log) }");
           if (!window.PublicKeyCredential) return sendMessage('ready', {
             error: 'invalid_browser',
             error_description: 'WebAuthn not supported on this browser'
           });
-          const input = JSON.parse("{! JSENCODE(log) }");
           var base64url = (function () {
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
             // Use a lookup table to find the index.
@@ -49,7 +49,7 @@
             };
           })()
 
-          var remote = async function(action, payload) {
+          var remote = function(action, payload) {
             return fetch( input.baseUrl + '/remote?action=' + encodeURIComponent(action), {
               method: 'POST',
               headers: {
@@ -59,9 +59,10 @@
                 payload: JSON.stringify(payload || {})
               })
             })
-            .then(resp => resp.json())
-            .then((resp) => {
-              const { error, response } = resp;
+            .then(function(resp) {return resp.json()})
+            .then(function(resp) {
+              var error = resp.error;
+              var response = resp.response;
               if (error) return Promise.reject(error);
               return response;
             });
@@ -83,7 +84,7 @@
               makeCredReq.excludeCredentials &&
               makeCredReq.excludeCredentials.length > 0
             ) {
-              makeCredReq.excludeCredentials.forEach((cred) => {
+              makeCredReq.excludeCredentials.forEach(function (cred) {
                 cred.id = base64url.decode(cred.id);
               });
             }
@@ -107,17 +108,13 @@
                 var publicKey = preformatMakeCredReq(response.publicKey);
                 return navigator.credentials
                   .create({ publicKey: publicKey })
-                  .then((response) => {
+                  .then(function(response) {
                     var payload = {
                       startURL: startUrl,
                       id: response.id,
                       rawId: base64url.encode(response.rawId),
-                      attestationObject: base64url.encode(
-                        response.response.attestationObject
-                      ),
-                      clientDataJSON: base64url.encode(
-                        response.response.clientDataJSON
-                      ),
+                      attestationObject: base64url.encode(response.response.attestationObject),
+                      clientDataJSON: base64url.encode(response.response.clientDataJSON),
                       transports: response.response.getTransports
                         ? JSON.stringify(response.response.getTransports())
                         : "[]",
@@ -146,12 +143,8 @@
                       startURL: startUrl,
                       id: response.id,
                       rawId: base64url.encode(response.rawId),
-                      authenticatorData: base64url.encode(
-                        response.response.authenticatorData
-                      ),
-                      clientDataJSON: base64url.encode(
-                        response.response.clientDataJSON
-                      ),
+                      authenticatorData: base64url.encode(response.response.authenticatorData),
+                      clientDataJSON: base64url.encode(response.response.clientDataJSON),
                       signature: base64url.encode(response.response.signature),
                       authenticator: input.authenticator.name,
                       requestId: requestId,
@@ -199,8 +192,8 @@
           }
 
           return sendMessage('ready', {});
-        })()
+        })();
       </script>
     </body>
-    </html>
+  </html>
 </apex:page>

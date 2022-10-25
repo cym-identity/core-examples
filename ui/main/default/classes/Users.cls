@@ -59,4 +59,27 @@ public with sharing class Users {
       when else { return u.Username; }
     }
   }
+
+  private static String getUsernameFromLoginHint(String login_hint) {
+    // The user has entered a phone number
+    if (!login_hint.contains('@')) return login_hint + '@' + UserInfo.getOrganizationId() + '.io';
+    // The user has entered a standard email address
+    return login_hint + '.' + UserInfo.getOrganizationId() + '.io';
+  }
+
+  public static LoginType getUserType(User u) {
+    if (u.Username == u.Email + '.' + UserInfo.getOrganizationId() + '.io') return LoginType.email;
+    if (u.Username == u.MobilePhone + '@' + UserInfo.getOrganizationId() + '.io') return LoginType.phone;
+    return LoginType.unknown;
+  }
+
+  public static Map<String, Object> getPrimaryIdentifier(User u) {
+    return new Map<String, Object> { 'type' => Users.getUserType(u), 'value' => Users.getLoginHint(u) };
+  }
+
+  public static Map<String, Object> getSecondaryIdentifier(User u) {
+    return Users.getUserType(u) == LoginType.email ?
+      (u.MobilePhone == null ? null : new Map<String, Object> { 'type' => LoginType.phone, 'value' => u.MobilePhone }) :
+      (u.Email == u.Username ? null : new Map<String, Object> { 'type' => LoginType.email, 'value' => u.Email });
+  }
 }

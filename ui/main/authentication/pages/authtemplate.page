@@ -303,7 +303,7 @@
         <div class="slds-col slds-grid slds-grid_vertical-align-end slds-grid_align-center" style="background: #FAFAFA; border-bottom: 1px solid #ccc;">
         </div>
         <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 480px;flex-grow: 1;margin-top: -100px;">
-          <article class="slds-card slds-grid_align-center" style="width:480px; min-height:400px; margin:auto;" id="loading">
+          <article class="slds-card slds-grid_align-center" style="max-width:480px; min-height:400px; margin:auto;" id="loading">
 
             <div class="slds-card__body slds-card__body_inner slds-grid slds-grid_vertical">
               <apex:insert name="card"/>

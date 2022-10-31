@@ -165,19 +165,6 @@ public with sharing class AuthContext {
 
     // The user has authenticated as part of the current authentication request, continue
     return new Step(StepKind.REDIRECT, webauthn);
-
-    // cym.Browser.SessionVerification webauthn_verification = (cym.Browser.SessionVerification) this.owner.session.verifications.find('authenticator', webauthn.id);
-
-    // // The user has used a platform authenticator in the current session on a previous request
-    // if (webauthn_verification != null && !webauthn_verification.isActive(this.request.iid, null)) return new Step(StepKind.AUTHENTICATOR_VERIFY, webauthn);
-    // // The user has successfully logged in with WebAuthn
-    // if (webauthn_verification != null && webauthn_verification.isActive(this.request.iid, null)) return new Step(StepKind.REDIRECT, webauthn);
-
-    // // The user did not authenticate as part of the current authentication request
-    // if (email_verification != null && !email_verification.isActive(this.request.iid, null)) return new Step(StepKind.AUTHENTICATOR_VERIFY, email);
-
-    // // The user has authenticated as part of the current authentication request, continue
-    // return new Step(StepKind.REDIRECT, webauthn);
   }
 
   public enum StepKind {

@@ -32,7 +32,7 @@ public with sharing class UserUtils {
       User[] users = [SELECT // NOPMD.ApexCrudViolation
         Id, Username, Name, IsActive, Email, FirstName, LastName, MobilePhone, CommunityNickname, SmallPhotoUrl, MediumPhotoUrl, TimeZoneSidKey, LocaleSidKey,
         CompanyName, Street, State, PostalCode, City, Country,
-        IsPasswordless__c, MobilePhoneVerified__c,
+        IsPasswordless__c, MobilePhoneVerified__c, LastPasswordChangeDate,
         AccountId, ContactId,
         LastModifiedDate
         FROM User
@@ -45,7 +45,7 @@ public with sharing class UserUtils {
       User[] users = [SELECT // NOPMD.ApexCrudViolation
         Id, Username, Name, IsActive, Email, FirstName, LastName, MobilePhone, CommunityNickname, SmallPhotoUrl, MediumPhotoUrl, TimeZoneSidKey, LocaleSidKey,
         CompanyName, Street, State, PostalCode, City, Country,
-        IsPasswordless__c, MobilePhoneVerified__c,
+        IsPasswordless__c, MobilePhoneVerified__c, LastPasswordChangeDate,
         AccountId, ContactId,
         LastModifiedDate
         FROM User
@@ -371,8 +371,4 @@ public with sharing class UserUtils {
 
 
   public class InvalidArgumentException extends Exception {}
-
-
-
-
 }

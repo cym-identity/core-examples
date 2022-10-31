@@ -61,9 +61,12 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
       }
 
       insert u; // NOPMD.ApexCRUDViolation
+      System.debug(JSON.serializePretty(u));
 
-
-      if (!u.IsPasswordless__c) System.setPassword(u.Id, password);
+      if (!u.IsPasswordless__c) {
+        System.debug('Setting Password');
+        System.setPassword(u.Id, password);
+      }
 
       // Set the user picture if provided
       Map<String, Object> picture = (Map<String, Object>) args.get('picture');

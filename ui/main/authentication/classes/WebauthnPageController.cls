@@ -24,14 +24,25 @@ public with sharing class WebauthnPageController extends AuthPageController {
 
   public PageReference next() {
     Map<String, String> params = ApexPages.currentPage().getParameters();
+
     Map<String, Object> payload = (Map<String, Object>) JSON.deserializeUntyped(params.get('payload'));
+    Boolean isAlreadyRegistered = Boolean.valueOf(params.get('is-registered'));
 
     cym.Community.Authenticator webauthn = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'webauthn_platform');
     if (webauthn == null) return null; // Don't know how the user reached this point
 
     AuthContext context = new AuthContext(this.request);
+
+    // The user has already registered webauthn; but the tracking has been wrong
+    if (isAlreadyRegistered && this.kind == 'register') {
+      this.publicKey = JSON.serialize(
+        webauthn.provider.initVerification(context.owner.session, new Map<String, Object> {})
+      );
+      this.kind = 'try';
+      return null;
+    }
     Map<String, Object> response = (Map<String, Object>) (
-      context.owner.authenticators.indexOf('webauthn_platform') == -1 ?
+      context.owner.authenticators.indexOf('webauthn_platform') == -1 && this.kind == 'register' ?
         webauthn.provider.verifyRegistration(context.owner.session, payload) :
         webauthn.provider.verifyVerification(context.owner.session, payload)
     );

@@ -61,7 +61,7 @@
           <apex:commandButton value="Continue" action="{!next}" styleClass="slds-button slds-button_brand" />
         </footer>
       </apex:form>
-      <apex:outputPanel layout="block">
+      <apex:outputPanel layout="block" rendered="{! AND(providers.size > 0) }">
         <p class="divider"><span>OR</span></p>
         <div class="slds-grid slds-grid_vertical">
           <p class="slds-text-align_center">

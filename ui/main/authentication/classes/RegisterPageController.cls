@@ -37,8 +37,6 @@ public with sharing class RegisterPageController extends AuthPageController {
     // Since the user has been created, reload the context
     context = new AuthContext(this.request, this.level);
 
-    next = context.next();
-
-    return context.getNextStep(next, this.startURL);
+    return this.redirect(context);
   }
 }

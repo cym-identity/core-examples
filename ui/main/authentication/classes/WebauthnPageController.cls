@@ -60,13 +60,7 @@ public with sharing class WebauthnPageController extends AuthPageController {
 
     context.owner.session.apply(webauthn, this.request.iid);
 
-    AuthContext.Step next = context.next();
-
-    if ( next.kind == AuthContext.StepKind.REDIRECT ) {
-      return context.owner.session.resume(this.startURL);
-    } else {
-      return context.getNextStep(next, this.startURL);
-    }
+    return this.redirect(context);
   }
 
 }

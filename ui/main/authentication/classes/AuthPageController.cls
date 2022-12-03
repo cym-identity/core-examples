@@ -66,9 +66,10 @@ public with sharing virtual class AuthPageController {
   }
 
   protected PageReference redirect(AuthContext context) {
-    AutContext.Step next = context.next();
+    Map<String, String> params = ApexPages.currentPage().getParameters();
+    AuthContext.Step next = context.next();
     if ( next.kind == AuthContext.StepKind.REDIRECT ) {
-      Boolean isWebAuthnEnabled = Boolean.valueOf(params.get('is-webauthn'));
+      Boolean isWebAuthnEnabled = String.isNotBlank(params.get('is-webauthn')) && Boolean.valueOf(params.get('is-webauthn'));
       if (isWebAuthnEnabled && next.authenticator?.name == 'webauth_platform') {
         PageReference pr = new PageReference('/web_authn');
         pr.getParameters().putAll(

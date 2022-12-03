@@ -303,8 +303,16 @@
         <div class="slds-col slds-grid slds-grid_vertical-align-end slds-grid_align-center" style="background: #FAFAFA; border-bottom: 1px solid #ccc;">
         </div>
         <div class="slds-col slds-size_1-of-1" id="container" style="margin: auto; max-width: 480px;flex-grow: 1;margin-top: -100px;">
-          <article class="slds-card slds-grid_align-center" style="max-width:480px; min-height:400px; margin:auto;" id="loading">
-
+          <article class="slds-card slds-grid_align-center" style="max-width:480px; min-height:400px; margin:auto;">
+            <div id="loading" style="position: absolute;left: 0;bottom: 0;right: 0;top: 0;background-color:rgba(22, 50, 92, 0.7);display: none;z-index: 100;">
+              <div class="slds-spinner_container">
+                <div role="status" class="slds-spinner slds-spinner_medium slds-spinner_inverse">
+                  <span class="slds-assistive-text">Loading</span>
+                  <div class="slds-spinner__dot-a"></div>
+                  <div class="slds-spinner__dot-b"></div>
+                </div>
+              </div>
+            </div>
             <div class="slds-card__body slds-card__body_inner slds-grid slds-grid_vertical">
               <apex:insert name="card"/>
             </div>

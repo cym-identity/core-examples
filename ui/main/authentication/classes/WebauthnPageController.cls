@@ -1,16 +1,19 @@
 public with sharing class WebauthnPageController extends AuthPageController {
   public String publicKey { get; private set; }
   public String kind { get; private set; }
-  public WebauthnPageController() {}
+  public String skip { get; private set; }
+  public Boolean auto { get; private set; }
+  public WebauthnPageController() {
+    this.auto = true;
+  }
 
   public PageReference load() {
     cym.Community.Authenticator webauthn = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'webauthn_platform');
     if (webauthn == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request);
+    AuthContext context = new AuthContext(this.request, this.level);
     AuthContext.Step next = context.next();
-
-    if (next.authenticator?.name != 'webauthn_platform') return context.getNextStep(next, this.startURL);
+    if (next.authenticator?.name != 'webauthn_platform' && next.steps.find('authenticator', webauthn.get('id')) == null) return context.getNextStep(next, this.startURL);
 
     this.kind = context.owner.authenticators.indexOf('webauthn_platform') == -1 ? 'register' : 'verify';
     this.publicKey = JSON.serialize(
@@ -18,6 +21,10 @@ public with sharing class WebauthnPageController extends AuthPageController {
         webauthn.provider.initRegistration(context.owner.session, new Map<String, Object> {}) :
         webauthn.provider.initVerification(context.owner.session, new Map<String, Object> {})
     );
+
+    if (this.kind == 'register' && next.kind == AuthContext.StepKind.REDIRECT) {
+      this.skip = context.owner.session.resume(this.startURL).getURL();
+    }
 
     return null;
   }
@@ -31,7 +38,7 @@ public with sharing class WebauthnPageController extends AuthPageController {
     cym.Community.Authenticator webauthn = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'webauthn_platform');
     if (webauthn == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request);
+    AuthContext context = new AuthContext(this.request, this.level);
 
     // The user has already registered webauthn; but the tracking has been wrong
     if (isAlreadyRegistered && this.kind == 'register') {

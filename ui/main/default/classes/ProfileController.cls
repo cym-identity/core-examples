@@ -201,7 +201,15 @@ global with sharing class ProfileController { // NOPMD.AvoidGlobalModifiers
     public override Object execute(Map<String, Object> params) {
       if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage('/me');
       cym.ResourceOwner.Session session = (cym.ResourceOwner.Session) cym.ResourceOwner.getCurrent().sessions.find('id', (Id) params.get('session'));
+      cym.Browser.Session b_session = (cym.Browser.Session) cym.Browser.getCurrent().sessions.find('id', (Id) params.get('session'));
       if (session != null) session.revoke();
+      // The user is logging out from the current browser. Log her out of Salesforce as Well
+      if (b_session != null) {
+        String logoutUrl = Network.getLogoutUrl(Network.getNetworkId());
+        PageReference logout = new PageReference(String.isNotBlank(logoutUrl) ? logoutUrl : '/secur/logout.jsp');
+        logout.getParameters().put('startURL', '/me');
+        return logout;
+      }
       return null;
     }
   }
@@ -255,9 +263,11 @@ global with sharing class ProfileController { // NOPMD.AvoidGlobalModifiers
       if (Auth.CommunitiesUtil.isGuestUser()) return Network.forwardToAuthPage('/me');
       cym.ResourceOwner context = cym.ResourceOwner.getCurrent();
       context.sessions.revoke();
-      // Add login to revoke all Salesforce Sessions as well
-      // delete (AuthSession[]) [SELECT Id FROM AuthSession WHERE UsersId = :UserInfo.getUserId()];
-      return null;
+      // Logout from Salesforce as well
+      String logoutUrl = Network.getLogoutUrl(Network.getNetworkId());
+      PageReference logout = new PageReference(String.isNotBlank(logoutUrl) ? logoutUrl : '/secur/logout.jsp');
+      logout.getParameters().put('startURL', '/me');
+      return logout;
     }
   }
 
@@ -345,8 +355,8 @@ global with sharing class ProfileController { // NOPMD.AvoidGlobalModifiers
       Boolean isValid = false;
       for (cym.Collection.Item v : verifications) {
         cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) v;
-        if (verification.authenticator == webauthn_platform.id && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
-        if (verification.authenticator == salesforce_push.id   && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
+        if (verification.authenticator == webauthn_platform?.id && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
+        if (verification.authenticator == salesforce_push?.id   && verification.lastVerificationTime.addSeconds(30) > Datetime.now()) {isValid = true; break;}
       }
       return new Map<String, Object> { 'isValid' => isValid };
     }

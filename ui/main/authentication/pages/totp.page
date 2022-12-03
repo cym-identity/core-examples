@@ -16,12 +16,12 @@
 
       <apex:form styleClass="slds-text-align_center">
         <div class="slds-col slds-size_1-of-1">
-          <p class="slds-text-align_center">
+          <p class="slds-text-align_center slds-p-around_medium">
             Welcome&nbsp;<a>{!$CurrentPage.parameters.login_hint}</a>
           </p>
         </div>
 
-        <apex:outputPanel rendered="{! kind == 'register' }" layout="block" style="padding: 16px;">
+        <apex:outputPanel rendered="{! kind == 'register' }" layout="block" styleClass="slds-p-around_medium">
           <div id="introduction">
             <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">Scan this QR Code with your app</div>
             <div class="slds-text-body_regular slds-text-align_center" style="margin: 16px">
@@ -61,6 +61,11 @@
             </div>
           </div>
           <div id="registration" style="display: none">
+            <div class="slds-col slds-size_1-of-1">
+              <p class="slds-text-align_center slds-p-around_medium">
+                Enter the 6 digit code from your authenticator App
+              </p>
+            </div>
             <div class="slds-form-element">
               <label class="slds-form-element__label" for="given_name">Code</label>
               <div class="slds-form-element__control">
@@ -88,7 +93,12 @@
           </script>
         </apex:outputPanel>
 
-        <apex:outputPanel rendered="{! kind == 'verify' }" layout="block" style="padding: 16px;">
+        <apex:outputPanel rendered="{! kind == 'verify' }" layout="block" styleClass="slds-p-around_medium">
+          <div class="slds-col slds-size_1-of-1">
+            <p class="slds-text-align_center slds-p-around_medium">
+              Enter the 6 digit code from your authenticator App
+            </p>
+          </div>
           <div class="slds-form-element">
             <label class="slds-form-element__label" for="given_name">Code</label>
             <div class="slds-form-element__control">
@@ -107,12 +117,13 @@
             <apex:commandButton value="{!$Label.Site.Submit}" action="{!next}" styleClass="slds-button slds-button_brand"/>
           </footer>
         </apex:outputPanel>
+
         <input type="hidden" name="startURL" value="{!$CurrentPage.parameters.startURL}" />
         <input type="hidden" name="is-webauthn" id="is-webauthn" value="false" />
+        <input type="hidden" name="iid" id="iid" value="{!$request.iid}" />
 
       </apex:form>
 
     </apex:define>
 	</apex:composition>
-
 </apex:page>

@@ -79,7 +79,7 @@ public with sharing class UserUtils {
 
     public String[] getUserFactors(Id user_id) {
       User u = this.findById(user_id);
-      Set<String> user_factors = u.IsPasswordless__c ? new Set<String>() : new Set<String> {'password'};
+      Set<String> user_factors = u.IsPasswordless__c ? new Set<String>() : (u.LastPasswordChangeDate == null ? new Set<String>() : new Set<String> {'password'});
 
       for(cym.Collection.Item cred: cym.WebAuthn.getAllCredentials().asList()) {
         if(((cym.WebAuthn.Credential) cred).transports.indexOf('internal') == -1) user_factors.add( 'webauthn_roaming' );
@@ -101,9 +101,9 @@ public with sharing class UserUtils {
 
     public Map<String, Object> getClaims(String[] scopes) {
       String[] computedClaims = new String[] {'sub', 'name', 'middle_name', 'nickname', 'preferred_username', 'profile', 'gender', 'birthdate', 'updated_at', 'email', 'email_verified', 'phone', 'phone_verified'};
-      cym__RealmClaim__c[] claims = [SELECT Id, Name FROM cym__RealmClaim__c WHERE cym__Scope__r.Name IN :scopes]; // NOPMD.ApexCRUDViolation
+      // cym__RealmClaim__c[] claims = [SELECT Id, Name FROM cym__RealmClaim__c WHERE cym__Scope__r.Name IN :scopes]; // NOPMD.ApexCRUDViolation
       Map<String, Object> response = new Map<String, Object> {};
-      for (cym__RealmClaim__c claim : claims) if (computedClaims.indexOf(claim.Name) == -1) response.put(claim.Name, new Map<String, Object> { 'required' => true });
+      // for (cym__RealmClaim__c claim : claims) if (computedClaims.indexOf(claim.Name) == -1) response.put(claim.Name, new Map<String, Object> { 'required' => true });
       return response;
     }
   }

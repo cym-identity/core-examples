@@ -16,8 +16,13 @@
 
       <apex:form styleClass="slds-text-align_center">
         <div class="slds-col slds-size_1-of-1">
-          <p class="slds-text-align_center">
+          <p class="slds-text-align_center slds-p-around_medium">
             Welcome&nbsp;<a>{!$CurrentPage.parameters.login_hint}</a>
+          </p>
+        </div>
+        <div class="slds-col slds-size_1-of-1">
+          <p class="slds-text-align_center slds-p-around_medium">
+            Enter the 6 digit code you have received by email
           </p>
         </div>
 

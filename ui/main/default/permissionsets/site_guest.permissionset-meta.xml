@@ -55,4 +55,12 @@
         <apexPage>web_authn</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
+    <pageAccesses>
+        <apexPage>password</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
+        <apexPage>authenticators</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
 </PermissionSet>

@@ -186,7 +186,7 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', 'password');
       cym.SalesforceAuthenticator.Password provider = (cym.SalesforceAuthenticator.Password) authenticator.provider;
 
-      if (provider.compromiseInstances(password) > 0) throw new InvalidPasswordException('weak_password');
+      if (provider.compromisesCount(password) > 0) throw new InvalidPasswordException('weak_password');
 
 
       PageReference pr = Site.login(username, password, '/');
@@ -216,7 +216,7 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       if (String.isBlank(username)) throw new InvalidUsernameException('Your login attempt has failed. Make sure the username and password are correct.');
 
       // Checks that the user chosen password is compliant to Authenticator policy ie.: HaveIBeenPwnd check.
-      if (provider.compromiseInstances(newPassword) > 0) throw new InvalidPasswordException('weak_password');
+      if (provider.compromisesCount(newPassword) > 0) throw new InvalidPasswordException('weak_password');
       cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), u.Id);
       // Setting the user password requires higher permissions than a Guest user or normal user. Hence calling using the Community Technical User
       session.getRemoteApex(DiscoveryController.ResetUserPassword.class).invoke(

@@ -48,7 +48,7 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
       User u = UserUtils.fromUiModel(args);
 
       u.ProfileId = [SELECT Id FROM Profile WHERE Name = 'sample-external-user'].Id;
-      u.IsPasswordless__c = String.isBlank(password);
+      u.IsPasswordless__c = false; // String.isBlank(password);
       u.CommunityNickname = key;
       u.Alias = key.substring(0, 8);
 
@@ -63,7 +63,7 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
       insert u; // NOPMD.ApexCRUDViolation
       System.debug(JSON.serializePretty(u));
 
-      if (!u.IsPasswordless__c) {
+      if (String.isNotBlank(password)) {
         System.debug('Setting Password');
         System.setPassword(u.Id, password);
       }

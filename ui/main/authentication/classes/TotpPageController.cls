@@ -8,10 +8,9 @@ public with sharing class TotpPageController extends AuthPageController {
     cym.Community.Authenticator totp = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
     if (totp == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request);
+    AuthContext context = new AuthContext(this.request, this.level);
     AuthContext.Step next = context.next();
-
-    if (next.authenticator?.name != 'totp') return context.getNextStep(next, this.startURL);
+    if (next.authenticator?.name != 'totp' && next.steps.find('authenticator', totp.get('id')) == null) return context.getNextStep(next, this.startURL);
 
     DEBUG_LOG.put('context', context);
     DEBUG_LOG.put('authenticators', context.idp.authenticators.asObjects());
@@ -34,7 +33,10 @@ public with sharing class TotpPageController extends AuthPageController {
     cym.Community.Authenticator totp = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
     if (totp == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request);
+    AuthContext context = new AuthContext(this.request, this.level);
+    AuthContext.Step next = context.next();
+    if (next.authenticator?.name != 'totp' && next.steps.find('authenticator', totp.get('id')) == null) return context.getNextStep(next, this.startURL);
+
     Map<String, Object> response = (Map<String, Object>) (
       context.owner.authenticators.indexOf('totp') == -1 ?
         totp.provider.verifyRegistration(context.owner.session, new Map<String, Object> { 'otp' => otp, 'secret' => this.secretKey }) :
@@ -47,11 +49,11 @@ public with sharing class TotpPageController extends AuthPageController {
 
     context.owner.session.apply(totp, this.request.iid);
 
-    AuthContext.Step next = context.next();
+    next = context.next();
 
     if ( next.kind == AuthContext.StepKind.REDIRECT ) {
       Boolean isWebAuthnEnabled = Boolean.valueOf(params.get('is-webauthn'));
-      if (isWebAuthnEnabled) {
+      if (isWebAuthnEnabled && next.authenticator?.name == 'webauth_platform') {
         PageReference pr = new PageReference('/web_authn');
         pr.getParameters().putAll(
           new Map<String, String> {

@@ -3,8 +3,7 @@ public with sharing class DiscoverPageController extends AuthPageController {
   public DiscoverPageController.DisplayUser[] users {get; private set;}
   public ExternalAuthProvider[] providers {get; private set; }
 
-  public DiscoverPageController() {
-    super();
+  public PageReference load() {
     Map<String, String> params = ApexPages.currentPage().getParameters();
     String startURL = params.get('startURL');
 
@@ -14,11 +13,8 @@ public with sharing class DiscoverPageController extends AuthPageController {
       if (idp.authenticators.find('name', provider.FriendlyName) == null) continue;
       this.providers.add(new ExternalAuthProvider(provider, startURL));
     }
-  }
-
-  public PageReference load() {
     try {
-      AuthContext context = new AuthContext(this.request);
+      AuthContext context = new AuthContext(this.request, this.level);
 
       Map<String, String> redirectParams = new Map<String, String> {
         'iid'        => this.request.iid,

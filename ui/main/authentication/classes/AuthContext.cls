@@ -2,11 +2,13 @@ public with sharing class AuthContext {
   public RessourceOwner owner { get; private set; }
   public cym.Community idp { get; private set; }
   public cym.Authentication.Request request { get; private set; }
+  public cym.Authentication.Level level { get; private set; }
 
-  public AuthContext(cym.Authentication.Request request) {
+  public AuthContext(cym.Authentication.Request request, cym.Authentication.Level level) {
     this.request = request;
     this.idp = cym.Community.getCurrent();
     this.owner = AuthContext.getRessourceOwner(request.login_hint);
+    this.level = level;
     if (this.owner == null) return;
 
     cym.Community.Authenticator webauthnAuthenticator = (cym.Community.Authenticator) this.idp.authenticators.find('name', 'webauthn_platform');
@@ -18,153 +20,96 @@ public with sharing class AuthContext {
     }
   }
 
+  public Step next() {
+    if (String.isBlank(this.request.login_hint)) return new Step(StepKind.IDENTITY_CHOOSE, null, null);
+    if (this.owner == null) return new Step(StepKind.IDENTITY_REGISTER, null, null);
+    cym.Community.Authenticator email = (cym.Community.Authenticator) this.idp.authenticators.find('name', 'email');
+    cym.Community.Authenticator webauthn = (cym.Community.Authenticator) this.idp.authenticators.find('name', 'webauthn_platform');
+    // The user has never verified her identity
+    if (this.owner.authenticators.indexOf('email') == -1) return new Step(StepKind.IDENTITY_VERIFY, email, null);
+
+
+    cym.Browser.SessionVerification email_verification = (cym.Browser.SessionVerification) this.owner.session.verifications.find('authenticator', email.id);
+    // The user has not validated her identity in the current session
+    // The email verification has expired (in case it has not been cleaned yet)
+    if (email_verification == null || !(Boolean) email_verification.get('isActive')) return new Step(StepKind.AUTHENTICATOR_VERIFY, email, null);
+
+    if (this.level == null || this.level.steps.size() == 0) return new Step(StepKind.REDIRECT, webauthn, null);
+
+    // The user is already compliant with the Community authentication policies
+    if (this.owner.session.verify(this.level, this.request)) return new Step(StepKind.REDIRECT, webauthn, null);
+
+    // If this point is reached, it means the user session is not compliant with the Authentication Levels defined.
+
+    cym.Authentication.Steps steps = this.level.steps.next(this.owner.session, this.request);
+    Id[] userAuthenticatorIds = this.idp.authenticators.filter('name', this.owner.authenticators).pluck('id').asIds();
+    // Check if the user already has register authenticators which can move her across the next step
+    Collection stepsWhichCanBeCompleted = steps.filter('authenticator', userAuthenticatorIds);
+    if (stepsWhichCanBeCompleted.size() > 0) return new Step(StepKind.AUTHENTICATOR_VERIFY, null, stepsWhichCanBeCompleted);
+
+    // The user has to register at least one new authenticator, ensure that she has completed one challenge in this request
+    cym.Collection.Item verificationFromCurrentRequest = this.owner.session.verifications.find('requestId', this.request.iid);
+    if (verificationFromCurrentRequest == null) return new Step(StepKind.AUTHENTICATOR_VERIFY, email, null);
+
+    // Only keep the path that the user has potentially started
+    cym.Authentication.Step current = this.level.steps.start;
+
+    cym.Collection stepsWhichCanBeStarted = this.level.steps.filter('id', current.next).filter('authenticator', userAuthenticatorIds);
+    if (stepsWhichCanBeStarted.size() == 0) return new Step(StepKind.AUTHENTICATOR_REGISTER, null, steps);
+
+    cym.Collection s = new cym.Collection( new cym.Authentication.Step[] {} );
+    for (cym.Collection.Item i : stepsWhichCanBeStarted.asList()) s = s.concat(this.level.steps.next(this.owner.session, this.request, (cym.Authentication.Step) i));
+    return new Step(StepKind.AUTHENTICATOR_REGISTER, null, s);
+  }
+
   public PageReference getNextStep(Step step, String startURL) {
+    Map<String, String> params = new Map<String, String> {
+      'iid' => this.request.iid,
+      'startURL' => startURL
+    };
+    if (String.isNotBlank(this.request.login_hint)) params.put('login_hint', this.request.login_hint);
     switch on step.kind {
       when IDENTITY_CHOOSE {
         PageReference pr = new PageReference('/discover');
-        pr.getParameters().putAll(
-          new Map<String, String> {
-            'iid' => this.request.iid,
-            'startURL' => startURL
-          }
-        );
+        pr.getParameters().putAll(params);
         return pr;
       }
       when IDENTITY_REGISTER {
         PageReference pr = new PageReference('/register');
-        pr.getParameters().putAll(
-          new Map<String, String> {
-            'iid' => this.request.iid,
-            'login_hint' => this.request.login_hint,
-            'startURL' => startURL
-          }
-        );
+        pr.getParameters().putAll(params);
         return pr;
       }
       when IDENTITY_VERIFY {
         PageReference pr = new PageReference('/email');
-        pr.getParameters().putAll(
-          new Map<String, String> {
-            'iid' => this.request.iid,
-            'login_hint' => this.request.login_hint,
-            'startURL' => startURL
-          }
-        );
+        pr.getParameters().putAll(params);
         return pr;
       }
       when REDIRECT {
         return this.owner.session.resume(startURL);
       }
       when else {
-        if (step.authenticator.name == 'webauthn_platform') {
-          PageReference pr = new PageReference('/web_authn');
-          pr.getParameters().putAll(
-            new Map<String, String> {
-              'iid' => this.request.iid,
-              'login_hint' => this.request.login_hint,
-              'startURL' => startURL
-            }
-          );
-          return pr;
-        }
-        if (step.authenticator.name == 'totp') {
-          PageReference pr = new PageReference('/totp');
-          pr.getParameters().putAll(
-            new Map<String, String> {
-              'iid' => this.request.iid,
-              'login_hint' => this.request.login_hint,
-              'startURL' => startURL
-            }
-          );
-          return pr;
-        }
-        if (step.authenticator.name == 'email') {
-          PageReference pr = new PageReference('/email');
-          pr.getParameters().putAll(
-            new Map<String, String> {
-              'iid' => this.request.iid,
-              'login_hint' => this.request.login_hint,
-              'startURL' => startURL
-            }
-          );
-          return pr;
-        }
-        return null;
+        PageReference pr = AuthContext.getNextPageReference(step, this.idp.authenticators);
+        if (pr != null) pr.getParameters().putAll(params);
+        return pr;
       }
     }
   }
 
-  public Step next() {
-    if (String.isBlank(this.request.login_hint)) return new Step(StepKind.IDENTITY_CHOOSE, null);
-    if (this.owner == null) return new Step(StepKind.IDENTITY_REGISTER, null);
-    cym.Community.Authenticator email = (cym.Community.Authenticator) this.idp.authenticators.find('name', 'email');
-    cym.Community.Authenticator webauthn = (cym.Community.Authenticator) this.idp.authenticators.find('name', 'webauthn_platform');
-    // The user has never verified her identity
-    if (this.owner.authenticators.indexOf('email') == -1) return new Step(StepKind.IDENTITY_VERIFY, email);
+  private static PageReference getNextPageReference(Step step, cym.Community.Authenticators authenticators) {
+    if (step.authenticator != null) return AuthContext.getAuthenticatorPageReference(step.authenticator);
+    return step.steps.pluck('authenticator').unique().size() > 1 ? new PageReference('/authenticators') : AuthContext.getAuthenticatorPageReference((cym.Community.Authenticator) authenticators.find('id', step.steps.get(0).get('authenticator')));
+  }
 
-
-    cym.Browser.SessionVerification email_verification = (cym.Browser.SessionVerification) this.owner.session.verifications.find('authenticator', email.id);
-    // The user has not validated her identity in the current session
-    // The email verification has expired (in case it has not been cleaned yet)
-    if (email_verification == null || !(Boolean) email_verification.get('isActive')) return new Step(StepKind.AUTHENTICATOR_VERIFY, email);
-
-    cym.Authentication.Level level = (cym.Authentication.Level) this.idp.acrs.get(0);
-
-    // The user is already compliant with the Community authentication policies
-    if (this.owner.session.verify(level, this.request)) return new Step(StepKind.REDIRECT, webauthn);
-
-    // If this point is reached, it means the user session is not compliant with the Authentication Levels defined.
-
-    cym.Authentication.Path[] pathsWhichCanBeCompleted = new cym.Authentication.Path[] {};
-    cym.Authentication.Path[] pathsWhichCanBeStarted = new cym.Authentication.Path[] {};
-    Id[] userAuthenticatorIds = this.idp.authenticators.filter('name', this.owner.authenticators).pluck('id').asIds();
-    for (cym.Collection.Item p : level.paths.asList()) {
-      cym.Authentication.Path path = (cym.Authentication.Path) p;
-      Integer pathUserFactorsCount = path.factors.filter('authenticator', userAuthenticatorIds).size();
-      // Only add paths which can be fully completed
-      if ( pathUserFactorsCount == path.factors.size()) pathsWhichCanBeCompleted.add(path);
-      // Remove paths which only consist of factors that the user does not have
-      if ( pathUserFactorsCount > 0 ) pathsWhichCanBeStarted.add(path);
-    }
-    cym.Authentication.Factors factorsToComplete;
-    if (pathsWhichCanBeCompleted.size() > 0) {
-      factorsToComplete = (cym.Authentication.Factors) new cym.Collection(pathsWhichCanBeCompleted)
-        .pluck('factors')
-        .sort('size', cym.Collection.SortOrder.ASCENDING)
-        .get(0);
-    } else {
-      // The user need to register extra authenticators
-      // We take the shortest incomplete path to avoid user friction
-      factorsToComplete = (cym.Authentication.Factors) new cym.Collection(pathsWhichCanBeStarted)
-        .pluck('factors')
-        .sort('size', cym.Collection.SortOrder.ASCENDING)
-        .get(0);
-    }
-
-    // List all authenticators which are compliant with the request
-    Id[] activeAuthenticators = new Id[]{};
-    for (cym.Collection.Item i : this.owner.session.verifications.asList()) {
-      cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) i;
-      cym.Authentication.Factor factor = (cym.Authentication.Factor) factorsToComplete.find('authenticator', verification.authenticator);
-      if (factor == null) continue;
-      if (cym.Authentication.verify(factor, this.request, verification)) activeAuthenticators.add(verification.authenticator);
-    }
-
-    // Start with the factors that the user already has and which are not already completed
-    Id[] factorsToCompleteIds = factorsToComplete
-        .filter('authenticator', userAuthenticatorIds)
-        .reject('authenticator', activeAuthenticators)
-        .pluck('authenticator')
-        .asIds();
-
-    if (factorsToCompleteIds.size() > 0) return new Step(StepKind.AUTHENTICATOR_VERIFY, (cym.Community.Authenticator) this.idp.authenticators.find('id', factorsToCompleteIds[0]));
-
-    // Request for the user to register the missing authenticators
-    Id[] factorsToRegisterIds = factorsToComplete.reject('authenticator', userAuthenticatorIds).pluck('authenticator').asIds();
-    if (factorsToRegisterIds.size() > 0) return new Step(StepKind.AUTHENTICATOR_REGISTER, (cym.Community.Authenticator) this.idp.authenticators.find('id', factorsToRegisterIds[0]));
-
-    // The user has authenticated as part of the current authentication request, continue
-    return new Step(StepKind.REDIRECT, webauthn);
+  public static PageReference getAuthenticatorPageReference(cym.Community.Authenticator authenticator) {
+    if (authenticator.name == 'webauthn_platform') return new PageReference('/web_authn');
+    if (authenticator.name == 'totp') return new PageReference('/totp');
+    if (authenticator.name == 'email') return new PageReference('/email');
+    if (authenticator.name == 'password') return new PageReference('/password');
+    if (authenticator.name == 'Facebook') return new PageReference('/facebook');
+    if (authenticator.name == 'LinkedIn') return new PageReference('/linkedin');
+    if (authenticator.name == 'Google') return new PageReference('/google');
+    if (authenticator.name == 'Twitter') return new PageReference('/twitter');
+    return null;
   }
 
   public enum StepKind {
@@ -179,9 +124,11 @@ public with sharing class AuthContext {
   public class Step {
     public StepKind kind;
     public cym.Community.Authenticator authenticator;
-    public Step(StepKind kind, cym.Community.Authenticator authenticator) {
+    public cym.Collection steps;
+    public Step(StepKind kind, cym.Community.Authenticator authenticator, cym.Collection steps) {
       this.kind = kind;
       this.authenticator = authenticator;
+      this.steps = steps;
     }
   }
 

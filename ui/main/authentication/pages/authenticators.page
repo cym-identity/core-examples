@@ -1,0 +1,58 @@
+<apex:page
+  id="authenticatorsPage"
+  showHeader="false"
+  title="{!$Label.site.site_login}"
+  controller="AuthenticatorsPageController"
+  action="{!load}"
+  applyBodyTag="false"
+  applyHtmlTag="false"
+  docType="html-5.0">
+
+	<apex:composition template="authtemplate">
+		<apex:define name="card">
+      <apex:outputPanel styleClass="slds-p-top_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
+      </apex:outputPanel>
+
+      <apex:outputPanel styleClass="slds-p-around_medium slds-text-align_center slds-text-heading_medium" rendered="{! (kind = 'AUTHENTICATOR_REGISTER') }" layout="block">
+        <span>You must register a new authenticator before you can continue</span>
+      </apex:outputPanel>
+
+      <apex:outputPanel styleClass="slds-p-around_medium slds-text-align_center slds-text-heading_medium" rendered="{! (kind = 'AUTHENTICATOR_VERIFY') }" layout="block">
+        <span>Verify your identity before you can continue</span>
+      </apex:outputPanel>
+
+      <ul class="slds-has-dividers_around-space">
+
+        <apex:repeat value="{!authenticators}" var="authenticator" id="theRepeat">
+          <li class="slds-item selectable">
+            <a href="{!authenticator.link}" style="color: inherit;text-decoration: inherit;cursor: inherit;display: block;" class="slds-p-around_medium">
+              <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                <div class="slds-col">
+                  <p class="slds-text-heading_small">
+                    Continue with {! authenticator.authenticator }
+                  </p>
+                </div>
+                <div class="slds-col slds-col_bump-left">
+                  <svg class="slds-button__icon slds-button__icon_left" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                    <use xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#chevronright')}"></use>
+                  </svg>
+                </div>
+              </div>
+            </a>
+          </li>
+        </apex:repeat>
+
+      </ul>
+
+
+
+
+
+
+      <script type="text/javascript">
+        console.log(JSON.parse('{! log}'))
+      </script>
+    </apex:define>
+  </apex:composition>
+</apex:page>

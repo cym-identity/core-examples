@@ -5,7 +5,7 @@ public with sharing class RegisterPageController extends AuthPageController {
   public PageReference next() {
     Map<String, String> params = ApexPages.currentPage().getParameters();
 
-    AuthContext context = new AuthContext(this.request);
+    AuthContext context = new AuthContext(this.request, this.level);
     AuthContext.Step next = context.next();
 
     if (next.kind != AuthContext.StepKind.IDENTITY_REGISTER) return context.getNextStep(next, this.startURL);
@@ -35,7 +35,10 @@ public with sharing class RegisterPageController extends AuthPageController {
       );
 
     // Since the user has been created, reload the context
-    context = new AuthContext(this.request);
-    return context.getNextStep(context.next(), this.startURL);
+    context = new AuthContext(this.request, this.level);
+
+    next = context.next();
+
+    return context.getNextStep(next, this.startURL);
   }
 }

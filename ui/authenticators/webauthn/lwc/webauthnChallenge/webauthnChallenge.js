@@ -1,6 +1,6 @@
 import { LightningElement, api } from "lwc";
-
-import STATIC_RESOURCE_URL from "@salesforce/resourceUrl/MFA";
+import { remote } from "c/fetch";
+import { base64url, preformatMakeCredReq } from "c/webAuthnUtils";
 
 export default class WebauthnChallenge extends LightningElement {
   @api authenticator;
@@ -10,92 +10,54 @@ export default class WebauthnChallenge extends LightningElement {
   @api mode = 'auto';
   error;
   loading = true;
-  ready = false;
-
-  get canShowButton() { return this.ready && !this.error; }
-
-  get webAuthnPath() {
-    let prefix = STATIC_RESOURCE_URL[0] === "/" ? window.location.protocol + '//' + window.location.host + STATIC_RESOURCE_URL.split("/resource/")[0] : STATIC_RESOURCE_URL.split("/resource/")[0]
-    return prefix + "/webauthn?authenticator=" + encodeURIComponent(this.authenticator) + '&requestor=' + this.requestor;
-  }
-
-  requestor = Math.floor(Math.random() * 100_000) + "";
-
-  webauthnController = function ({ data: { action, response, requestor } }) {
-    if (requestor !== this.requestor) return;
-    this.loading = false;
-    if (action === "ready") {
-      const {
-        error,
-        error_description,
-      } = response;
-      this.ready = true;
-      this.error = error;
-      if (! error && this.mode === 'auto' ) this.handleInitVerifyWebAuthn();
-      return this.dispatchEvent(
-        new CustomEvent("ready", {
-          detail: error? { error, error_description } : {},
-        })
-      );
-    }
-    if (action === "initVerifyWebAuthn") {
-      const { isValid, error, error_description } = response;
-      if (error)
-        return this.dispatchEvent(
-          new CustomEvent("error", {
-            detail: { error, error_description },
-          })
-        );
-      if (!isValid)
-        return this.dispatchEvent(
-          new CustomEvent("error", {
-            detail: {
-              error: "invalid_credential",
-              error_description:
-                "The credential presented is unknown, malformed or invalid",
-            },
-          })
-        );
-      return this.dispatchEvent(
-        new CustomEvent("done", { detail: { isValid } })
-      );
-    }
-    return this.dispatchEvent(
-      new CustomEvent("error", {
-        detail: {
-          error: "invalid_action",
-          error_description:
-            "The response received from the handler is unknown : " + action,
-        },
-      })
-    );
-  }.bind(this);
 
   connectedCallback() {
-    window.addEventListener("message", this.webauthnController);
-  }
-
-  disconnectedCallback() {
-    window.removeEventListener("message", this.webauthnController);
+    if (this.mode === 'auto') this.handleInitVerifyWebAuthn();
   }
 
   handleInitVerifyWebAuthn() {
-    try {
-      let u = new URL(this.webAuthnPath);
-      this.loading = true;
-      const input = {
-        action: "initVerifyWebAuthn",
-        requestor: this.requestor,
-        startUrl: this.startUrl,
-        requestId: this.requestId,
-      };
-      if (this.userId != undefined) input.userId = this.userId;
-      this.template.querySelector("iframe").contentWindow.postMessage(
-        input,
-        `${u.protocol}//${u.host}`
-      );
-    } catch(e) {
-      console.error(e);
-    }
+    this.loading = true;
+    return remote('WebAuthnController.initVerifyWebAuthn', {'authenticator' : this.authenticator, userId: this.userId || null })
+      .then(({ publicKey }) => {
+        return navigator.credentials.get({ publicKey: preformatMakeCredReq(publicKey) })
+      })
+      .then(response => {
+        return remote('WebAuthnController.VerifyVerifyWebAuthn', {
+          startURL: this.startUrl,
+          id: response.id,
+          rawId: base64url.encode(response.rawId),
+          authenticatorData: base64url.encode(response.response.authenticatorData),
+          clientDataJSON: base64url.encode(response.response.clientDataJSON),
+          signature: base64url.encode(response.response.signature),
+          authenticator: this.authenticator,
+          requestId: this.requestId,
+          userId: this.userId || null
+        });
+      })
+      .then(({ isValid, error, error_description }) => {
+        if (error)
+          return this.dispatchEvent(
+            new CustomEvent("error", {
+              detail: { error, error_description },
+            })
+          );
+        if (!isValid)
+          return this.dispatchEvent(
+            new CustomEvent("error", {
+              detail: {
+                error: "invalid_credential",
+                error_description:
+                  "The credential presented is unknown, malformed or invalid",
+              },
+            })
+          );
+        return this.dispatchEvent(
+          new CustomEvent("done", { detail: { isValid } })
+        );
+      }).catch(error => {
+        this.error = error;
+        console.log(error);
+      })
+      .then(_ => this.loading = false);
   }
 }

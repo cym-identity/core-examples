@@ -51,6 +51,58 @@
           <c-twilio-sms-challenge user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-twilio-sms-challenge>
         </template>
 
+        <template if:true={showAuthenticatorRegisterList}>
+          <div class="slds-p-around_medium slds-text-align_center slds-text-heading_medium">
+            <span>You must register a new authenticator before you can continue</span>
+          </div>
+          <ul class="slds-has-dividers_around-space">
+
+            <template for:each={step.authenticators} for:item="authenticator">
+              <li class="slds-item selectable" key={authenticator.name} onclick={authenticator.handleSelect}>
+                <a href="#" style="color: inherit;text-decoration: inherit;cursor: inherit;display: block;" class="slds-p-around_medium">
+                  <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                    <div class="slds-col">
+                      <p class="slds-text-heading_small">
+                        Continue with {authenticator.name}
+                      </p>
+                    </div>
+                    <div class="slds-col slds-col_bump-left">
+                      <lightning-icon size="x-small" icon-name="utility:chevronright"></lightning-icon>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            </template>
+
+          </ul>
+        </template>
+
+        <template if:true={showAuthenticatorChallengeList}>
+          <div class="slds-p-around_medium slds-text-align_center slds-text-heading_medium">
+            <span>Verify your identity before you can continue</span>
+          </div>
+          <ul class="slds-has-dividers_around-space">
+
+            <template for:each={step.authenticators} for:item="authenticator">
+              <li class="slds-item selectable" key={authenticator.name} onclick={authenticator.handleSelect}>
+                <a href="#" style="color: inherit;text-decoration: inherit;cursor: inherit;display: block;" class="slds-p-around_medium">
+                  <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
+                    <div class="slds-col">
+                      <p class="slds-text-heading_small">
+                        Continue with {authenticator.name}
+                      </p>
+                    </div>
+                    <div class="slds-col slds-col_bump-left">
+                      <lightning-icon size="x-small" icon-name="utility:chevronright"></lightning-icon>
+                    </div>
+                  </div>
+                </a>
+              </li>
+            </template>
+
+          </ul>
+        </template>
+
         <template if:true={showAuthenticatorRegisterPhone}>
           <c-twilio-sms-register user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-twilio-sms-register>
         </template>
@@ -131,7 +183,7 @@
         </template>
 
         <template if:true={showAuthenticatorRegisterWebauthnPlatform}>
-          <c-webauthn-enroll user={step.user.attributes} request-id={requestId} ondone={handleWebAuthnEnrollCompleted}></c-webauthn-enroll>
+          <c-webauthn-enroll user={step.user.attributes} request-id={requestId} ondone={handleStepCompleted}></c-webauthn-enroll>
         </template>
       </div>
     </div>

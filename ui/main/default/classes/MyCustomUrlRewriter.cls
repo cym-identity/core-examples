@@ -11,7 +11,7 @@ global with sharing class MyCustomUrlRewriter implements Site.UrlRewriter { // N
       }
       // Here goes your existing code
       Map<String, String> params = pr.getParameters();
-      if (pr.getUrl().startsWith('/web_authn')) {
+      if (pr.getUrl().startsWith('/webauthn')) {
         PageReference p = new PageReference('/auth/webauthn');
         p.getParameters().putAll(params);
         results.add(p);
@@ -54,7 +54,7 @@ global with sharing class MyCustomUrlRewriter implements Site.UrlRewriter { // N
     String uri = userFriendlyPage.getUrl();
     Map<String, String> params = userFriendlyPage.getParameters();
     if (uri.startsWith('/auth/webauthn')) {
-      PageReference pr = new PageReference('/web_authn');
+      PageReference pr = new PageReference('/webauthn');
       pr.getParameters().putAll(params);
       return pr;
     }

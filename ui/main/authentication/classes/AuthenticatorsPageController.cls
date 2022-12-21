@@ -5,23 +5,23 @@ public with sharing class AuthenticatorsPageController extends AuthPageControlle
 
 
   public PageReference load() {
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step step = context.next();
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    this.logo = context.logo;
 
-    if (step.kind != AuthContext.StepKind.AUTHENTICATOR_REGISTER && step.kind != AuthContext.StepKind.AUTHENTICATOR_VERIFY) return context.getNextStep(step, this.startURL);
-    if (step.authenticator != null) return context.getNextStep(step, this.startURL);
-    if (step.steps.pluck('authenticator').unique().size() == 1) return new PageReference(
+    if (! context.isNext(new AuthContext.StepKind[] {AuthContext.StepKind.AUTHENTICATOR_REGISTER, AuthContext.StepKind.AUTHENTICATOR_VERIFY})) return context.redirect();
+
+    if (context.next.authenticators.size() == 1) return new PageReference(
       new AuthenticatorChoice(
-        (cym.Community.Authenticator) context.idp.authenticators.find('id', step.steps.get(0).get('authenticator')),
+        (cym.Community.Authenticator) context.next.authenticators.get(0),
         context,
-        this.startURL
+        context.startURL
       ).link
     );
 
-    this.kind = step.kind.name().toUpperCase();
+    this.kind = context.isNext(AuthContext.StepKind.AUTHENTICATOR_REGISTER) ? 'register' : 'verify';
 
     this.authenticators = new AuthenticatorChoice[] {};
-    for (cym.Collection.Item item : context.idp.authenticators.filter('id', step.steps.pluck('authenticator').asIds()).asList()) this.authenticators.add(new AuthenticatorChoice((cym.Community.Authenticator) item, context, this.startURL));
+    for (cym.Collection.Item item : context.next.authenticators.asList()) this.authenticators.add(new AuthenticatorChoice((cym.Community.Authenticator) item, context, context.startURL));
 
     return null;
   }

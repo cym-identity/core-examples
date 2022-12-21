@@ -12,17 +12,11 @@ export default class WebauthnEnroll extends LightningElement {
   get showAuthenticatorRegisterWebauthnPlatform() { return this.step === 'authenticator.register.webauthn_platform'; }
   get showAuthenticatorTryChallengeWebauthnPlatform() { return this.step === 'authenticator.try.webauthn_platform'; }
 
-  registerWebAuthnPlatformLoading = true;
+  registerWebAuthnPlatformLoading = false;
 
   fingerprintUrl = STATIC_RESOURCE_URL + "/img/fingerprint_generic_white.svg";
   fidoCertifiedUrl = STATIC_RESOURCE_URL + "/img/FIDO_Certified_logo_yellow.png";
   registerAnimationUrl = STATIC_RESOURCE_URL + "/img/windows_register_animation.gif";
-
-  handleWebAuthnPlatformReady({ detail : { error } }) {
-    // The browser does not support WebAuthn or does not have UserVerification
-    if (error) return this.dispatchEvent(new CustomEvent('done', { detail : { registered : false } }));
-    this.registerWebAuthnPlatformLoading = false;
-  }
 
   handleWebAuthnPlatformDone() {
     this.dispatchEvent(new CustomEvent('done', {detail : { registered : true }}));

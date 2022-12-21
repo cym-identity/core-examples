@@ -62,6 +62,7 @@ export default class DiscoveryUi extends LightningElement {
   get showIdentityRegisterPhone() { return this.step.action === 'identity.register.phone'; }
   get showIdentityRegisterEmail() { return this.step.action === 'identity.register.email'; }
 
+  get showAuthenticatorChallengeList() { return this.step.action === 'authenticator.challenge'}
   get showAuthenticatorChallengeTotp() { return this.step.action === 'authenticator.challenge.totp'; }
   get showAuthenticatorChallengeEmail() { return this.step.action === 'authenticator.challenge.email'; }
   get showAuthenticatorChallengePhone() { return this.step.action === 'authenticator.challenge.phone'; }
@@ -79,6 +80,7 @@ export default class DiscoveryUi extends LightningElement {
   get facebook() { return this.socialProviders.filter(provider => provider.friendlyName === 'Facebook'); }
   get linkedin() { return this.socialProviders.filter(provider => provider.friendlyName === 'LinkedIn'); }
 
+  get showAuthenticatorRegisterList() { return this.step.action === 'authenticator.register'; }
   get showAuthenticatorRegisterTotp() { return this.step.action === 'authenticator.register.totp'; }
   get showAuthenticatorRegisterPhone() { return this.step.action === 'authenticator.register.phone'; }
   get showAuthenticatorRegisterWebauthnPlatform() { return this.step.action === 'authenticator.register.webauthn_platform'; }
@@ -90,6 +92,10 @@ export default class DiscoveryUi extends LightningElement {
     this.handleStepCompleted();
   }
 
+  handleAuthenticatorSelected(name) {
+    this.step = {...this.step, action: this.step.action + '.' + name}
+  }
+
   handleStepCompleted() {
     this.loading = true;
     remote('DiscoveryController.Discover', {
@@ -99,13 +105,12 @@ export default class DiscoveryUi extends LightningElement {
     })
       .then(( detail ) => {
         if (detail.action === 'redirect') return this.complete(detail.redirect);
-        this.step = detail;
-        this.loading = false;
+        this.step = {...detail, authenticators: detail.authenticators?.map(authenticator => ({name: authenticator, handleSelect: () => this.handleAuthenticatorSelected(authenticator)}))};
       })
       .catch(e => {
         this.error = e;
-        this.loading = false;
-      });
+      })
+      .then(_ => this.loading = false);
   }
 
   backToChooser() { this.step = { action: "identity.choose" }; }

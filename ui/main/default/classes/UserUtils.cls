@@ -3,20 +3,6 @@ public with sharing class UserUtils {
     public User[] findUsers(Set<Id> userIds) {
       return (User[]) [SELECT Id, Username, IsActive, Email, MobilePhone, SmallPhotoUrl, MediumPhotoUrl, Name, FirstName, LastName FROM User WHERE Id IN :userIds AND IsActive = true]; // NOPMD.ApexCrudViolation
     }
-    public Object[] getUsers(Id[] userIds) {
-      User[] us = [SELECT Id, Username, IsActive, Email, MobilePhone, SmallPhotoUrl, MediumPhotoUrl, Name, FirstName, LastName FROM User WHERE Id IN :userIds AND IsActive = true]; // NOPMD.ApexCrudViolation
-      Object[] result = new Object[] {};
-      for(User u : us) {
-        result.add(new Map<String, Object> {
-          'id' => u.Id,
-          'name' => u.FirstName + ' ' + u.LastName,
-          'login_hint' => Users.getLoginHint(u),
-          'login_type' => Users.getLoginType(u),
-          'picture' => u.MediumPhotoUrl
-        });
-      }
-      return result;
-    }
     public User findById(Id user_id) {
       return [SELECT // NOPMD.ApexCRUDViolation
         Id, Username, Name, IsActive, Email, FirstName, LastName, MobilePhone, CommunityNickname, SmallPhotoUrl, MediumPhotoUrl, TimeZoneSidKey, LocaleSidKey,
@@ -166,7 +152,6 @@ public with sharing class UserUtils {
     return response;
   }
 
-
   public static Map<String, Object> getPicklists() {
     return new Map<String, Object> {
       'locale' => User.LocaleSidKey.getDescribe().getPicklistValues(),
@@ -289,86 +274,6 @@ public with sharing class UserUtils {
       }
     }
   }
-
-  public static AuthenticationStep nextAuthenticationStep(cym.Browser browser, String[][] acrs, cym.Authentication.Request request, String startURL) {
-    String requestId = request.iid;
-    Integer maxAge = request.max_age;
-    String login_hint = request.login_hint;
-
-    if (browser == null) throw new InvalidArgumentException('You must initiate the browser before calling this function');
-    if (String.isBlank(login_hint)) throw new InvalidArgumentException('login_hint cannot be empty');
-    if (String.isBlank(requestId)) requestId = ConverterUtils.base64encode(Crypto.generateAesKey(128));
-
-    cym.Community idp = cym.Community.getCurrent();
-
-    User u = new UserUtils.Repository().findByUsername(UserUtils.buildUsername(login_hint));
-
-    if (u == null) return new AuthenticationStep(AuthenticationStepType.IDENTITY_REGISTER, null, null);
-
-    cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(browser, u.Id);
-
-    String[] userAuthenticators = new UserUtils.Repository().getUserFactors(UserInfo.getUserId());
-
-    // The user has never verified his / her identity in the current session. It must be done right now and will also verify the email / phone
-    if (userAuthenticators.indexOf(Users.getLoginType(login_hint).name()) == -1) {
-      return new AuthenticationStep(AuthenticationStepType.IDENTITY_VERIFY, (cym.Community.Authenticator) idp.authenticators.find('name', Users.getLoginType(login_hint).name()), session);
-    }
-
-    cym.Community.Authenticator webauthnAuthenticator = (cym.Community.Authenticator) idp.authenticators.find('name', 'webauthn_platform');
-
-    // Webauthn_platform is configured for the community
-    if (webauthnAuthenticator != null) {
-
-      // The user has already used device biometrics on this session
-      if (session.verifications.find('authenticator', webauthnAuthenticator.id) != null) userAuthenticators.add('webauthn_platform');
-    }
-
-    // Filter the ACR to see which paths the user can go through
-    String[][] availableFactorsForUser = new String[][]{};
-    for (String[] factors : acrs) {
-      Boolean isAvailableForUser = true;
-      for (String factor : factors) if (userAuthenticators.indexOf(factor) == -1) { isAvailableForUser = false; break; }
-      if (isAvailableForUser) availableFactorsForUser.add(factors);
-    }
-
-    // The user will be requested to complete the first available combination
-    if (availableFactorsForUser.size() > 0) {
-      String[] factors = availableFactorsForUser[0];
-      for (String factor : factors) {
-        cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', factor);
-        cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticator', authenticator?.get('Id'));
-        if (verification != null && verification.isActive(requestId, maxAge == null ? authenticator.ttl : maxAge)) continue;
-        return new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_VERIFY, authenticator, session);
-      }
-      // If we reach this point, it means that the user has completed all factors from the combination
-      // Log her in
-      return userAuthenticators.indexOf('webauthn_platform') == -1?
-        new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_REGISTER, webauthnAuthenticator, session):
-        new AuthenticationStep(AuthenticationStepType.REDIRECT, null, session);
-    }
-
-    String[] requestedFactors;
-    // The user cannot complete any of the combinations
-    // Pick the first one where she has an authenticator, or the first one of all
-    for (String[] factors : acrs) {
-      for (String factor : factors) if (userAuthenticators.indexOf(factor) > -1) { requestedFactors = factors; break; }
-      if (requestedFactors != null) break;
-    }
-    if (requestedFactors == null) requestedFactors = acrs[0];
-
-    for (String factor : requestedFactors) {
-      cym.Community.Authenticator authenticator = (cym.Community.Authenticator) idp.authenticators.find('name', factor);
-      cym.Browser.SessionVerification verification = (cym.Browser.SessionVerification) session.verifications.find('authenticator', authenticator?.get('Id'));
-      if (verification == null || !verification.isActive(requestId, maxAge == null ? authenticator.ttl : maxAge)) {
-        return userAuthenticators.indexOf(factor) > -1 ?
-          new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_VERIFY, authenticator, session):
-          new AuthenticationStep(AuthenticationStepType.AUTHENTICATOR_REGISTER, authenticator, session);
-      }
-    }
-
-    throw new InvalidArgumentException('Reached an unreacheable location');
-  }
-
 
   public class InvalidArgumentException extends Exception {}
 }

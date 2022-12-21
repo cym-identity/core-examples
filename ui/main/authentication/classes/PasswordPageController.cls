@@ -2,14 +2,15 @@ global with sharing class PasswordPageController extends AuthPageController { //
   public String kind { get; private set; }
 
   public PageReference load() {
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    this.logo = context.logo;
+
     cym.Community.Authenticator password = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'password');
     if (password == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-    if (next.authenticator?.name != 'password' && next.steps.find('authenticator', password.get('id')) == null) return context.getNextStep(next, this.startURL);
+    if (!context.isNext(password)) return context.redirect();
 
-    this.kind = context.owner.authenticators.indexOf('password') == -1 ? 'register' : 'verify';
+    this.kind = context.isNext(AuthContext.StepKind.AUTHENTICATOR_REGISTER) ? 'register' : 'verify';
 
     return null;
   }
@@ -24,9 +25,8 @@ global with sharing class PasswordPageController extends AuthPageController { //
     cym.Community.Authenticator password = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'password');
     if (password == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-    if (next.authenticator?.name != 'password' && next.steps.find('authenticator', password.get('id')) == null) return context.getNextStep(next, this.startURL);
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    if (!context.isNext(password)) return context.redirect();
 
     Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(
       context.owner.session.getRemoteApex(PasswordPageController.SetPassword.class).invoke(JSON.serialize(new Map<String, Object> { 'userId' => context.owner.user.Id, 'password' => new_password}))
@@ -34,9 +34,9 @@ global with sharing class PasswordPageController extends AuthPageController { //
 
     if (!(Boolean) response.get('isValid')) return null;
 
-    context.owner.session.apply(password, this.request.iid);
+    context.apply(password);
 
-    return this.redirect(context);
+    return context.redirect();
   }
 
   public PageReference verify() {
@@ -46,36 +46,11 @@ global with sharing class PasswordPageController extends AuthPageController { //
     cym.Community.Authenticator password = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'password');
     if (password == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-    if (next.authenticator?.name != 'password' && next.steps.find('authenticator', password.get('id')) == null) return context.getNextStep(next, this.startURL);
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    if (!context.isNext(password)) return context.redirect();
 
-    PageReference isValid = Site.login(context.owner.user.Username, current_password, this.startURL);
-
-    if (isValid == null) return null;
-
-    context.owner.session.apply(password, this.request.iid);
-
-    next = context.next();
-
-    if ( next.kind == AuthContext.StepKind.REDIRECT ) {
-      Boolean isWebAuthnEnabled = Boolean.valueOf(params.get('is-webauthn'));
-      if (isWebAuthnEnabled && next.authenticator?.name == 'webauth_platform') {
-        PageReference pr = new PageReference('/web_authn');
-        pr.getParameters().putAll(
-          new Map<String, String> {
-            'login_hint' => this.request.login_hint,
-            'startURL'   => this.startURL,
-            'iid'        => this.request.iid
-          }
-        );
-        return pr;
-      } else {
-        return context.owner.session.resume(this.startURL);
-      }
-    } else {
-      return context.getNextStep(next, this.startURL);
-    }
+    if (Site.login(context.owner.user.Username, current_password, context.startURL) == null) return null;
+    return context.apply(password).redirect();
   }
 
   global inherited sharing class SetPassword extends cym.Remote.Function {

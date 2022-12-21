@@ -1,14 +1,11 @@
 public with sharing class RegisterPageController extends AuthPageController {
 
-  public RegisterPageController() {}
-
   public PageReference next() {
     Map<String, String> params = ApexPages.currentPage().getParameters();
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-
-    if (next.kind != AuthContext.StepKind.IDENTITY_REGISTER) return context.getNextStep(next, this.startURL);
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    this.logo = context.logo;
+    if (!context.isNext(AuthContext.StepKind.IDENTITY_REGISTER)) return context.redirect();
 
     Map<String, Object> args = new Map<String, Object> {
       'login' => context.request.login_hint,
@@ -17,7 +14,7 @@ public with sharing class RegisterPageController extends AuthPageController {
       'requestId' => context.request.iid
     };
 
-    String resp = context.idp.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
+    String resp = context.community.getRemoteApex(MyCommunitiesSelfRegController.CreateUser.class)
       .invoke(
         JSON.serialize(args)
       );
@@ -25,7 +22,7 @@ public with sharing class RegisterPageController extends AuthPageController {
     Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp);
 
     Id userId = (Id) response.get('userId');
-    context.idp.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSetAndLicense.class)
+    context.community.getRemoteApex(MyCommunitiesSelfRegController.AssignPermSetAndLicense.class)
       .invoke(
         JSON.serialize(
           new Map<String, Object> {
@@ -35,8 +32,6 @@ public with sharing class RegisterPageController extends AuthPageController {
       );
 
     // Since the user has been created, reload the context
-    context = new AuthContext(this.request, this.level);
-
-    return this.redirect(context);
+    return AuthContext.fromParameters(ApexPages.currentPage().getParameters()).redirect();
   }
 }

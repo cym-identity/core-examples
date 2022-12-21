@@ -3,17 +3,16 @@ public with sharing class WebauthnPageController extends AuthPageController {
   public String kind { get; private set; }
   public String skip { get; private set; }
   public Boolean auto { get; private set; }
-  public WebauthnPageController() {
-    this.auto = true;
-  }
 
   public PageReference load() {
+    this.auto = true;
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    this.logo = context.logo;
+
     cym.Community.Authenticator webauthn = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'webauthn_platform');
     if (webauthn == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-    if (next.authenticator?.name != 'webauthn_platform' && next.steps.find('authenticator', webauthn.get('id')) == null) return context.getNextStep(next, this.startURL);
+    if (!context.isNext(webauthn)) return context.redirect();
 
     this.kind = context.owner.authenticators.indexOf('webauthn_platform') == -1 ? 'register' : 'verify';
     this.publicKey = JSON.serialize(
@@ -22,8 +21,8 @@ public with sharing class WebauthnPageController extends AuthPageController {
         webauthn.provider.initVerification(context.owner.session, new Map<String, Object> {})
     );
 
-    if (this.kind == 'register' && next.kind == AuthContext.StepKind.REDIRECT) {
-      this.skip = context.owner.session.resume(this.startURL).getURL();
+    if (this.kind == 'register' && context.isNext(AuthContext.StepKind.REDIRECT)) {
+      this.skip = context.owner.session.resume(context.startURL).getURL();
     }
 
     return null;
@@ -38,7 +37,7 @@ public with sharing class WebauthnPageController extends AuthPageController {
     cym.Community.Authenticator webauthn = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'webauthn_platform');
     if (webauthn == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
 
     // The user has already registered webauthn; but the tracking has been wrong
     if (isAlreadyRegistered && this.kind == 'register') {
@@ -54,13 +53,8 @@ public with sharing class WebauthnPageController extends AuthPageController {
         webauthn.provider.verifyVerification(context.owner.session, payload)
     );
 
-    Boolean isValid = (Boolean) response.get('isValid');
-
-    if (!isValid) return null;
-
-    context.owner.session.apply(webauthn, this.request.iid);
-
-    return this.redirect(context);
+    if (!(Boolean) response.get('isValid')) return null;
+    return context.apply(webauthn).redirect();
   }
 
 }

@@ -47,7 +47,9 @@ global with sharing class MyCommunitiesSelfRegController { // NOPMD.AvoidGlobalM
 
       User u = UserUtils.fromUiModel(args);
 
-      u.ProfileId = [SELECT Id FROM Profile WHERE Name = 'sample-external-user'].Id;
+      Auth.AuthConfiguration conf = new Auth.AuthConfiguration(Site.getBaseRequestUrl(), '/');
+
+      u.ProfileId = conf.getDefaultProfileForRegistration(); //[SELECT Id FROM Profile WHERE Name = 'sample-external-user'].Id;
       u.IsPasswordless__c = false; // String.isBlank(password);
       u.CommunityNickname = key;
       u.Alias = key.substring(0, 8);

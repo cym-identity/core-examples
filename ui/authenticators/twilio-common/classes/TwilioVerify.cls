@@ -179,7 +179,7 @@ global inherited sharing class TwilioVerify { // NOPMD-AvoidGlobalModifier
 
       Map<String, Object> response = (Map<String, Object>) JSON.deserializeUntyped(resp.getBody());
       return response;
-    }
+      }
 
     public String verify(String challengeSid) {
       return verify(UserInfo.getUserId(), challengeSid);

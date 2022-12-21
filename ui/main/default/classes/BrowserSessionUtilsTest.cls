@@ -2,7 +2,7 @@
 public with sharing class BrowserSessionUtilsTest {
   @TestSetup
   static void makeData(){
-    cym.Tests.setupCommunity(UserInfo.getOrganizationId());
+    cym.Community.create(UserInfo.getOrganizationId());
   }
 
 

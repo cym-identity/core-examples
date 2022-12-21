@@ -49,8 +49,7 @@
           $Lightning.use("c:loginApp", function () {
             $Lightning.createComponent("c:discoveryUi",
               {
-                login_hint: "{!JSENCODE(login_hint)}",
-                login_type: "{!JSENCODE(login_type)}",
+                login_hint: "{!JSENCODE(login_hint)}"
               },
               "container",
               function (cmp, status) { document.getElementById('loading').style.display = 'none'; }

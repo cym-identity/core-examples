@@ -14,7 +14,7 @@
         <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
       </apex:outputPanel>
 
-      <apex:outputPanel rendered="{! AND(users != null) }" layout="block">
+      <apex:outputPanel rendered="{! AND(users.size > 0) }" layout="block">
         <ul class="slds-has-dividers_around-space">
 
           <apex:repeat value="{!users}" var="user" id="theRepeat">

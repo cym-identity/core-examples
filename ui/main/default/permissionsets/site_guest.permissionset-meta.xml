@@ -28,10 +28,6 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
-        <apexPage>webauthn</apexPage>
-        <enabled>true</enabled>
-    </pageAccesses>
-    <pageAccesses>
         <apexPage>remote</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
@@ -52,7 +48,7 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
-        <apexPage>web_authn</apexPage>
+        <apexPage>webauthn</apexPage>
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>

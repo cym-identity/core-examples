@@ -5,15 +5,14 @@ public with sharing class TotpPageController extends AuthPageController {
   public String kind { get; private set; }
 
   public PageReference load() {
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    this.logo = context.logo;
+
     cym.Community.Authenticator totp = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
     if (totp == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-    if (next.authenticator?.name != 'totp' && next.steps.find('authenticator', totp.get('id')) == null) return context.getNextStep(next, this.startURL);
+    if (!context.isNext(totp)) return context.redirect();
 
-    DEBUG_LOG.put('context', context);
-    DEBUG_LOG.put('authenticators', context.idp.authenticators.asObjects());
     this.kind = context.owner.authenticators.indexOf('totp') == -1 ? 'register' : 'verify';
 
     if (this.kind == 'register') {
@@ -33,9 +32,8 @@ public with sharing class TotpPageController extends AuthPageController {
     cym.Community.Authenticator totp = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', 'totp');
     if (totp == null) return null; // Don't know how the user reached this point
 
-    AuthContext context = new AuthContext(this.request, this.level);
-    AuthContext.Step next = context.next();
-    if (next.authenticator?.name != 'totp' && next.steps.find('authenticator', totp.get('id')) == null) return context.getNextStep(next, this.startURL);
+    AuthContext context = AuthContext.fromParameters(ApexPages.currentPage().getParameters());
+    if (!context.isNext(totp)) return context.redirect();
 
     Map<String, Object> response = (Map<String, Object>) (
       context.owner.authenticators.indexOf('totp') == -1 ?
@@ -43,13 +41,7 @@ public with sharing class TotpPageController extends AuthPageController {
         totp.provider.verifyVerification(context.owner.session, new Map<String, Object> { 'otp' => otp, 'description' => 'User Authentication' })
     );
 
-    Boolean isValid = (Boolean) response.get('isValid');
-
-    if (!isValid) return null;
-
-    context.owner.session.apply(totp, this.request.iid);
-
-    return this.redirect(context);
-
+    if (!(Boolean) response.get('isValid')) return null;
+    return context.apply(totp).redirect();
   }
 }

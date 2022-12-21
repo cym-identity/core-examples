@@ -7,27 +7,6 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
     }
   }
 
-  public String contentType {get; private set;}
-  public WebAuthnController() {}
-
-  public PageReference init() {
-    String name = ApexPages.currentPage().getParameters().get('authenticator');
-    if (String.isBlank(name)) return null;
-
-    RESPONSE.put('requestor', ApexPages.currentPage().getParameters().get('requestor')); // NOPMD.ApexXSSFromUrlParam
-
-    cym.Community.Authenticator authenticator = (cym.Community.Authenticator) cym.Community.getCurrent().authenticators.find('name', name); // NOPMD.ApexXSSFromUrlParam
-    if (authenticator == null) return null;
-
-    String type = (String) authenticator.provider.get('type');
-    String userVerification = (String) authenticator.provider.get('user_verification');
-
-    RESPONSE.put('authenticator', new Map<String, Object> { 'type' => type, 'userVerification' => userVerification, 'name' => authenticator.name});
-    RESPONSE.put('baseUrl', Site.getBaseRequestUrl());
-
-    return null;
-  }
-
   public with sharing class InitRegisterWebAuthn extends Fetch.Function {
     public override Object execute(Map<String, Object> params) {
       Id userId = params.get('userId') != 'undefined' ? (Id) params.remove('userId') : null;
@@ -69,7 +48,8 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
             'credentialId' => EncodingUtil.base64Encode(credential.credentialId),
             'aaguid' => EncodingUtil.base64Encode(credential.aaguid),
             'counter' => credential.counter,
-            'transports' => credential.transports
+            'transports' => credential.transports,
+            'rpId' => credential.rpId
           }
         };
       } catch (Exception ex) {
@@ -178,7 +158,7 @@ global with sharing class WebAuthnController { // NOPMD.AvoidGlobalModifier
 
       credential = credential.rename(name);
 
-      return JSON.serialize(new Map<String, Object> {'name' => credential.id, 'name' => credential.name});
+      return JSON.serialize(new Map<String, Object> {'id' => credential.id, 'name' => credential.name});
     }
   }
 

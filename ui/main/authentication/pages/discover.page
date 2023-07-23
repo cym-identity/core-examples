@@ -15,10 +15,10 @@
       </apex:outputPanel>
 
       <apex:outputPanel rendered="{! AND(users.size > 0) }" layout="block">
-        <ul class="slds-has-dividers_around-space">
+        <ul class="slds-has-dividers_around-space slds-has-block-links_space">
 
           <apex:repeat value="{!users}" var="user" id="theRepeat">
-            <li class="slds-item selectable">
+            <li class="selectable">
               <a href="{!user.next}" style="color: inherit;text-decoration: inherit;cursor: inherit;">
                 <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
                   <div class="slds-col">

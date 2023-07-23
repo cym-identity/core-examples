@@ -1,0 +1,166 @@
+<apex:page
+  id="roamingPage"
+  showHeader="false"
+  title="{!$Label.site.site_login}"
+  controller="RoamingPageController"
+  cache="false"
+  action="{!load}"
+  applyBodyTag="false"
+  applyHtmlTag="false"
+  docType="html-5.0">
+
+	<apex:composition template="authtemplate">
+		<apex:define name="card">
+
+      <apex:outputPanel styleClass="slds-p-top_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
+      </apex:outputPanel>
+
+      <apex:form styleClass="slds-text-align_center">
+        <input type="hidden" name="startURL" value="{!$CurrentPage.parameters.startURL}" />
+        <input type="hidden" name="payload" id="payload" value="{}" />
+        <input type="hidden" name="is-registered" id="is-registered" value="false" />
+        <input type="hidden" name="iid" id="iid" value="{!$request.iid}" />
+        <footer style="height:0px; visibility:hidden;" id="webauthn-submit-container">
+          <apex:commandButton action="{!next}"/>
+        </footer>
+      </apex:form>
+
+      <div class="slds-col slds-size_1-of-1">
+        <p class="slds-text-align_center slds-p-around_medium">
+          Welcome&nbsp;<a>{!$CurrentPage.parameters.login_hint}</a>
+        </p>
+      </div>
+
+      <apex:outputPanel rendered="{! kind == 'register' }" layout="block" styleClass="slds-p-around_medium">
+        <div class="slds-text-heading_medium slds-text-align_center">You're eligible for a more secure sign-in!</div>
+        <div style="margin: 16px;">
+          <img src="{! URLFOR($Resource.MFA, '/img/windows_register_animation.gif') }" alt="Biometrics Sign In Animated Image" />
+        </div>
+        <div class="slds-text-heading_small slds-text-align_center">You can use a Security Key to login</div>
+        <button class="slds-button slds-button_brand slds-button_stretch" style="margin: 16px 0;" id="webauthn-register-btn">
+          <img src="{! URLFOR($Resource.MFA, '/img/fingerprint_generic_white.svg') }" alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+          Register your Security Key
+        </button>
+        <div class="slds-text-heading_medium slds-text-align_center">
+          <img src="{! URLFOR($Resource.MFA, '/img/FIDO_Certified_logo_yellow.png') }" alt="FIDO Certified Logo" width="40px" />
+        </div>
+
+        <apex:outputPanel rendered="{! AND(skip != null)}" layout="block">
+          <p class="slds-text-align_center slds-m-around_medium">
+            <a href="{! skip}">Skip</a>
+          </p>
+        </apex:outputPanel>
+
+        <script type="text/javascript">
+          var webauthn_register_btn = document.getElementById('webauthn-register-btn');
+          var loading = document.getElementById('loading');
+          webauthn_register_btn.addEventListener('click', function() {
+            loading.style.display='block';
+            navigator.credentials
+              .create({ publicKey: preformatMakeCredReq(JSON.parse('{! publicKey }').publicKey) })
+              .then(function(response) {
+                document.getElementById('payload').value = JSON.stringify({
+                  id: response.id,
+                  rawId: base64url.encode(response.rawId),
+                  attestationObject: base64url.encode(response.response.attestationObject),
+                  clientDataJSON: base64url.encode(response.response.clientDataJSON),
+                  transports: response.response.getTransports
+                    ? JSON.stringify(response.response.getTransports())
+                    : "[]",
+                });
+                // Ask the user to give the credential a name
+                document.querySelector('#webauthn-submit-container>input[type="submit"]').click();
+              }).catch(function({name, message}) {
+                if (name === 'InvalidStateError') {
+                  document.getElementById('is-registered').value = 'true';
+                  document.querySelector('#webauthn-submit-container>input[type="submit"]').click();
+                } else loading.style.display = 'none';
+              });
+          });
+        </script>
+      </apex:outputPanel>
+
+      <apex:outputPanel rendered="{! kind == 'verify' }" layout="block" styleClass="slds-p-around_medium">
+        <div class="slds-grid slds-gutters slds-wrap slds-grid_align-center slds-grid_vertical-stretch authenticators-grid">
+          <div class="slds-col slds-size_1-of-1">
+            <button class="slds-button slds-button_brand slds-button_stretch" style="margin: 16px 0;" id="webauthn-verify-btn">
+              <img src="{! URLFOR($Resource.MFA, '/img/fingerprint_generic_white.svg') }" alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+              Verify with your Security Key
+            </button>
+          </div>
+        </div>
+        <div class="slds-text-heading_medium slds-text-align_center">
+          <img src="{! URLFOR($Resource.MFA, '/img/FIDO_Certified_logo_yellow.png') }" alt="FIDO Certified Logo" width="40px" />
+        </div>
+        <script type="text/javascript">
+          var webauthn_register_btn = document.getElementById('webauthn-verify-btn');
+          var loading = document.getElementById('loading');
+          webauthn_register_btn.addEventListener('click', function() {
+            loading.style.display='block';
+            navigator.credentials
+              .get({ publicKey: preformatMakeCredReq(JSON.parse('{! publicKey }').publicKey) })
+              .then(function(response) {
+                document.getElementById('payload').value = JSON.stringify({
+                  id: response.id,
+                  rawId: base64url.encode(response.rawId),
+                  authenticatorData: base64url.encode(response.response.authenticatorData),
+                  clientDataJSON: base64url.encode(response.response.clientDataJSON),
+                  signature: base64url.encode(response.response.signature),
+                });
+                document.querySelector('#webauthn-submit-container>input[type="submit"]').click();
+              }).catch(function() {
+                loading.style.display='none';
+              });
+          });
+        </script>
+        <apex:outputPanel rendered="{! auto == true }" layout="block">
+          <script type="text/javascript">
+            var webauthn_register_btn = document.getElementById('webauthn-verify-btn');
+            webauthn_register_btn.click();
+          </script>
+        </apex:outputPanel>
+
+      </apex:outputPanel>
+
+      <apex:outputPanel rendered="{! kind == 'try' }" layout="block" styleClass="slds-p-around_medium">
+        <div class="slds-grid slds-gutters slds-wrap slds-grid_align-center slds-grid_vertical-stretch authenticators-grid">
+          <div class="slds-text-heading_small slds-text-align_center">
+            You have successfully registered your device
+          </div>
+          <div class="slds-col slds-size_1-of-1">
+            <button class="slds-button slds-button_brand slds-button_stretch" style="margin: 16px 0;" id="webauthn-verify-btn">
+              <img src="{! URLFOR($Resource.MFA, '/img/fingerprint_generic_white.svg') }" alt="fingerprint icon" style="width: 40px; padding: 0 16px 0 0;"/>
+              Try it now!!
+            </button>
+          </div>
+        </div>
+        <div class="slds-text-heading_medium slds-text-align_center">
+          <img src="{! URLFOR($Resource.MFA, '/img/FIDO_Certified_logo_yellow.png') }" alt="FIDO Certified Logo" width="40px" />
+        </div>
+        <script type="text/javascript">
+          var webauthn_register_btn = document.getElementById('webauthn-verify-btn');
+          var loading = document.getElementById('loading');
+          webauthn_register_btn.addEventListener('click', function() {
+            loading.style.display='block';
+            navigator.credentials
+              .get({ publicKey: preformatMakeCredReq(JSON.parse('{! publicKey }').publicKey) })
+              .then(function(response) {
+                document.getElementById('payload').value = JSON.stringify({
+                  id: response.id,
+                  rawId: base64url.encode(response.rawId),
+                  authenticatorData: base64url.encode(response.response.authenticatorData),
+                  clientDataJSON: base64url.encode(response.response.clientDataJSON),
+                  signature: base64url.encode(response.response.signature),
+                });
+                document.querySelector('#webauthn-submit-container>input[type="submit"]').click();
+              }).catch(function() {
+                loading.style.display='none';
+              });;
+          });
+
+        </script>
+      </apex:outputPanel>
+    </apex:define>
+	</apex:composition>
+</apex:page>

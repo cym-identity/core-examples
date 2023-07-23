@@ -1,10 +1,18 @@
-<apex:page id="discoverPage" showHeader="false" title="{!$Label.site.site_login}" controller="RegisterPageController" applyBodyTag="false" applyHtmlTag="false" docType="html-5.0">
+<apex:page
+  id="discoverPage"
+  showHeader="false"
+  title="{!$Label.site.site_login}"
+  controller="RegisterPageController"
+  applyBodyTag="false"
+  applyHtmlTag="false"
+  docType="html-5.0">
 
 	<apex:composition template="authtemplate">
 		<apex:define name="card">
-      <apex:outputPanel styleClass="slds-p-top_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
-        <img src="{!logo}" style="max-height:96px;max-width:300px"/>
+      <apex:outputPanel styleClass="slds-p-around_medium slds-text-align_center" rendered="{! (logo != null) }" layout="block">
+        <img src="{!logo}" style="max-height:96px;max-width:300px" alt="logo"/>
       </apex:outputPanel>
+
       <apex:form>
 
         <div class="slds-form-element">

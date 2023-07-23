@@ -17,7 +17,7 @@ export default class UserRegister extends LightningElement {
 
   async handleRegister(e) {
     this.loading = true;
-    remote('MyCommunitiesSelfRegController.RegisterUser', { ...this.profile, login_hint: this.profile.login, password: this.password, requestId: this.requestId})
+    remote('RegisterPageController.RegisterUser', { ...this.profile, login_hint: this.profile.login, password: this.password, requestId: this.requestId})
       .then( ({ isValid }) => {
         if (isValid) this.dispatchEvent(new CustomEvent("done", { detail: { login_hint: this.profile.login }}))
       })

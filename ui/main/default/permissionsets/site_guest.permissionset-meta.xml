@@ -52,6 +52,10 @@
         <enabled>true</enabled>
     </pageAccesses>
     <pageAccesses>
+        <apexPage>roaming</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <pageAccesses>
         <apexPage>password</apexPage>
         <enabled>true</enabled>
     </pageAccesses>

@@ -10,7 +10,7 @@ public with sharing class UpdateProfileController {
 
   public UpdateProfileController() {
     if (Auth.CommunitiesUtil.isGuestUser()) throw new NoAccessException();
-    cym.AuthorizationContext context = cym.AuthorizationContext.getContext(ApexPages.currentPage().getParameters().get('startURL'));
+    cym.Authorization.Context context = cym.Authorization.getContext(ApexPages.currentPage().getParameters().get('startURL'));
 
     cym.Authorization.Request request = context.authz;
     this.initUser();

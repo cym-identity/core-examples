@@ -5,7 +5,7 @@ public with sharing class BrowserSessionUtils {
   }
   public static String getRequestId(String startURL) {
     try {
-      return cym.AuthorizationContext.getContext(startURL).authn.iid;
+      return cym.Authorization.getContext(startURL).authn.iid;
     } catch (Exception ignored) { System.debug(ConverterUtils.toMap(ignored)); }
     return ConverterUtils.base64encode(Crypto.generateAesKey(256));
   }

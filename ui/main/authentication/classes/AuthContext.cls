@@ -11,7 +11,7 @@ public with sharing class AuthContext {
     String login_hint = params.get('login_hint');
     String startURL = String.isBlank(params.get('startURL')) ? '/' : params.get('startURL');
     try {
-      cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
+      cym.Authorization.Context context = cym.Authorization.getContext(startURL);
       return new AuthContext(
         new cym.Authentication.Request(
           new Map<String, Object> {
@@ -185,6 +185,7 @@ public with sharing class AuthContext {
 
   public static PageReference getAuthenticatorPageReference(cym.Community.Authenticator authenticator) {
     if (authenticator.name == 'webauthn_platform') return new PageReference('/webauthn');
+    if (authenticator.name == 'webauthn_roaming') return new PageReference('/roaming');
     if (authenticator.name == 'totp') return new PageReference('/totp');
     if (authenticator.name == 'email') return new PageReference('/email');
     if (authenticator.name == 'password') return new PageReference('/password');
@@ -196,7 +197,7 @@ public with sharing class AuthContext {
   }
 
   public ExternalAuthProvider[] getCommunityAuthProviders() {
-    return (ExternalAuthProvider[]) new Collection(
+    return (ExternalAuthProvider[]) new cym.Collection(
       new Auth.AuthConfiguration(Site.getBaseRequestUrl(), '/').getAuthProviders()
     )
       .filter('FriendlyName', this.community.authenticators.pluck('name').asStrings())
@@ -204,7 +205,7 @@ public with sharing class AuthContext {
   }
 
   public DisplayUser[] getBrowserUsers() {
-    return (DisplayUser[]) new Collection(
+    return (DisplayUser[]) new cym.Collection(
       new UserUtils.Repository().findUsers(new Set<Id>(cym.Browser.getCurrent().sessions.pluck('ownerId').asIds()))
     ).asList((cym.Collection.AsList) cym.Func.of(CastToDisplayUserList.class).bind('request', this.request).bind('startURL', this.startURL));
   }

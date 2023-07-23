@@ -131,9 +131,7 @@ global with sharing class DiscoveryController { // NOPMD.AvoidGlobalModifier
       cym.Browser.Session session = BrowserSessionUtils.findOrAddSession(cym.Browser.getCurrent(), userId);
       session.apply((cym.Community.Authenticator) idp.authenticators.find('name', 'password'), requestId);
 
-      return new Map<String, Object> {
-        'isValid' => true
-      };
+      return new Map<String, Object> { 'isValid' => true };
     }
   }
 

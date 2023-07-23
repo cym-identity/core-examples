@@ -22,9 +22,9 @@
         <span>Verify your identity before you can continue</span>
       </apex:outputPanel>
 
-      <ul class="slds-has-dividers_around-space">
+      <ul class="slds-has-dividers_around-space slds-has-block-links_space">
         <apex:repeat value="{!authenticators}" var="authenticator" id="theRepeat">
-          <li class="slds-item selectable">
+          <li class="selectable">
             <a href="{!authenticator.link}" style="color: inherit;text-decoration: inherit;cursor: inherit;display: block;" class="slds-p-around_medium">
               <div class="slds-grid slds-gutters slds-grid_vertical-align-center">
                 <div class="slds-col">

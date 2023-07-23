@@ -3,7 +3,7 @@ public with sharing class ApprovalController {
   public class Init extends Fetch.Function {
     public override Object execute(Map<String, Object> params) {
       String startURL = (String) params.get('startURL');
-      cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
+      cym.Authorization.Context context = cym.Authorization.getContext(startURL);
       cym.ResourceOwner owner = cym.ResourceOwner.getCurrent();
       cym.ResourceOwner.Consent consent = (cym.ResourceOwner.Consent) owner.consents.find('client', context.client.id);
       return new Map<String, Object> {
@@ -19,7 +19,7 @@ public with sharing class ApprovalController {
   public class Save extends Fetch.Function {
     public override Object execute(Map<String, Object> params) {
       String startURL = (String) params.get('startURL');
-      cym.AuthorizationContext context = cym.AuthorizationContext.getContext(startURL);
+      cym.Authorization.Context context = cym.Authorization.getContext(startURL);
       cym.ResourceOwner.Consents consents = cym.ResourceOwner.getCurrent().consents;
       cym.ResourceOwner.Consent consent = (cym.ResourceOwner.Consent) consents.find('client', context.client.id);
       if (consent == null) consent = consents.add(context);
